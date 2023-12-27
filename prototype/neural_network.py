@@ -25,7 +25,7 @@ class Dense:
         :param z: logits.
         :returns: a numpy array with the activation function applied to the logits.
         """
-        if self.activation == 'linear':
+        if self._activation == 'linear':
             return z
         elif self._activation == 'relu':
             return relu(z)
