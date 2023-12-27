@@ -1,0 +1,350 @@
+,Task,Importance,Time to complete (minutes)
+0,Meeting with team,8,60
+1,Email response,4,15
+2,Review project proposal,9,45
+3,Presentation preparation,7,30
+4,Task priorities assessment,6,20
+5,Lunch break,3,60
+6,Deadline discussion,7,45
+7,Client meeting,9,90
+8,Brainstorming session,8,60
+9,Data analysis,5,40
+10,Design mockups,8,60
+11,Documentation update,6,30
+12,Training session,8,60
+13,Code debugging,7,45
+14,Content creation,6,30
+15,Software testing,5,25
+16,Research new technologies,7,40
+17,Weekly progress report,6,45
+18,Team collaboration,7,30
+19,Performance review,9,60
+20,Meeting with stakeholders,8,60
+21,Task delegation,5,20
+22,Error handling improvement,7,45
+23,Project kickoff,9,60
+24,Presentation rehearsal,6,40
+25,Workshop attendance,5,60
+26,Review code documentation,7,30
+27,Brainstorming ideas,8,45
+28,System integration,7,60
+29,Product demonstration,8,45
+30,User interface design,7,30
+31,Database optimization,6,60
+32,Error resolution,7,45
+33,Peer code review,6,30
+34,Functional testing,5,25
+35,Team building activity,3,60
+36,Client negotiation,9,60
+37,Project status update,6,45
+38,Requirement analysis,7,30
+39,Feature implementation,8,60
+40,Content editing,6,20
+41,Server maintenance,7,45
+42,Presentation creation,8,60
+43,Task prioritization,5,30
+44,Troubleshooting session,7,45
+45,Product roadmap planning,8,60
+46,Data validation,6,40
+47,Code refactoring,7,30
+48,Training workshop,8,45
+49,Documentation review,6,30
+50,Team collaboration,5,20
+51,Time tracking analysis,7,45
+52,Marketing campaign review,9,60
+53,Feedback implementation,6,25
+54,Client support call,7,30
+55,Prototype development,8,60
+56,Research competitor strategies,7,45
+57,Goal setting exercise,6,20
+58,Code deployment,8,45
+59,UI/UX improvement,6,30
+60,Data visualization,5,25
+61,Presentation design,7,60
+62,Task estimation,6,30
+63,Code documentation,7,45
+64,Performance optimization,8,60
+65,Team meeting,6,45
+66,System maintenance,7,30
+67,Project coordination,8,60
+68,Content research,6,40
+69,Unit testing,7,25
+70,Collaboration tool training,5,60
+71,Customer feedback analysis,9,45
+72,Code review,6,30
+73,Task planning,7,45
+74,Client onboarding call,8,60
+75,Bug fixing,7,45
+76,Product feature discussion,8,30
+77,Data cleansing,6,60
+78,Sprint retrospective,7,60
+79,User feedback collection,6,30
+80,System upgrade,7,45
+81,Release planning,8,60
+82,Documentation management,7,45
+83,Team training,6,40
+84,System testing,5,25
+85,Project brainstorming,7,60
+86,Client feedback meeting,8,45
+87,Design review,6,20
+88,Process optimization,7,45
+89,Meeting preparation,8,30
+90,Requirement gathering,6,45
+91,Task coordination,5,20
+92,Error investigation,7,60
+93,Product launch planning,8,45
+94,Code optimization,6,30
+95,Project follow-up,7,45
+96,User testing,5,25
+97,Team motivation session,7,60
+98,Sales pitch preparation,8,60
+99,Prioritization meeting,6,30
+100,Data analysis,7,45
+101,UI layout design,6,20
+102,Documentation writing,7,60
+103,Time management training,8,45
+104,Task delegation,7,30
+105,Project collaboration,6,60
+106,Daily stand-up,7,60
+107,Code integration,8,30
+108,Proposal evaluation,6,45
+109,Feature testing,7,25
+110,Market research,5,60
+111,Customer support,9,45
+112,Code cleanup,6,30
+113,Meeting follow-up,7,45
+114,Prototype testing,8,60
+115,Collaboration tool setup,6,30
+116,Task status update,7,45
+117,Data migration,6,60
+118,Sprint planning,7,45
+119,User feedback analysis,8,30
+120,Data visualization design,7,60
+121,Performance analysis,6,20
+122,Documentation review,7,45
+123,Task analysis,8,60
+124,Team feedback session,7,30
+125,System monitoring,6,45
+126,Project evaluation,7,60
+127,Customer requirements gathering,8,45
+128,Code enhancement,6,30
+129,Task tracking,7,45
+130,Meeting follow-up,8,60
+131,UI/UX usability testing,6,40
+132,User documentation writing,7,30
+133,Feature implementation,8,45
+134,Documentation organization,6,30
+135,Error fixing,7,45
+136,User training,6,25
+137,Project progress tracking,7,60
+138,Design discussion,8,60
+139,Task estimation,6,30
+140,Code refactoring,7,45
+141,Database optimization,8,60
+142,Performance testing,6,45
+143,Team collaboration,7,30
+144,Task update,5,20
+145,System upgrade,7,45
+146,Release management,8,60
+147,Documentation writing,7,45
+148,Team training,6,40
+149,Code review,7,25
+150,User feedback analysis,8,60
+151,Project planning,6,60
+152,Client meeting,7,30
+153,Error investigation,8,45
+154,Product roadmap discussion,6,20
+155,Requirement gathering,7,60
+156,Code optimization,8,45
+157,Project coordination,7,30
+158,Code integration,6,60
+159,Task prioritization,7,45
+160,Data analysis,8,60
+161,UI layout design,6,30
+162,Documentation writing,7,20
+163,Time management training,8,45
+164,Task delegation,6,30
+165,Project collaboration,7,45
+166,Daily stand-up,8,60
+167,Code review,7,30
+168,Feature testing,6,25
+169,Market research,7,60
+170,Customer support,8,45
+171,Code cleanup,6,30
+172,Meeting follow-up,7,45
+173,Prototype testing,8,60
+174,Collaboration tool setup,7,30
+175,Task status update,6,45
+176,Data migration,7,60
+177,Sprint planning,8,45
+178,User feedback analysis,7,30
+179,Data visualization design,6,60
+180,Performance analysis,7,45
+181,Documentation review,8,20
+182,Task analysis,6,45
+183,Team feedback session,7,60
+184,System monitoring,8,60
+185,Project evaluation,6,30
+186,Customer requirements gathering,7,45
+187,Code enhancement,8,60
+188,Task tracking,7,45
+189,Meeting follow-up,6,30
+190,UI/UX usability testing,7,45
+191,User documentation writing,8,60
+192,Feature implementation,6,40
+193,Documentation organization,7,30
+194,Error fixing,8,45
+195,User training,7,25
+196,Project progress tracking,6,60
+197,Design discussion,7,60
+198,Task estimation,8,30
+199,Code refactoring,7,45
+200,Database optimization,6,60
+201,Performance testing,7,45
+202,Team collaboration,8,30
+203,Task update,6,20
+204,System upgrade,7,45
+205,Release management,8,60
+206,Documentation writing,7,45
+207,Team training,6,40
+208,Code review,7,25
+209,User feedback analysis,8,60
+210,Project planning,7,60
+211,Client meeting,6,30
+212,Error investigation,7,45
+213,Product roadmap discussion,8,20
+214,Requirement gathering,6,60
+215,Code optimization,7,45
+216,Project coordination,8,30
+217,Code integration,7,60
+218,Task prioritization,6,45
+219,Data analysis,7,60
+220,UI layout design,8,30
+221,Documentation writing,6,45
+222,Time management training,7,25
+223,Task delegation,8,60
+224,Project collaboration,7,30
+225,Daily stand-up,6,45
+226,Code review,7,60
+227,Feature testing,8,30
+228,Market research,7,60
+229,Customer support,6,45
+230,Code cleanup,7,20
+231,Meeting follow-up,8,45
+232,Prototype testing,7,30
+233,Collaboration tool setup,6,60
+234,Task status update,7,45
+235,Data migration,8,60
+236,Sprint planning,7,45
+237,User feedback analysis,6,30
+238,Data visualization design,7,60
+239,Performance analysis,8,45
+240,Documentation review,7,30
+241,Task analysis,6,60
+242,Team feedback session,7,45
+243,System monitoring,8,20
+244,Project evaluation,7,60
+245,Customer requirements gathering,6,40
+246,Code enhancement,7,30
+247,Task tracking,8,45
+248,Meeting follow-up,7,25
+249,UI/UX usability testing,6,60
+250,User documentation writing,7,45
+251,Feature implementation,8,30
+252,Documentation organization,7,45
+253,Error fixing,6,60
+254,User training,7,20
+255,Project progress tracking,8,45
+256,Design discussion,7,30
+257,Task estimation,6,45
+258,Code refactoring,7,60
+259,Database optimization,8,30
+260,Performance testing,7,45
+261,Team collaboration,6,60
+262,Task update,7,45
+263,System upgrade,8,30
+264,Release management,7,60
+265,Documentation writing,6,45
+266,Team training,7,20
+267,Code review,8,45
+268,User feedback analysis,7,30
+269,Project planning,6,60
+270,Client meeting,7,45
+271,Error investigation,8,25
+272,Product roadmap discussion,7,60
+273,Requirement gathering,6,45
+274,Code optimization,7,30
+275,Project coordination,8,45
+276,Code integration,7,60
+277,Task prioritization,6,30
+278,Data analysis,7,45
+279,UI layout design,8,60
+280,Documentation writing,7,45
+281,Time management training,6,20
+282,Task delegation,7,60
+283,Project collaboration,8,45
+284,Daily stand-up,7,25
+285,Code review,6,60
+286,Feature testing,7,45
+287,Market research,8,30
+288,Customer support,7,60
+289,Code cleanup,6,40
+290,Meeting follow-up,7,30
+291,Prototype testing,8,45
+292,Collaboration tool setup,7,20
+293,Task status update,6,60
+294,Data migration,7,45
+295,Sprint planning,8,30
+296,User feedback analysis,7,60
+297,Data visualization design,6,45
+298,Performance analysis,7,25
+299,Documentation review,8,60
+300,Task analysis,7,30
+301,Team feedback session,6,45
+302,System monitoring,7,60
+303,Project evaluation,8,45
+304,Customer requirements gathering,7,30
+305,Code enhancement,6,60
+306,Task tracking,7,45
+307,Meeting follow-up,8,30
+308,UI/UX usability testing,7,20
+309,User documentation writing,6,60
+310,Feature implementation,7,45
+311,Documentation organization,8,30
+312,Error fixing,7,60
+313,User training,6,45
+314,Project progress tracking,7,30
+315,Design discussion,8,60
+316,Task estimation,7,45
+317,Code refactoring,6,30
+318,Database optimization,7,60
+319,Performance testing,8,45
+320,Team collaboration,7,25
+321,Task update,6,60
+322,System upgrade,7,45
+323,Release management,8,30
+324,Documentation writing,7,60
+325,Team training,6,45
+326,Code review,7,30
+327,User feedback analysis,8,20
+328,Project planning,7,45
+329,Client meeting,6,60
+330,Error investigation,7,45
+331,Product roadmap discussion,8,30
+332,Requirement gathering,7,60
+333,Code optimization,6,45
+334,Project coordination,7,30
+335,Code integration,8,60
+336,Task prioritization,7,45
+337,Data analysis,6,40
+338,UI layout design,7,30
+339,Documentation writing,8,45
+340,Time management training,7,60
+341,Task delegation,6,45
+342,Project collaboration,7,25
+343,Daily stand-up,8,60
+344,Code review,7,60
+345,Feature testing,6,30
+346,Market research,7,45
+347,Customer support,8,40
+348,Code cleanup,7,20
