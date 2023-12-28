@@ -1,4 +1,5 @@
 import numpy as np
+from nltk import word_tokenize, WordNetLemmatizer
 
 
 def relu(x: np.ndarray) -> np.ndarray:
@@ -38,3 +39,36 @@ def get_batches(X: np.ndarray, y: np.ndarray, batch_size) -> (list[np.ndarray], 
             X_batches.append(X[batch_size * (m // batch_size):])
             y_batches.append(y[batch_size * (m // batch_size):])
         return X_batches, y_batches
+
+
+def preprocess_data(examples: list[str]) -> list[list[str]]:
+    tokens = [word_tokenize(example) for example in examples]
+    stemmer = WordNetLemmatizer()
+    stemmed_tokens = [[stemmer.lemmatize(token.lower()) for token in example] for example in tokens]
+    return stemmed_tokens
+
+
+class BagOfWords:
+    def __init__(self, vocabulary: list) -> None:
+        """
+        Creates a bag of words vocabulary based on the training examples.
+        :param training_examples: a list of training examples where each example is a list of words.
+        """
+        self.vocabulary = vocabulary
+    
+    def encode(self, examples: list[list[str]]) -> np.ndarray:
+        """
+        Converts the training examples into numbers using the bag of words method.
+        :param examples: a list of training examples where each example is a list of words.
+        :returns: training examples encoded using the bag of words method.
+        """
+        encoded_examples = list()
+        for example in examples:
+            encoded_example = np.zeros(len(self.vocabulary))
+            for word in example:
+                if word in self.vocabulary:
+                    encoded_example[self.vocabulary.index(word)] = 1
+            encoded_examples.append(encoded_example)
+
+        encoded_examples = np.asarray(encoded_examples)
+        return encoded_examples   

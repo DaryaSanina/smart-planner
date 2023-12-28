@@ -60,7 +60,7 @@ class Dense:
         m = X.shape[0]  # The number of examples
         logit_gradients = self._get_logit_gradients(output_gradients)
         weight_gradients = X.T @ logit_gradients
-        bias_gradients = np.sum(logit_gradients, axis=0)
+        bias_gradients = np.sum(logit_gradients, axis=0).reshape((1, -1))
         return weight_gradients, bias_gradients
     
     def get_input_gradients(self, output_gradients: np.ndarray) -> np.ndarray:

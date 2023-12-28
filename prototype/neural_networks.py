@@ -12,7 +12,8 @@ class Sequential:
     
     def compile(self, error: Error, learning_rate=0.001) -> None:
         """
-        :param 
+        :param error: the model's cost function.
+        :param learning_rate: the model's learning rate.
         """
         self._error = error
         self._learning_rate = learning_rate
@@ -29,6 +30,16 @@ class Sequential:
             values = layer.forward(values)
         return values
     
+    def predict_with_history(self, X: np.ndarray) -> list[np.ndarray]:
+        value_history = [X]
+        values = X
+        for layer in self._layers:
+            n = values.shape[1]  # The number of features
+            assert n == layer.input_units
+            values = layer.forward(values)
+            value_history.append(values)
+        return value_history
+    
     def fit(self, X: list[np.ndarray], y: list[np.ndarray], epochs: int) -> list[np.int32]:
         """
         Trains the model.
@@ -36,7 +47,7 @@ class Sequential:
         :param y: targets to train the model on (in batches). Each batch should have a shape (number of training examples, number of outputs).
         :returns: the cost at each epoch.
         """
-        m = X.shape[0]  # The number of training examples
+        m = len(X)  # The number of batches
         cost_history = list()
         for i in range(epochs):
             cost = 0
@@ -44,20 +55,22 @@ class Sequential:
                 X_batch = X[batch_index]
                 y_batch = y[batch_index]
 
-                outputs = self.predict(X_batch)
+                output_history = self.predict_with_history(X_batch)
+                outputs = output_history[-1]
                 losses = self._error.get_loss(outputs, y_batch)
                 cost += self._error.get_cost(losses)
 
                 # Back propagation
                 output_gradients = self._error.get_gradients(outputs, y_batch)
                 for layer in reversed(self._layers):
-                    weight_gradients, bias_gradients = layer.get_weight_gradients(output_gradients)
+                    output_history.pop()
+                    weight_gradients, bias_gradients = layer.get_weight_gradients(output_history[-1], output_gradients)
                     input_gradients = layer.get_input_gradients(output_gradients)
                     layer.update_weights(weight_gradients, bias_gradients, self._learning_rate)
                     output_gradients = input_gradients
 
             cost /= 2 * m
             cost_history.append(cost)
-            print(f"Epoch #{i}: Cost = {cost}")
+            print(f"Epoch #{i}: Cost = {cost[0]}")
         
         return cost_history
