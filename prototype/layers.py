@@ -50,7 +50,7 @@ class Dense:
         a = self._activate(z)
         return a
     
-    def get_weight_gradients(self, X: np.ndarray, output_gradients: np.ndarray) -> np.ndarray:
+    def get_weight_gradients(self, X: np.ndarray, output_gradients: np.ndarray, regularization: int) -> np.ndarray:
         """
         :param X: the features of the examples the output gradients were computed for. The shape should be (number of examples, number of features).
         :param output_gradients: the gradients of the cost function for the outputs of the layer. The shape should be (number of examples, number of outputs).
@@ -59,7 +59,7 @@ class Dense:
         """
         m = X.shape[0]  # The number of examples
         logit_gradients = self._get_logit_gradients(output_gradients)
-        weight_gradients = X.T @ logit_gradients
+        weight_gradients = X.T @ logit_gradients + regularization / (2 * m) * self._weights ** 2
         bias_gradients = np.sum(logit_gradients, axis=0).reshape((1, -1))
         return weight_gradients, bias_gradients
     

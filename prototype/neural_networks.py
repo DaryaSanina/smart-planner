@@ -10,13 +10,15 @@ class Sequential:
         """
         self._layers = layers
     
-    def compile(self, error: Error, learning_rate=0.001) -> None:
+    def compile(self, error: Error, learning_rate=0.001, regularization=0.001) -> None:
         """
         :param error: the model's cost function.
         :param learning_rate: the model's learning rate.
+        :param regularization: the model's regularization parameter.
         """
         self._error = error
         self._learning_rate = learning_rate
+        self._regularization = regularization
     
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -64,7 +66,7 @@ class Sequential:
                 output_gradients = self._error.get_gradients(outputs, y_batch)
                 for layer in reversed(self._layers):
                     output_history.pop()
-                    weight_gradients, bias_gradients = layer.get_weight_gradients(output_history[-1], output_gradients)
+                    weight_gradients, bias_gradients = layer.get_weight_gradients(output_history[-1], output_gradients, self._regularization)
                     input_gradients = layer.get_input_gradients(output_gradients)
                     layer.update_weights(weight_gradients, bias_gradients, self._learning_rate)
                     output_gradients = input_gradients
