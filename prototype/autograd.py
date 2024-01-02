@@ -66,7 +66,9 @@ class Tensor:
         Supported values of creation_op of this tensor:
             - "add": tensor addition,
             - "neg": tensor negation,
-            - "sub": tensor subtraction.
+            - "sub": tensor subtraction,
+            - "mul": elementwise tensor multiplication,
+            - "sum_<dim>": tensor summation along the specified dimensions.
 
         Parameters
         ----------
@@ -99,14 +101,26 @@ class Tensor:
                 if self.creation_op == "add":
                     self.creators[0].backward(self.grad, self)
                     self.creators[1].backward(self.grad, self)
+                
                 if self.creation_op == "neg":
                     self.creators[0].backward(self.grad.__neg__(), self)
+                
                 if self.creation_op == "sub":
                     self.creators[0].backward(self.grad, self)
                     self.creators[1].backward(self.grad.__neg__(), self)
+                
                 if self.creation_op == "mul":
                     self.creators[0].backward(self.grad * self.creators[1], self)
                     self.creators[1].backward(self.grad * self.creators[0], self)
+                
+                if "sum" in self.creation_op:
+                    dim = int(self.creation_op.split('_')[1])
+                    copies = self.creators[0].data.shape[dim]
+                    self.creators[0].backward(self.grad.expand(dim, copies), self)
+                
+                if "expand" in self.creation_op:
+                    dim = int(self.creation_op.split('_')[1])
+                    self.creators[0].backward(self.grad.sum(dim))
     
     def __add__(self, other: Tensor):
         """
@@ -174,6 +188,49 @@ class Tensor:
         if self.autograd:
             return Tensor(self.data * other.data, autograd=True, creators=[self, other], creation_op="mul")
         return Tensor(self.data * other.data)
+    
+    def sum(self, dim: int):
+        """
+        Sums the tensor along the specified axes.
+
+        Parameters
+        ----------
+        dim: int
+            The axis along which the tensor should be summed.
+        
+        Returns
+        -------
+        Tensor
+            The tensor produced when summing this tensor along the specified axes.
+        """
+        if self.autograd:
+            return Tensor(self.data.sum(dim), autograd=True, creators=[self], creation_op="sum_" + str(dim))
+        return Tensor(self.data.sum(dim))
+    
+    def expand(self, dim: int, copies: int):
+        """
+        Repeats the specified axis of the tensor the specified number of times.
+
+        Parameters
+        ----------
+        dim: int
+            The axis that should be repeated.
+        copies: int
+            The number of copies of the axis.
+        
+        Returns
+        -------
+        Tensor
+            The tensor produced when repeating the specifed axis of this tensor the specified number of times.
+        """
+        transpose_command = list(range(0, len(self.data.shape)))
+        transpose_command.insert(dim, len(self.data.shape))
+        new_shape = list(self.data.shape) + [copies]
+        new_data = self.data.repeat(copies).reshape(new_shape).transpose(transpose_command)
+
+        if self.autograd:
+            return Tensor(new_data, autograd=True, creators=[self], creation_op="expand_" + str(dim))
+        return Tensor(new_data)
     
     def __repr__(self) -> str:
         return str(self.data.__repr__())
