@@ -70,7 +70,8 @@ class Tensor:
             - "mul": elementwise tensor multiplication,
             - "sum_<dim>": tensor summation along the specified dimension,
             - "expand_<dim>": tensor expansion along the specified dimension,
-            - "transpose": tensor transpose.
+            - "transpose": tensor transpose,
+            - "matmul": matrix multiplication.
 
         Parameters
         ----------
@@ -105,7 +106,7 @@ class Tensor:
                     self.creators[1].backward(self.grad, self)
                 
                 if self.creation_op == "neg":
-                    self.creators[0].backward(self.grad.__neg__(), self)
+                    self.creators[0].backward(self.grad.__neg__())
                 
                 if self.creation_op == "sub":
                     self.creators[0].backward(self.grad, self)
@@ -115,13 +116,19 @@ class Tensor:
                     self.creators[0].backward(self.grad * self.creators[1], self)
                     self.creators[1].backward(self.grad * self.creators[0], self)
                 
+                if self.creation_op == "matmul":
+                    activation = self.creators[0]
+                    weights = self.creators[1]
+                    activation.backward(self.grad @ weights.transpose())
+                    weights.backward((self.grad.transpose() @ activation).transpose())
+                
                 if self.creation_op == "transpose":
-                    self.creators[0].backward(self.grad.transpose(), self)
+                    self.creators[0].backward(self.grad.transpose())
                 
                 if "sum" in self.creation_op:
                     dim = int(self.creation_op.split('_')[1])
                     copies = self.creators[0].data.shape[dim]
-                    self.creators[0].backward(self.grad.expand(dim, copies), self)
+                    self.creators[0].backward(self.grad.expand(dim, copies))
                 
                 if "expand" in self.creation_op:
                     dim = int(self.creation_op.split('_')[1])
@@ -190,9 +197,27 @@ class Tensor:
         Tensor
             The tensor produced when multiplying the elements of this tensor by the corresponding elements of the 'other' tensor.
         """
-        if self.autograd:
+        if self.autograd and other.autograd:
             return Tensor(self.data * other.data, autograd=True, creators=[self, other], creation_op="mul")
         return Tensor(self.data * other.data)
+    
+    def __matmul__(self, other: Tensor):
+        """
+        Performs matrix multiplication on two tensors (multiplies this tensor by the 'other' tensor).
+
+        Parameters
+        ----------
+        other : Tensor
+            The tensor this tensor should be multiplied by. Its first dimension should be equal to the last dimension of this tensor.
+        
+        Returns
+        -------
+        Tensor
+            The tensor produced when multiplying this tensor by the 'other' tensor.
+        """
+        if self.autograd:
+            return Tensor(self.data @ other.data, autograd=True, creators=[self, other], creation_op="matmul")
+        return Tensor(self.data @ other.data)
     
     def sum(self, dim: int):
         """
@@ -200,7 +225,7 @@ class Tensor:
 
         Parameters
         ----------
-        dim: int
+        dim : int
             The axis along which the tensor should be summed.
         
         Returns
@@ -218,9 +243,9 @@ class Tensor:
 
         Parameters
         ----------
-        dim: int
+        dim : int
             The axis that should be repeated.
-        copies: int
+        copies : int
             The number of copies of the axis.
         
         Returns
