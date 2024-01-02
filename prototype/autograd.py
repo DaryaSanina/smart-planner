@@ -63,7 +63,10 @@ class Tensor:
     def backward(self, grad=None, grad_origin=None) -> None:
         """
         Backpropagates the gradient of the tensor to its creators.
-        The only supported creation_op of the tensor is "add", which represents the addition of two tensors.
+        Supported values of creation_op of this tensor:
+            - "add": tensor addition,
+            - "neg": tensor negation,
+            - "sub": tensor subtraction.
 
         Parameters
         ----------
@@ -96,6 +99,11 @@ class Tensor:
                 if self.creation_op == "add":
                     self.creators[0].backward(grad, self)
                     self.creators[1].backward(grad, self)
+                if self.creation_op == "neg":
+                    self.creators[0].backward(grad.__neg__(), self)
+                if self.creation_op == "sub":
+                    self.creators[0].backward(grad, self)
+                    self.creators[1].backward(grad.__neg__(), self)
     
     def __add__(self, other: Tensor):
         """
@@ -116,9 +124,35 @@ class Tensor:
         return Tensor(self.data + other.data)
     
     def __neg__(self):
+        """
+        Performs the negation operation on the tensor.
+
+        Returns
+        -------
+        Tensor
+            The tensor produced when negating this tensor.
+        """
         if self.autograd:
             return Tensor(self.data * -1, autograd=True, creators=[self], creation_op="neg")
         return Tensor(self.data * -1)
+    
+    def __sub__(self, other: Tensor):
+        """
+        Subtracts one vector from another
+
+        Parameters
+        ----------
+        other : Tensor
+            The tensor that should be subtracted from this tensor. Its dimensions should match to the dimensions of this tensor.
+        
+        Returns
+        -------
+        Tensor
+            The tensor produced when subtracting the 'other' tensor from this tensor.
+        """
+        if self.autograd:
+            return Tensor(self.data - other.data, autograd=True, creators=[self, other], creation_op="sub")
+        return Tensor(self.data - other.data)
     
     def __repr__(self) -> str:
         return str(self.data.__repr__())
