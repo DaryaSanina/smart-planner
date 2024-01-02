@@ -1,2 +1,3 @@
 prototype/.env
 prototype/test.py
+prototype/__pycache__

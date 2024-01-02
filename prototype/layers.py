@@ -63,5 +63,65 @@ class Linear(Layer):
         ----------
         input : Tensor
             The layer's input.
+        
+        Returns
+        -------
+        Tensor
+            The layer's output.
         """
         return input @ self.weight + self.bias.expand(0, len(input.data))
+
+
+class Sequential(Layer):
+    """
+    Represents a sequence of layers of a neural network.
+
+    Attributes
+    ----------
+    layers : list[Layer]
+        A list of neural network layers.
+    parameters : list[Tensor]
+        The parameters of each layer.
+    """
+
+
+class Sequential(Layer):
+    def __init__(self, layers: list[Layer] = list()) -> None:
+        super().__init__()
+        self.layers = layers
+    
+    def add(self, layer: Layer) -> None:
+        """
+        Adds a layer to the sequence.
+
+        Parameters
+        ----------
+        layer : Layer
+            The layer to add to the sequence.
+        """
+        self.layers.append(layer)
+    
+    def forward(self, input: Tensor) -> Tensor:
+        """
+        Executes forward propagation on the layer sequence.
+
+        Parameters
+        ----------
+        input : Tensor
+            The input to the neural network.
+        
+        Returns
+        -------
+        Tensor
+            The output of the neural network.
+        """
+        for layer in self.layers:
+            input = layer.forward(input)
+        return input
+    
+    @property
+    def get_parameters(self) -> list[Tensor]:
+        params = list()
+        for layer in self.layers:
+            params += layer.get_parameters()
+        return params
