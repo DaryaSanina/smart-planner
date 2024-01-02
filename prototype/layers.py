@@ -17,7 +17,6 @@ class Layer:
     def __init__(self) -> None:
         self.parameters = list()
     
-    @property
     def get_parameters(self) -> list[Tensor]:
         return self.parameters
 
@@ -108,18 +107,17 @@ class Sequential(Layer):
         Parameters
         ----------
         input : Tensor
-            The input to the neural network.
+            The input to the sequential layer.
         
         Returns
         -------
         Tensor
-            The output of the neural network.
+            The output of the sequential layer.
         """
         for layer in self.layers:
             input = layer.forward(input)
         return input
     
-    @property
     def get_parameters(self) -> list[Tensor]:
         params = list()
         for layer in self.layers:
