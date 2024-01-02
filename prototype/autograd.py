@@ -106,7 +106,7 @@ class Tensor:
                     self.creators[1].backward(self.grad, self)
                 
                 if self.creation_op == "neg":
-                    self.creators[0].backward(self.grad.__neg__())
+                    self.creators[0].backward(self.grad.__neg__(), self)
                 
                 if self.creation_op == "sub":
                     self.creators[0].backward(self.grad, self)
@@ -119,8 +119,8 @@ class Tensor:
                 if self.creation_op == "matmul":
                     activation = self.creators[0]
                     weights = self.creators[1]
-                    activation.backward(self.grad @ weights.transpose())
-                    weights.backward((self.grad.transpose() @ activation).transpose())
+                    activation.backward(self.grad @ weights.transpose(), self)
+                    weights.backward((self.grad.transpose() @ activation).transpose(), self)
                 
                 if self.creation_op == "transpose":
                     self.creators[0].backward(self.grad.transpose())
@@ -128,11 +128,11 @@ class Tensor:
                 if "sum" in self.creation_op:
                     dim = int(self.creation_op.split('_')[1])
                     copies = self.creators[0].data.shape[dim]
-                    self.creators[0].backward(self.grad.expand(dim, copies))
+                    self.creators[0].backward(self.grad.expand(dim, copies), self)
                 
                 if "expand" in self.creation_op:
                     dim = int(self.creation_op.split('_')[1])
-                    self.creators[0].backward(self.grad.sum(dim))
+                    self.creators[0].backward(self.grad.sum(dim), self)
     
     def __add__(self, other: Tensor):
         """
