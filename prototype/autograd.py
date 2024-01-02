@@ -26,7 +26,7 @@ class Tensor:
 
 
 class Tensor:
-    def __init__(self, data, autograd=False, creators=None, creation_op=None, id=None) -> None:
+    def __init__(self, data, autograd=False, creators: list[Tensor] = None, creation_op: str = None, id: int = None) -> None:
         self.data = np.array(data)
         self.creators = creators
         self.creation_op = creation_op
@@ -114,6 +114,11 @@ class Tensor:
         if self.autograd and other.autograd:
             return Tensor(self.data + other.data, autograd=True, creators=[self, other], creation_op="add")
         return Tensor(self.data + other.data)
+    
+    def __neg__(self):
+        if self.autograd:
+            return Tensor(self.data * -1, autograd=True, creators=[self], creation_op="neg")
+        return Tensor(self.data * -1)
     
     def __repr__(self) -> str:
         return str(self.data.__repr__())
