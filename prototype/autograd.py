@@ -68,7 +68,9 @@ class Tensor:
             - "neg": tensor negation,
             - "sub": tensor subtraction,
             - "mul": elementwise tensor multiplication,
-            - "sum_<dim>": tensor summation along the specified dimensions.
+            - "sum_<dim>": tensor summation along the specified dimension,
+            - "expand_<dim>": tensor expansion along the specified dimension,
+            - "transpose": tensor transpose.
 
         Parameters
         ----------
@@ -112,6 +114,9 @@ class Tensor:
                 if self.creation_op == "mul":
                     self.creators[0].backward(self.grad * self.creators[1], self)
                     self.creators[1].backward(self.grad * self.creators[0], self)
+                
+                if self.creation_op == "transpose":
+                    self.creators[0].backward(self.grad.transpose(), self)
                 
                 if "sum" in self.creation_op:
                     dim = int(self.creation_op.split('_')[1])
@@ -231,6 +236,19 @@ class Tensor:
         if self.autograd:
             return Tensor(new_data, autograd=True, creators=[self], creation_op="expand_" + str(dim))
         return Tensor(new_data)
+    
+    def transpose(self):
+        """
+        Transposes the tensor.
+
+        Returns
+        -------
+        Tensor
+            The transposed tensor.
+        """
+        if self.autograd:
+            return Tensor(self.data.transpose(), autograd=True, creators=[self], creation_op="transpose")
+        return Tensor(self.data.transpose())
     
     def __repr__(self) -> str:
         return str(self.data.__repr__())
