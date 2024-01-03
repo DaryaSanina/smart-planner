@@ -194,3 +194,28 @@ class Tanh(Layer):
             The result of applying the tanh activation function to the logits.
         """
         return input.tanh()
+
+
+class Relu(Layer):
+    """
+    Represents the ReLU activation function.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+    
+    def forward(self, input: Tensor) -> Tensor:
+        """
+        Applies the ReLU activation function to the input.
+
+        Parameters
+        ----------
+        input : Tensor
+            The input to the ReLU function (the logits).
+        
+        Returns
+        -------
+        Tensor
+            The result of applying the ReLU activation function to the logits.
+        """
+        return input.relu()

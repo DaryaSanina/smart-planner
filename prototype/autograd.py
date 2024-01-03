@@ -73,7 +73,8 @@ class Tensor:
             - "transpose": tensor transpose,
             - "matmul": matrix multiplication,
             - "sigmoid": sigmoid function,
-            - "tanh": tanh function.
+            - "tanh": tanh function,
+            - "relu": ReLU function.
 
         Parameters
         ----------
@@ -139,6 +140,11 @@ class Tensor:
                 if self.creation_op == "tanh":
                     # tanh'(x) = 1 / cosh(x) ** 2
                     self.creators[0].backward(Tensor(1 / (np.cosh(self.grad.data) ** 2)))
+                
+                if self.creation_op == "relu":
+                    # ReLU'(x) = 1 if x > 0, 0 if x <= 0
+                    ones = Tensor(np.ones_like(self.grad.data))
+                    self.creators[0].backward(ones * (self.grad > 0))
                 
                 if "sum" in self.creation_op:
                     dim = int(self.creation_op.split('_')[1])
@@ -292,7 +298,7 @@ class Tensor:
     
     def sigmoid(self) -> Tensor:
         """
-        Applies the sigmoid function to the tensor.
+        Applies the sigmoid function to each element of the tensor.
 
         σ(x) = 1 / (1 + e ** (-x))
 
@@ -306,7 +312,7 @@ class Tensor:
     
     def tanh(self) -> Tensor:
         """
-        Applies the tanh function to the tensor.
+        Applies the tanh function to each element of the tensor.
 
         tanh(x) = (e ** x - e ** (-x)) / (e ** x + e ** (-x))
 
@@ -318,6 +324,22 @@ class Tensor:
         if self.autograd:
             return Tensor(np.tanh(self.data), autograd=True, creators=[self], creation_op="tanh")
         return Tensor(np.tanh(self.data))
+    
+    def relu(self) -> Tensor:
+        """
+        Applies the ReLU function to each element of the tensor.
+
+        ReLU(x) = 
+            x if x > 0
+            0 if x <= 0
+
+        Returns
+        -------
+        Tensor
+            The result of applying the ReLU function to the tensor.
+        """
+        if self.autograd:
+            return Tensor(self.data * (self.data > 0), autograd=True, creators=[self], creation_op="relu")
     
     def __repr__(self) -> str:
         return str(self.data.__repr__())
