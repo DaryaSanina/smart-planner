@@ -72,7 +72,8 @@ class Tensor:
             - "expand_<dim>": tensor expansion along the specified dimension,
             - "transpose": tensor transpose,
             - "matmul": matrix multiplication,
-            - "sigmoid": sigmoid function.
+            - "sigmoid": sigmoid function,
+            - "tanh": tanh function.
 
         Parameters
         ----------
@@ -131,8 +132,13 @@ class Tensor:
                     self.creators[0].backward(self.grad.transpose())
                 
                 if self.creation_op == "sigmoid":
+                    # σ'(x) = σ(x) * (1 - σ(x))
                     ones = Tensor(np.ones_like(self.grad.data))
-                    self.creators[0].backward(self.grad * (ones - self.grad.sigmoid()))
+                    self.creators[0].backward(self.grad * (ones - self.grad))
+                
+                if self.creation_op == "tanh":
+                    # tanh'(x) = 1 / cosh(x) ** 2
+                    self.creators[0].backward(Tensor(1 / (np.cosh(self.grad.data) ** 2)))
                 
                 if "sum" in self.creation_op:
                     dim = int(self.creation_op.split('_')[1])
@@ -297,6 +303,21 @@ class Tensor:
         if self.autograd:
             return Tensor(1 / (1 + np.exp(-self.data)), autograd=True, creators=[self], creation_op="sigmoid")
         return Tensor(1 / (1 + np.exp(-self.data)))
+    
+    def tanh(self) -> Tensor:
+        """
+        Applies the tanh function to the tensor.
+
+        tanh(x) = (e ** x - e ** (-x)) / (e ** x + e ** (-x))
+
+        Returns
+        -------
+        Tensor
+            The result of applying the tanh function to the tensor.
+        """
+        if self.autograd:
+            return Tensor(np.tanh(self.data), autograd=True, creators=[self], creation_op="tanh")
+        return Tensor(np.tanh(self.data))
     
     def __repr__(self) -> str:
         return str(self.data.__repr__())

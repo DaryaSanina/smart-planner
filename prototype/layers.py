@@ -169,3 +169,28 @@ class Sigmoid(Layer):
             The result of applying the sigmoid activation function to the logits.
         """
         return input.sigmoid()
+
+
+class Tanh(Layer):
+    """
+    Represents the tanh activation function.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+    
+    def forward(self, input: Tensor) -> Tensor:
+        """
+        Applies the tanh activation function to the input.
+
+        Parameters
+        ----------
+        input : Tensor
+            The input to the tanh function (the logits).
+        
+        Returns
+        -------
+        Tensor
+            The result of applying the tanh activation function to the logits.
+        """
+        return input.tanh()
