@@ -164,7 +164,7 @@ class Tensor:
                     self.creators[0].backward(Tensor(new_grad))
                 
                 if self.creation_op == "cross_entropy":
-                    self.creators[0].backward(Tensor(self.softmax_output - self.target_dist))
+                    self.creators[0].backward(Tensor(self.softmax_output - self.target_distribution))
                 
                 if "sum" in self.creation_op:
                     dim = int(self.creation_op.split('_')[1])
@@ -396,7 +396,7 @@ class Tensor:
         Tensor
             A tensor containing the calculated cross-entropy.
         """
-        temp = np.exp(self)
+        temp = np.exp(self.data)
         softmax_output = temp / np.sum(temp, axis=len(self.data.shape) - 1, keepdims=True)
         target = target_indices.data.flatten()
         prediction = softmax_output.reshape(len(target), -1)
