@@ -52,7 +52,7 @@ class Linear(Layer):
     
     def forward(self, input: Tensor) -> Tensor:
         """
-        Executes forward propagation on this layer.
+        Performs forward propagation on this layer.
 
         Parameters
         ----------
@@ -79,6 +79,8 @@ class Embedding(Layer):
         The number of dimensions of each vector.
     weight : int
         The layer's weights.
+    parameters : list[Tensor]
+        The layer's parameters.
     """
 
     def __init__(self, vocab_size: int, dim: int) -> None:
@@ -93,7 +95,7 @@ class Embedding(Layer):
     
     def forward(self, input: Tensor) -> Tensor:
         """
-        Executes forward propagation on the embedding layer.
+        Performs forward propagation on the embedding layer.
 
         Parameters
         ----------
@@ -137,7 +139,7 @@ class Sequential(Layer):
     
     def forward(self, input: Tensor) -> Tensor:
         """
-        Executes forward propagation on the layer sequence.
+        Performs forward propagation on the layer sequence.
 
         Parameters
         ----------
@@ -287,3 +289,98 @@ class Relu(Layer):
             The result of applying the ReLU activation function to the logits.
         """
         return input.relu()
+
+
+class RNNCell(Layer):
+    """
+    Represents a recurrent neural network cell.
+
+    Attributes
+    ----------
+    n_inputs : int
+        The number of inputs to the cell.
+    n_hidden : int
+        The number of hidden neurons in the cell.
+    n_outputs : int
+        The number of outputs of the cell.
+    activation : Layer
+        The activation function applied to the hidden layer before passing its result to the output layer.
+    w_ih : Linear
+        The weight matrix from the input layer to the hidden layer.
+    w_hh : Linear
+        The weight matrix from one hidden state to the next.
+    w_ho : Linear
+        The weight matrix from the hidden layer to the output layer.
+    parameters : list[Tensor]
+        The layer's parameters (a combination of the parameters of w_ih, w_hh and w_ho)
+    """
+
+    def __init__(self, n_inputs: int, n_hidden: int, n_outputs: int, activation: str) -> None:
+        """
+        Raises
+        ------
+        Exception
+            If the activation is neither "sigmoid" nor "tanh" nor "relu".
+        """
+        super().__init__()
+
+        self.n_inputs = n_inputs
+        self.n_hidden = n_hidden
+        self.n_outputs = n_outputs
+
+        if activation == 'sigmoid':
+            self.activation = Sigmoid()
+        elif activation == 'tanh':
+            self.activation = Tanh()
+        elif activation == 'relu':
+            self.activation = Relu()
+        else:
+            raise Exception("Non-linearity not found")
+        
+        self.w_ih = Linear(n_inputs, n_hidden)
+        self.w_hh = Linear(n_hidden, n_hidden)
+        self.w_ho = Linear(n_hidden, n_outputs)
+
+        self.parameters += self.w_ih.get_parameters()
+        self.parameters += self.w_hh.get_parameters()
+        self.parameters += self.w_ho.get_parameters()
+    
+    def forward(self, input: Tensor, hidden: Tensor) -> (Tensor, Tensor):
+        """
+        Performs forward propagation on the recurrent neural network cell.
+
+        Parameters
+        ----------
+        input : Tensor
+            The input to the cell (1 word vector).
+        hidden : Tensor
+            The hidden layer from the previous cell.
+        
+        Returns
+        -------
+        output : Tensor
+            This cell's output.
+        new_hidden : Tensor
+            This cell's hidden layer.
+        """
+        from_previous_hidden = self.w_hh.forward(hidden)
+        combined = self.w_ih.forward(input) + from_previous_hidden
+        new_hidden = self.activation.forward(combined)
+        output = self.w_ho.forward(new_hidden)
+        return output, new_hidden
+    
+    def init_hidden(self, batch_size: int = 1) -> Tensor:
+        """
+        Initialises a hidden layer to be inputted to the first cell.
+
+        Parameters
+        ----------
+        batch_size : int
+            The cell's batch size.
+        
+        Returns
+        -------
+        Tensor
+            A tensor of shape (batch_size, n_hidden) initialised with 0s.
+        """
+        return Tensor(np.zeros((batch_size, self.n_hidden)), autograd=True)
