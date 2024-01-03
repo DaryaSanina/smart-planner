@@ -33,7 +33,7 @@ class Linear(Layer):
         The layer's parameters (a combination of weight and bias).
     """
 
-    def __init__(self, n_inputs: int, n_outputs: int) -> None:
+    def __init__(self, n_inputs: int, n_outputs: int, bias: bool = True) -> None:
         """
         Parameters
         ----------
@@ -41,6 +41,8 @@ class Linear(Layer):
             The number of inputs of the layer.
         n_outputs : int
             The number of outputs of the layer.
+        bias : bool
+            Whether the layer should include bias.
         """
         super().__init__()
         W = np.random.randn(n_inputs, n_outputs) * np.sqrt(2.0 / n_inputs)
@@ -48,7 +50,9 @@ class Linear(Layer):
         self.bias = Tensor(np.zeros(n_outputs), autograd=True)
 
         self.parameters.append(self.weight)
-        self.parameters.append(self.bias)
+
+        if bias:
+            self.parameters.append(self.bias)
     
     def forward(self, input: Tensor) -> Tensor:
         """
@@ -293,7 +297,7 @@ class Relu(Layer):
 
 class RNNCell(Layer):
     """
-    Represents a recurrent neural network cell.
+    Represents a RNN (Recurrent Neural Network) cell.
 
     Attributes
     ----------
@@ -312,7 +316,7 @@ class RNNCell(Layer):
     w_ho : Linear
         The weight matrix from the hidden layer to the output layer.
     parameters : list[Tensor]
-        The layer's parameters (a combination of the parameters of w_ih, w_hh and w_ho)
+        The cell's parameters (a combination of the parameters of w_ih, w_hh and w_ho)
     """
 
     def __init__(self, n_inputs: int, n_hidden: int, n_outputs: int, activation: str) -> None:
@@ -347,12 +351,12 @@ class RNNCell(Layer):
     
     def forward(self, input: Tensor, hidden: Tensor) -> (Tensor, Tensor):
         """
-        Performs forward propagation on the recurrent neural network cell.
+        Performs forward propagation on the RNN cell.
 
         Parameters
         ----------
         input : Tensor
-            The input to the cell (1 word vector).
+            The input to the cell.
         hidden : Tensor
             The hidden layer from the previous cell.
         
@@ -371,7 +375,7 @@ class RNNCell(Layer):
     
     def init_hidden(self, batch_size: int = 1) -> Tensor:
         """
-        Initialises a hidden layer to be inputted to the first cell.
+        Initialises a hidden layer to be inputted to the first cell with 0s.
 
         Parameters
         ----------
@@ -384,3 +388,123 @@ class RNNCell(Layer):
             A tensor of shape (batch_size, n_hidden) initialised with 0s.
         """
         return Tensor(np.zeros((batch_size, self.n_hidden)), autograd=True)
+
+
+class LSTMCell(Layer):
+    """
+    Represents a LSTM (Long Short-Term Memory) cell.
+
+    Attributes
+    ----------
+    n_inputs : int
+        The number of inputs to the cell.
+    n_hidden : int
+        The number of hidden neurons in the cell.
+    n_outputs : int
+        The number of outputs of the cell.
+    input_to_forgetting_gate : Linear
+        A linear layer mapping the input to the forgetting gate.
+    input_to_input_gate : Linear
+        A linear layer mapping the input to the input gate.
+    input_to_output_gate : Linear
+        A linear layer mapping the input to the output gate.
+    input_to_update_gate : Linear
+        A linear layer mapping the input to the update gate.
+    hidden_to_forgetting_gate : Linear
+        A linear layer (without bias) mapping the hidden layer to the forgetting gate.
+    hidden_to_input_gate : Linear
+        A linear layer (without bias) mapping the hidden layer to the input gate.
+    hidden_to_output_gate : Linear
+        A linear layer (without bias) mapping the hidden layer to the output gate.
+    hidden_to_update_gate : Linear
+        A linear layer (without bias) mapping the hidden layer to the update gate.
+    cell_to_output : Linear
+        A linear layer (without bias) mapping the cell state to the output.
+    parameters : list[Tensor]
+        A combination of all the parameters of this cell.
+    """
+    def __init__(self, n_inputs, n_hidden, n_outputs) -> None:
+        super().__init__()
+
+        self.n_inputs = n_inputs
+        self.n_hidden = n_hidden
+        self.n_outputs = n_outputs
+
+        self.input_to_forgetting_gate = Linear(n_inputs, n_hidden)
+        self.input_to_input_gate = Linear(n_inputs, n_hidden)
+        self.input_to_output_gate = Linear(n_inputs, n_hidden)
+        self.input_to_update_gate = Linear(n_inputs, n_hidden)
+        self.hidden_to_forgetting_gate = Linear(n_hidden, n_hidden, bias=False)
+        self.hidden_to_input_gate = Linear(n_hidden, n_hidden, bias=False)
+        self.hidden_to_output_gate = Linear(n_hidden, n_hidden, bias=False)
+        self.hidden_to_update_gate = Linear(n_hidden, n_hidden, bias=False)
+
+        self.cell_to_output = Linear(n_hidden, n_outputs, bias=False)
+
+        self.parameters += self.input_to_forgetting_gate.get_parameters()
+        self.parameters += self.input_to_input_gate.get_parameters()
+        self.parameters += self.input_to_output_gate.get_parameters()
+        self.parameters += self.input_to_update_gate.get_parameters()
+        self.parameters += self.hidden_to_forgetting_gate.get_parameters()
+        self.parameters += self.hidden_to_input_gate.get_parameters()
+        self.parameters += self.hidden_to_output_gate.get_parameters()
+        self.parameters += self.hidden_to_update_gate.get_parameters()
+
+        self.parameters += self.cell_to_output.get_parameters()
+    
+    def forward(self, input: Tensor, hidden: tuple[Tensor, Tensor]) -> (Tensor, (Tensor, Tensor)):
+        """
+        Performs forward propagation on the LSTM cell.
+
+        Parameters
+        ----------
+        input : Tensor
+            The input to the cell.
+        hidden : tuple[Tensor, Tensor]
+            A tuple of length 2
+            where the first value is a Tensor that represents the hidden hidden state vector of the previous cell,
+            and the second value is a Tensor that represents the cell hidden state vector of the previous cell.
+        
+        Returns
+        -------
+        output : Tensor
+            The cell's output.
+        new_hidden : Tensor
+            The cell's hidden hidden state vector.
+        new_cell : Tensor
+            The cell's cell hidden state vector.
+        """
+        previous_hidden = hidden[0]
+        previous_cell = hidden[1]
+
+        forgetting_gate = (self.input_to_forgetting_gate(input) + self.hidden_to_forgetting_gate(previous_hidden)).sigmoid()
+        input_gate = (self.input_to_input_gate(input) + self.hidden_to_input_gate(previous_hidden)).sigmoid()
+        output_gate = (self.input_to_output_gate(input) + self.hidden_to_output_gate(previous_hidden)).sigmoid()
+        update_gate = (self.input_to_update_gate(input) + self.hidden_to_update_gate(previous_hidden)).tanh()
+        new_cell = forgetting_gate * previous_cell + input_gate * update_gate
+        new_hidden = output_gate * new_cell.tanh()
+
+        output = self.cell_to_output.forward(new_cell)
+        return output, (new_hidden, new_cell)
+    
+    def init_hidden(self, batch_size: int = 1) -> (Tensor, Tensor):
+        """
+        Initialises a hidden and a cell hidden states to be inputted to the first cell.
+
+        Parameters
+        ----------
+        batch_size : int
+            The cell's batch size.
+        
+        Returns
+        -------
+        hidden : Tensor
+            A tensor of shape (batch_size, n_hidden) where the first element is 1 and the rest of the elements are 0.
+        cell : Tensor
+            A tensor of shape (batch_size, n_hidden) where the first element is 1 and the rest of the elements are 0.
+        """
+        hidden = Tensor(np.zeros((batch_size, self.n_hidden)), autograd=True)
+        cell = Tensor(np.zeros((batch_size, self.n_hidden)), autograd=True)
+        hidden.data[:,0] += 1
+        cell.data[:,0] += 1
+        return hidden, cell
