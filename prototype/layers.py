@@ -12,8 +12,6 @@ class Layer:
         The layer's parameters.
     """
 
-
-class Layer:
     def __init__(self) -> None:
         self.parameters = list()
     
@@ -35,8 +33,6 @@ class Linear(Layer):
         The layer's parameters (a combination of weight and bias).
     """
 
-
-class Linear(Layer):
     def __init__(self, n_inputs: int, n_outputs: int) -> None:
         """
         Parameters
@@ -83,8 +79,6 @@ class Sequential(Layer):
         The parameters of each layer.
     """
 
-
-class Sequential(Layer):
     def __init__(self, layers: list[Layer] = list()) -> None:
         super().__init__()
         self.layers = layers
@@ -123,3 +117,30 @@ class Sequential(Layer):
         for layer in self.layers:
             params += layer.get_parameters()
         return params
+
+
+class MSELoss(Layer):
+    """
+    Represents a Mean Squared Error loss layer.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+    
+    def forward(self, pred: Tensor, target: Tensor) -> Tensor:
+        """
+        Calculates the Mean Squared Error of a prediction.
+
+        Parameters
+        ----------
+        pred : Tensor
+            The prediction.
+        target : Tensor
+            The target values. They should have the same shape as 'pred'.
+        
+        Returns
+        -------
+        Tensor
+            The value of the Mean Squared Error loss.
+        """
+        return ((pred - target) * (pred - target)).sum(0)
