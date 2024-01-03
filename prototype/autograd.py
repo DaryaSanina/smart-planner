@@ -86,6 +86,10 @@ class Tensor:
             If the 'grad_origin' tensor has already backpropagated its gradient to this tensor the number of times it needed to do so.
         """
         if self.autograd:
+            # Allows not to pass the gradient when calling backward() for the first time
+            if grad is None:
+                grad = Tensor(np.ones_like(self.data))
+            
             if grad_origin is not None:
                 # Check to make sure backpropagation is possible or whether the tensor is waiting for a gradient, in which case decrement the counter
                 if self.children[grad_origin.id] == 0:
