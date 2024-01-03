@@ -219,3 +219,44 @@ class Relu(Layer):
             The result of applying the ReLU activation function to the logits.
         """
         return input.relu()
+
+
+class Embedding(Layer):
+    """
+    Represents an embedding layer of a neural network.
+
+    Attributes
+    ----------
+    vocab_size : int
+        The size of the vocabulary (the number of vectors).
+    dim : int
+        The number of dimensions of each vector.
+    weight : int
+        The layer's weights.
+    """
+
+    def __init__(self, vocab_size: int, dim: int) -> None:
+        super().__init__()
+
+        self.vocab_size = vocab_size
+        self.dim = dim
+
+        weight = (np.random.rand(vocab_size, dim) - 0.5) / dim
+        self.weight = Tensor(weight, autograd=True)
+        self.parameters.append(self.weight)
+    
+    def forward(self, input: Tensor) -> Tensor:
+        """
+        Executes forward propagation on the embedding layer.
+
+        Parameters
+        ----------
+        input : Tensor
+            The layer's input (one-hot encoded words).
+        
+        Returns
+        -------
+        Tensor
+            The layer's output (word vectors).
+        """
+        return self.weight[input]

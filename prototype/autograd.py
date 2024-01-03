@@ -22,6 +22,8 @@ class Tensor:
     children : dict[int, int]
         A dictionary where the keys represent the ids of the tensors that were created using this tensor,
         and the values represent the number of times a child tensor needs to backpropagate its gradient to this tensor.
+    index_select_indices : Tensor
+        If the tensor was created using the 'index_select' operation, this attribute stores the indices of the tensor this tensor was created from.
     """
 
 
@@ -74,7 +76,8 @@ class Tensor:
             - "matmul": matrix multiplication,
             - "sigmoid": sigmoid function,
             - "tanh": tanh function,
-            - "relu": ReLU function.
+            - "relu": ReLU function,
+            - "index_select": tensor index selection.
 
         Parameters
         ----------
@@ -146,6 +149,14 @@ class Tensor:
                     # ReLU'(x) = 1 if x > 0, 0 if x <= 0
                     ones = Tensor(np.ones_like(self.grad.data))
                     self.creators[0].backward(self.grad * (self > 0))
+                
+                if self.creation_op == "index_select":
+                    new_grad = np.zeros_like(self.creators[0].data)
+                    indices_ = self.index_select_indices.data.flatten()
+                    grad_ = grad.data.reshape(len(indices_), -1)
+                    for i in range(len(indices_)):
+                        new_grad[indices_[i]] += grad_[i]
+                    self.creators[0].backward(Tensor(new_grad))
                 
                 if "sum" in self.creation_op:
                     dim = int(self.creation_op.split('_')[1])
@@ -240,6 +251,26 @@ class Tensor:
         if self.autograd:
             return Tensor(self.data @ other.data, autograd=True, creators=[self, other], creation_op="matmul")
         return Tensor(self.data @ other.data)
+    
+    def __getitem__(self, indices: Tensor) -> Tensor:
+        """
+        Selects the elements of the tensor with the corresponding indices.
+
+        Parameters
+        ----------
+        indices : Tensor
+            The indices to be selected.
+        
+        Returns
+        -------
+        Tensor
+            The tensor of this tensor's elements with the corresponding indices.
+        """
+        if self.autograd:
+            new = Tensor(self.data[indices.data], autograd=True, creators=[self], creation_op="index_select")
+            new.index_select_indices = indices
+            return new
+        return Tensor(self.data[indices.data])
     
     def sum(self, dim: int) -> Tensor:
         """
@@ -341,6 +372,7 @@ class Tensor:
         """
         if self.autograd:
             return Tensor(self.data * (self.data > 0), autograd=True, creators=[self], creation_op="relu")
+        return Tensor(self.data * (self.data > 0))
     
     def __repr__(self) -> str:
         return str(self.data.__repr__())
