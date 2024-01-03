@@ -67,6 +67,47 @@ class Linear(Layer):
         return input @ self.weight + self.bias.expand(0, len(input.data))
 
 
+class Embedding(Layer):
+    """
+    Represents an embedding layer of a neural network.
+
+    Attributes
+    ----------
+    vocab_size : int
+        The size of the vocabulary (the number of vectors).
+    dim : int
+        The number of dimensions of each vector.
+    weight : int
+        The layer's weights.
+    """
+
+    def __init__(self, vocab_size: int, dim: int) -> None:
+        super().__init__()
+
+        self.vocab_size = vocab_size
+        self.dim = dim
+
+        weight = (np.random.rand(vocab_size, dim) - 0.5) / dim
+        self.weight = Tensor(weight, autograd=True)
+        self.parameters.append(self.weight)
+    
+    def forward(self, input: Tensor) -> Tensor:
+        """
+        Executes forward propagation on the embedding layer.
+
+        Parameters
+        ----------
+        input : Tensor
+            The layer's input (one-hot encoded words).
+        
+        Returns
+        -------
+        Tensor
+            The layer's output (word vectors).
+        """
+        return self.weight[input]
+
+
 class Sequential(Layer):
     """
     Represents a sequence of layers of a neural network.
@@ -127,23 +168,50 @@ class MSELoss(Layer):
     def __init__(self) -> None:
         super().__init__()
     
-    def forward(self, pred: Tensor, target: Tensor) -> Tensor:
+    def forward(self, prediction: Tensor, target: Tensor) -> Tensor:
         """
         Calculates the Mean Squared Error of a prediction.
 
         Parameters
         ----------
-        pred : Tensor
+        prediction : Tensor
             The prediction.
         target : Tensor
-            The target values. They should have the same shape as 'pred'.
+            The target values. They should have the same shape as 'prediction'.
         
         Returns
         -------
         Tensor
             The value of the Mean Squared Error loss.
         """
-        return ((pred - target) * (pred - target)).sum(0)
+        return ((prediction - target) * (prediction - target)).sum(0)
+
+
+class CrossEntropyLoss(Layer):
+    """
+    Represents the Cross-entropy loss function.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+    
+    def forward(self, prediction: Tensor, target: Tensor) -> Tensor:
+        """
+        Calculates the Cross-entropy loss of a prediction.
+
+        Parameters
+        ----------
+        prediction : Tensor
+            The prediction.
+        target : Tensor
+            The indices of the target values. They should have the same shape as 'prediction'.
+        
+        Returns
+        -------
+        Tensor
+            The value of the Cross-entropy loss.
+        """
+        return prediction.cross_entropy(target)
 
 
 class Sigmoid(Layer):
@@ -219,44 +287,3 @@ class Relu(Layer):
             The result of applying the ReLU activation function to the logits.
         """
         return input.relu()
-
-
-class Embedding(Layer):
-    """
-    Represents an embedding layer of a neural network.
-
-    Attributes
-    ----------
-    vocab_size : int
-        The size of the vocabulary (the number of vectors).
-    dim : int
-        The number of dimensions of each vector.
-    weight : int
-        The layer's weights.
-    """
-
-    def __init__(self, vocab_size: int, dim: int) -> None:
-        super().__init__()
-
-        self.vocab_size = vocab_size
-        self.dim = dim
-
-        weight = (np.random.rand(vocab_size, dim) - 0.5) / dim
-        self.weight = Tensor(weight, autograd=True)
-        self.parameters.append(self.weight)
-    
-    def forward(self, input: Tensor) -> Tensor:
-        """
-        Executes forward propagation on the embedding layer.
-
-        Parameters
-        ----------
-        input : Tensor
-            The layer's input (one-hot encoded words).
-        
-        Returns
-        -------
-        Tensor
-            The layer's output (word vectors).
-        """
-        return self.weight[input]

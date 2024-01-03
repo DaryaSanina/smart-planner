@@ -24,6 +24,10 @@ class Tensor:
         and the values represent the number of times a child tensor needs to backpropagate its gradient to this tensor.
     index_select_indices : Tensor
         If the tensor was created using the 'index_select' operation, this attribute stores the indices of the tensor this tensor was created from.
+    softmax_output : Tensor
+        If the tensor was created using the 'cross_entropy' operation, this attribute stores the values of the softmax activation function applied to the original layer.
+    target_distribution : Tensor
+        If the tensor was created using the 'cross_entropy' operation, this attribute stores a tensor of one-hot encoded targets.
     """
 
 
@@ -77,7 +81,8 @@ class Tensor:
             - "sigmoid": sigmoid function,
             - "tanh": tanh function,
             - "relu": ReLU function,
-            - "index_select": tensor index selection.
+            - "index_select": tensor index selection,
+            - "cross_entropy": cross-entropy function.
 
         Parameters
         ----------
@@ -157,6 +162,9 @@ class Tensor:
                     for i in range(len(indices_)):
                         new_grad[indices_[i]] += grad_[i]
                     self.creators[0].backward(Tensor(new_grad))
+                
+                if self.creation_op == "cross_entropy":
+                    self.creators[0].backward(Tensor(self.softmax_output - self.target_dist))
                 
                 if "sum" in self.creation_op:
                     dim = int(self.creation_op.split('_')[1])
@@ -373,6 +381,34 @@ class Tensor:
         if self.autograd:
             return Tensor(self.data * (self.data > 0), autograd=True, creators=[self], creation_op="relu")
         return Tensor(self.data * (self.data > 0))
+    
+    def cross_entropy(self, target_indices: Tensor) -> Tensor:
+        """
+        Calculates the cross entropy of the tensor given the indices of the target values (where the target = 1).
+
+        Parameters
+        ----------
+        target_indices : Tensor
+            The indices where the target = 1.
+        
+        Returns
+        -------
+        Tensor
+            A tensor containing the calculated cross-entropy.
+        """
+        temp = np.exp(self)
+        softmax_output = temp / np.sum(temp, axis=len(self.data.shape) - 1, keepdims=True)
+        target = target_indices.data.flatten()
+        prediction = softmax_output.reshape(len(target), -1)
+        target_distribution = np.eye(prediction.shape[1])[target]
+        loss = -(np.log(prediction) * target_distribution).sum(1).mean()
+
+        if self.autograd:
+            output = Tensor(loss, autograd=True, creators=[self], creation_op="cross_entropy")
+            output.softmax_output = softmax_output
+            output.target_distribution = target_distribution
+            return output
+        return Tensor(loss)
     
     def __repr__(self) -> str:
         return str(self.data.__repr__())
