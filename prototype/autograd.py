@@ -135,16 +135,17 @@ class Tensor:
                 if self.creation_op == "sigmoid":
                     # σ'(x) = σ(x) * (1 - σ(x))
                     ones = Tensor(np.ones_like(self.grad.data))
-                    self.creators[0].backward(self.grad * (ones - self.grad))
+                    self.creators[0].backward(self.grad * (self * (ones - self)))
                 
                 if self.creation_op == "tanh":
-                    # tanh'(x) = 1 / cosh(x) ** 2
-                    self.creators[0].backward(Tensor(1 / (np.cosh(self.grad.data) ** 2)))
+                    # tanh'(x) = 1 - tanh(x) ** 2
+                    ones = Tensor(np.ones_like(self.grad.data))
+                    self.creators[0].backward(self.grad * (ones - self * self))
                 
                 if self.creation_op == "relu":
                     # ReLU'(x) = 1 if x > 0, 0 if x <= 0
                     ones = Tensor(np.ones_like(self.grad.data))
-                    self.creators[0].backward(ones * (self.grad > 0))
+                    self.creators[0].backward(self.grad * (self > 0))
                 
                 if "sum" in self.creation_op:
                     dim = int(self.creation_op.split('_')[1])
