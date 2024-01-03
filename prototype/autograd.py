@@ -46,7 +46,7 @@ class Tensor:
                 else:
                     c.children[self.id] += 1
     
-    def grads_accounted_for_all_children(self):
+    def grads_accounted_for_all_children(self) -> bool:
         """
         Determines whether all the children of this tensor have backpropagated their gradients onto it.
 
@@ -71,7 +71,8 @@ class Tensor:
             - "sum_<dim>": tensor summation along the specified dimension,
             - "expand_<dim>": tensor expansion along the specified dimension,
             - "transpose": tensor transpose,
-            - "matmul": matrix multiplication.
+            - "matmul": matrix multiplication,
+            - "sigmoid": sigmoid function.
 
         Parameters
         ----------
@@ -129,6 +130,10 @@ class Tensor:
                 if self.creation_op == "transpose":
                     self.creators[0].backward(self.grad.transpose())
                 
+                if self.creation_op == "sigmoid":
+                    ones = Tensor(np.ones_like(self.grad.data))
+                    self.creators[0].backward(self.grad * (ones - self.grad.sigmoid()))
+                
                 if "sum" in self.creation_op:
                     dim = int(self.creation_op.split('_')[1])
                     copies = self.creators[0].data.shape[dim]
@@ -138,7 +143,7 @@ class Tensor:
                     dim = int(self.creation_op.split('_')[1])
                     self.creators[0].backward(self.grad.sum(dim), self)
     
-    def __add__(self, other: Tensor):
+    def __add__(self, other: Tensor) -> Tensor:
         """
         Adds two tensors together.
 
@@ -156,7 +161,7 @@ class Tensor:
             return Tensor(self.data + other.data, autograd=True, creators=[self, other], creation_op="add")
         return Tensor(self.data + other.data)
     
-    def __neg__(self):
+    def __neg__(self) -> Tensor:
         """
         Performs the negation operation on the tensor.
 
@@ -169,7 +174,7 @@ class Tensor:
             return Tensor(self.data * -1, autograd=True, creators=[self], creation_op="neg")
         return Tensor(self.data * -1)
     
-    def __sub__(self, other: Tensor):
+    def __sub__(self, other: Tensor) -> Tensor:
         """
         Subtracts one vector from another.
 
@@ -187,7 +192,7 @@ class Tensor:
             return Tensor(self.data - other.data, autograd=True, creators=[self, other], creation_op="sub")
         return Tensor(self.data - other.data)
     
-    def __mul__(self, other: Tensor):
+    def __mul__(self, other: Tensor) -> Tensor:
         """
         Multiplies the elements of one tensor by the corresponding elements of another tensor.
 
@@ -205,7 +210,7 @@ class Tensor:
             return Tensor(self.data * other.data, autograd=True, creators=[self, other], creation_op="mul")
         return Tensor(self.data * other.data)
     
-    def __matmul__(self, other: Tensor):
+    def __matmul__(self, other: Tensor) -> Tensor:
         """
         Performs matrix multiplication on two tensors (multiplies this tensor by the 'other' tensor).
 
@@ -223,7 +228,7 @@ class Tensor:
             return Tensor(self.data @ other.data, autograd=True, creators=[self, other], creation_op="matmul")
         return Tensor(self.data @ other.data)
     
-    def sum(self, dim: int):
+    def sum(self, dim: int) -> Tensor:
         """
         Sums the tensor along the specified axes.
 
@@ -241,7 +246,7 @@ class Tensor:
             return Tensor(self.data.sum(dim), autograd=True, creators=[self], creation_op="sum_" + str(dim))
         return Tensor(self.data.sum(dim))
     
-    def expand(self, dim: int, copies: int):
+    def expand(self, dim: int, copies: int) -> Tensor:
         """
         Repeats the specified axis of the tensor the specified number of times.
 
@@ -266,7 +271,7 @@ class Tensor:
             return Tensor(new_data, autograd=True, creators=[self], creation_op="expand_" + str(dim))
         return Tensor(new_data)
     
-    def transpose(self):
+    def transpose(self) -> Tensor:
         """
         Transposes the tensor.
 
@@ -278,6 +283,20 @@ class Tensor:
         if self.autograd:
             return Tensor(self.data.transpose(), autograd=True, creators=[self], creation_op="transpose")
         return Tensor(self.data.transpose())
+    
+    def sigmoid(self) -> Tensor:
+        """
+        Applies the sigmoid function to the tensor.
+
+        σ(x) = 1 / (1 + e ** (-x))
+
+        Returns
+        -------
+            The result of applying the sigmoid function to the tensor.
+        """
+        if self.autograd:
+            return Tensor(1 / (1 + np.exp(-self.data)), autograd=True, creators=[self], creation_op="sigmoid")
+        return Tensor(1 / (1 + np.exp(-self.data)))
     
     def __repr__(self) -> str:
         return str(self.data.__repr__())

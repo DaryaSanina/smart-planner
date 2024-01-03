@@ -121,7 +121,7 @@ class Sequential(Layer):
 
 class MSELoss(Layer):
     """
-    Represents a Mean Squared Error loss layer.
+    Represents the Mean Squared Error loss function.
     """
 
     def __init__(self) -> None:
@@ -144,3 +144,28 @@ class MSELoss(Layer):
             The value of the Mean Squared Error loss.
         """
         return ((pred - target) * (pred - target)).sum(0)
+
+
+class Sigmoid(Layer):
+    """
+    Represents the sigmoid activation function.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+    
+    def forward(self, input: Tensor) -> Tensor:
+        """
+        Applies the sigmoid activation function to the input.
+
+        Parameters
+        ----------
+        input : Tensor
+            The input to the sigmoid function (the logits).
+        
+        Returns
+        -------
+        Tensor
+            The result of applying the sigmoid activation function to the logits.
+        """
+        return input.sigmoid()
