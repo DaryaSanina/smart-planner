@@ -1,3 +1,4 @@
+import numpy as np
 from autograd import Tensor
 
 
@@ -24,7 +25,7 @@ class SGD:
         Resets the parameters' gradients.
         """
         for p in self.parameters:
-            p.grad.data *= 0
+            p.grad = Tensor(np.zeros_like(p.grad))
     
     def step(self, zero=True) -> None:
         """
@@ -36,6 +37,6 @@ class SGD:
             Whether the parameters' gradients should be reset after this step.
         """
         for p in self.parameters:
-            p.data -= p.grad.data * self.alpha
+            p.data -= p.grad.data.astype("float64") * self.alpha
             if zero:
-                p.grad.data *= 0
+                p.grad = Tensor(np.zeros_like(p.grad))

@@ -418,8 +418,6 @@ class LSTMCell(Layer):
         A linear layer (without bias) mapping the hidden layer to the output gate.
     hidden_to_update_gate : Linear
         A linear layer (without bias) mapping the hidden layer to the update gate.
-    cell_to_output : Linear
-        A linear layer (without bias) mapping the cell state to the output.
     parameters : list[Tensor]
         A combination of all the parameters of this cell.
     """
@@ -439,8 +437,6 @@ class LSTMCell(Layer):
         self.hidden_to_output_gate = Linear(n_hidden, n_hidden, bias=False)
         self.hidden_to_update_gate = Linear(n_hidden, n_hidden, bias=False)
 
-        self.cell_to_output = Linear(n_hidden, n_outputs, bias=False)
-
         self.parameters += self.input_to_forgetting_gate.get_parameters()
         self.parameters += self.input_to_input_gate.get_parameters()
         self.parameters += self.input_to_output_gate.get_parameters()
@@ -449,10 +445,8 @@ class LSTMCell(Layer):
         self.parameters += self.hidden_to_input_gate.get_parameters()
         self.parameters += self.hidden_to_output_gate.get_parameters()
         self.parameters += self.hidden_to_update_gate.get_parameters()
-
-        self.parameters += self.cell_to_output.get_parameters()
     
-    def forward(self, input: Tensor, hidden: tuple[Tensor, Tensor]) -> (Tensor, (Tensor, Tensor)):
+    def forward(self, input: Tensor, hidden: tuple[Tensor, Tensor]) -> (Tensor, Tensor):
         """
         Performs forward propagation on the LSTM cell.
 
@@ -467,8 +461,6 @@ class LSTMCell(Layer):
         
         Returns
         -------
-        output : Tensor
-            The cell's output.
         new_hidden : Tensor
             The cell's hidden hidden state vector.
         new_cell : Tensor
@@ -477,15 +469,15 @@ class LSTMCell(Layer):
         previous_hidden = hidden[0]
         previous_cell = hidden[1]
 
-        forgetting_gate = (self.input_to_forgetting_gate(input) + self.hidden_to_forgetting_gate(previous_hidden)).sigmoid()
-        input_gate = (self.input_to_input_gate(input) + self.hidden_to_input_gate(previous_hidden)).sigmoid()
-        output_gate = (self.input_to_output_gate(input) + self.hidden_to_output_gate(previous_hidden)).sigmoid()
-        update_gate = (self.input_to_update_gate(input) + self.hidden_to_update_gate(previous_hidden)).tanh()
+        forgetting_gate = (self.input_to_forgetting_gate.forward(input) + self.hidden_to_forgetting_gate.forward(previous_hidden)).sigmoid()
+        input_gate = (self.input_to_input_gate.forward(input) + self.hidden_to_input_gate.forward(previous_hidden)).sigmoid()
+        output_gate = (self.input_to_output_gate.forward(input) + self.hidden_to_output_gate.forward(previous_hidden)).sigmoid()
+        update_gate = (self.input_to_update_gate.forward(input) + self.hidden_to_update_gate.forward(previous_hidden)).tanh()
         new_cell = forgetting_gate * previous_cell + input_gate * update_gate
-        new_hidden = output_gate * new_cell.tanh()
+        self.new_cell_tanh = new_cell.tanh()
+        new_hidden = output_gate * self.new_cell_tanh
 
-        output = self.cell_to_output.forward(new_cell)
-        return output, (new_hidden, new_cell)
+        return new_hidden, new_cell
     
     def init_hidden(self, batch_size: int = 1) -> (Tensor, Tensor):
         """

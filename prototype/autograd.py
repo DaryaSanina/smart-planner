@@ -134,26 +134,28 @@ class Tensor:
                 if self.creation_op == "matmul":
                     activation = self.creators[0]
                     weights = self.creators[1]
-                    activation.backward(self.grad @ weights.transpose(), self)
-                    weights.backward((self.grad.transpose() @ activation).transpose(), self)
+                    new1 = self.grad @ weights.transpose()
+                    new2 = (self.grad.transpose() @ activation).transpose()
+                    activation.backward(new1, self)
+                    weights.backward(new2, self)
                 
                 if self.creation_op == "transpose":
-                    self.creators[0].backward(self.grad.transpose())
+                    self.creators[0].backward(self.grad.transpose(), self)
                 
                 if self.creation_op == "sigmoid":
                     # σ'(x) = σ(x) * (1 - σ(x))
                     ones = Tensor(np.ones_like(self.grad.data))
-                    self.creators[0].backward(self.grad * (self * (ones - self)))
+                    self.creators[0].backward(self.grad * (self * (ones - self)), self)
                 
                 if self.creation_op == "tanh":
                     # tanh'(x) = 1 - tanh(x) ** 2
                     ones = Tensor(np.ones_like(self.grad.data))
-                    self.creators[0].backward(self.grad * (ones - self * self))
+                    self.creators[0].backward(self.grad * (ones - self * self), self)
                 
                 if self.creation_op == "relu":
                     # ReLU'(x) = 1 if x > 0, 0 if x <= 0
                     ones = Tensor(np.ones_like(self.grad.data))
-                    self.creators[0].backward(self.grad * (self > 0))
+                    self.creators[0].backward(self.grad * (self > 0), self)
                 
                 if self.creation_op == "index_select":
                     new_grad = np.zeros_like(self.creators[0].data)
@@ -161,10 +163,10 @@ class Tensor:
                     grad_ = grad.data.reshape(len(indices_), -1)
                     for i in range(len(indices_)):
                         new_grad[indices_[i]] += grad_[i]
-                    self.creators[0].backward(Tensor(new_grad))
+                    self.creators[0].backward(Tensor(new_grad), self)
                 
                 if self.creation_op == "cross_entropy":
-                    self.creators[0].backward(Tensor(self.softmax_output - self.target_distribution))
+                    self.creators[0].backward(Tensor(self.softmax_output - self.target_distribution), self)
                 
                 if "sum" in self.creation_op:
                     dim = int(self.creation_op.split('_')[1])
