@@ -16,6 +16,8 @@ with open('importance_output.pkl', 'rb') as file:
 with open('word2index.pkl', 'rb') as file:
     word2index = pkl.load(file)
 
+ids_to_entities = dict()
+
 
 class Entity:
     """
@@ -96,6 +98,27 @@ class Entity:
         
         self.importance = output.data[0][0]
     
+    def select_child(self) -> int:
+        """
+        Asks the user to enter the name of the sub-task or sub-event they would like to select and returns its id or raises an error.
+
+        Returns
+        -------
+        child_id: int
+            The ID of the sub-task or the sub-event the user would like to select.
+        
+        Raises
+        ------
+        NameError:
+            If the name of the sub-task or sub-event the user has entered is not in the current task/event children list.
+        """
+        sub_entity_name = input("Enter the name of the subtask or sub-event you would like to select: ")
+        for child_id in self.children_ids:
+            if ids_to_entities[child_id].name == sub_entity_name:
+                return child_id
+        print("Sorry, there is no such task or event.")
+        raise NameError
+    
     def __repr__(self) -> str:
         return f"Name: {self.name.capitalize()}\nDescription: {self.description}\nImportance: {self.importance:.2}\n"
 
@@ -167,7 +190,38 @@ class Event(Entity):
         return "Event\n" + super().__repr__() + f"Start: {self.start}\nEnd: {self.end}\n"
 
 
-ids_to_entities = dict()
+def ask_name():
+    name = input("Name: ")
+    return name
+
+
+def ask_description():
+    print("Description (you can enter multiple lines of text, enter an empty line after the last line):")
+    description = ""
+    while True:
+        line = input()
+        if line == '':
+            break
+        else:
+            description += '\n' + line
+    return description
+
+
+def ask_importance():
+    while True:
+        try:
+            importance = input("Importance level from 1 to 10 (leave blank if you would like it to be predicted by AI): ")
+            if importance == '':
+                importance = None
+            else:
+                importance = float(importance)
+                if importance < 1 or importance > 10:
+                    raise ValueError
+            break
+        except ValueError:
+            print("Please enter the importance level in the specified format.")
+    return importance
+
 
 def add_entity(current_id):
     """
@@ -185,36 +239,19 @@ def add_entity(current_id):
 
     id = max(ids_to_entities.keys()) + 1
 
-    name = input("Name: ")
+    name = ask_name()
 
-    print("Description (you can enter multiple lines of text, enter an empty line after the last line):")
-    description = ""
-    while True:
-        line = input()
-        if line == '':
-            break
-        else:
-            description += '\n' + line
+    description = ask_description()
     
-    while True:
-        try:
-            importance = input("Importance level from 1 to 10 (leave blank if you would like it to be predicted by AI): ")
-            if importance == '':
-                importance = None
-            else:
-                importance = float(importance)
-                if importance < 1 or importance > 10:
-                    raise ValueError
-            break
-        except ValueError:
-            print("Please enter the importance level in the specified format.")
+    importance = ask_importance()
 
     entity = None
     if entity_type.lower() == 'task':
         deadline = get_task_deadline()
         entity = Task(id, name, deadline, description, importance, current_id, {})
     elif entity_type.lower() == 'event':
-        start, end = get_event_start_and_end()
+        start = get_event_start()
+        end = get_event_end()
         entity = Event(id, name, start, end, description, importance, current_id, {})
     
     ids_to_entities[id] = entity
@@ -238,17 +275,7 @@ def get_task_deadline():
             print("Please enter the deadline in the specified format.")
 
 
-def get_event_start_and_end():
-    """
-    Asks the user to enter the start and end dates and times of the event they would like to create.
-
-    Returns
-    -------
-    start: datetime.datetime
-        The start date and time of the new event.
-    end: datetime.datetime
-        The end date and time of the new event.
-    """
+def get_event_start():
     while True:
         try:
             year, month, day, hour, minute = map(int, input("Start date and time (year-month-day-hour-minute as integers): ").split('-'))
@@ -256,6 +283,10 @@ def get_event_start_and_end():
             break
         except ValueError:
             print("Please enter the event start date and time in the specified format.")
+    return start
+
+
+def get_event_end():
     while True:
         try:
             year, month, day, hour, minute = map(int, input("End date and time (year-month-day-hour-minute as integers): ").split('-'))
@@ -263,32 +294,47 @@ def get_event_start_and_end():
             break
         except ValueError:
             print("Please enter the event end date and time in the specified format.")
-    return start, end
+    return end
 
 
-def select_entity(current_id):
-    """
-    Asks the user to enter the name of a sub-task or a sub-event of the current task/event and returns its ID.
+def edit_entity(entity_id: int):
+    entity = ids_to_entities[entity_id]
+    property_ = input("Which property would you like to edit? ")
+    if property_ == "name":
+        new_name = ask_name()
+        entity.set_name(new_name)
+    elif property_ == "description":
+        new_description = ask_description()
+        entity.set_description(new_description)
+    elif property_ == "importance":
+        new_importance = ask_importance()
+        entity.set_importance(new_importance)
+    else:
+        if isinstance(entity, Task):
+            edit_task()
+        elif isinstance(entity, Event):
+            edit_event()
+        else:
+            raise KeyError
 
-    Parameters
-    ----------
-    current_id: int
-        The ID of the current task/event.
-    
-    Returns
-    -------
-    child_id: int
-        The ID of the specified sub-task or sub-event if it was found.
-    current_id: int
-        The ID of the current task/event if the name entered by the user was not found in the sub-tasks and sub-events of this task/event.
-    """
-    entity = ids_to_entities[current_id]
-    sub_entity_name = input("Enter the name of the subtask or sub-event you would like to select: ")
-    for child_id in entity.children_ids:
-        if ids_to_entities[child_id].name == sub_entity_name:
-            return child_id
-    print("Sorry, there is no such task or event.")
-    return current_id
+
+def edit_task(task: Task, property_: str):
+    if property_ == "deadline":
+        new_deadline = get_task_deadline()
+        task.set_deadline(new_deadline)
+    else:
+        raise KeyError
+
+
+def edit_event(event: Event, property_: str):
+    if property_ == "start":
+        new_start = get_event_start()
+        event.set_start(new_start)
+    elif property_ == "end":
+        new_end = get_event_end()
+        event.set_end(new_end)
+    else:
+        raise KeyError
 
 
 def main():
@@ -319,7 +365,13 @@ def main():
                 add_entity(current_id)
 
             case 'edit':
-                pass
+                try:
+                    entity_id = ids_to_entities[current_id].select_child()
+                    edit_entity(entity_id)
+                except NameError:
+                    print("Sorry, there is not such task or event.")
+                except KeyError:
+                    print("Sorry the entity doesn't have this property.")
 
             case 'delete':
                 pass
@@ -328,7 +380,10 @@ def main():
                 current_id = ids_to_entities[current_id].parent_id
 
             case 'select':
-                current_id = select_entity(current_id)
+                try:
+                    current_id = ids_to_entities[current_id].select_child()
+                except NameError:
+                    print("Sorry, there is not such task or event.")
 
             case 'view':
                 pass
