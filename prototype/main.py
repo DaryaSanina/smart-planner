@@ -284,7 +284,7 @@ def main():
                 pass
 
             case 'go back':
-                pass
+                current_id = ids_to_entities[current_id].parent_id
 
             case 'select':
                 current_id = select_entity(current_id)
