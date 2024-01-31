@@ -170,6 +170,14 @@ class Event(Entity):
 ids_to_entities = dict()
 
 def add_entity(current_id):
+    """
+    Adds a task or an event to the list as a child of the current task/event.
+
+    Parameters
+    ----------
+    current_id: int
+        The ID of the current task/event.
+    """
     entity_type = input("Task/event: ")
     while entity_type.lower() not in ('task', 'event'):
         print("Sorry, I didn't understand that.")
@@ -203,17 +211,25 @@ def add_entity(current_id):
 
     entity = None
     if entity_type.lower() == 'task':
-        deadline = get_task_details()
+        deadline = get_task_deadline()
         entity = Task(id, name, deadline, description, importance, current_id, {})
     elif entity_type.lower() == 'event':
-        start, end = get_event_details()
+        start, end = get_event_start_and_end()
         entity = Event(id, name, start, end, description, importance, current_id, {})
     
     ids_to_entities[id] = entity
     ids_to_entities[current_id].children_ids.add(id)
 
 
-def get_task_details():
+def get_task_deadline():
+    """
+    Asks the user to enter the deadline of the task they would like to create.
+
+    Returns
+    -------
+    deadline: datetime.date
+        The deadline of the new task.
+    """
     while True:
         try:
             deadline = datetime.date(*map(int, input("Deadline (year-month-day as integers): ").split('-')))
@@ -222,7 +238,17 @@ def get_task_details():
             print("Please enter the deadline in the specified format.")
 
 
-def get_event_details():
+def get_event_start_and_end():
+    """
+    Asks the user to enter the start and end dates and times of the event they would like to create.
+
+    Returns
+    -------
+    start: datetime.datetime
+        The start date and time of the new event.
+    end: datetime.datetime
+        The end date and time of the new event.
+    """
     while True:
         try:
             year, month, day, hour, minute = map(int, input("Start date and time (year-month-day-hour-minute as integers): ").split('-'))
@@ -241,6 +267,21 @@ def get_event_details():
 
 
 def select_entity(current_id):
+    """
+    Asks the user to enter the name of a sub-task or a sub-event of the current task/event and returns its ID.
+
+    Parameters
+    ----------
+    current_id: int
+        The ID of the current task/event.
+    
+    Returns
+    -------
+    child_id: int
+        The ID of the specified sub-task or sub-event if it was found.
+    current_id: int
+        The ID of the current task/event if the name entered by the user was not found in the sub-tasks and sub-events of this task/event.
+    """
     entity = ids_to_entities[current_id]
     sub_entity_name = input("Enter the name of the subtask or sub-event you would like to select: ")
     for child_id in entity.children_ids:
