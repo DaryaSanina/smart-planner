@@ -240,6 +240,16 @@ def get_event_details():
     return start, end
 
 
+def select_entity(current_id):
+    entity = ids_to_entities[current_id]
+    sub_entity_name = input("Enter the name of the subtask or sub-event you would like to select: ")
+    for child_id in entity.children_ids:
+        if ids_to_entities[child_id].name == sub_entity_name:
+            return child_id
+    print("Sorry, there is no such task or event.")
+    return current_id
+
+
 def main():
     global ids_to_entities
     ids_to_entities = {-1: Entity(-1, "base", importance = 0)}
@@ -277,7 +287,7 @@ def main():
                 pass
 
             case 'select':
-                pass
+                current_id = select_entity(current_id)
 
             case 'view':
                 pass
