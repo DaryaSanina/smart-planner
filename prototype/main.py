@@ -98,9 +98,14 @@ class Entity:
         
         self.importance = output.data[0][0]
     
-    def select_child(self) -> int:
+    def select_child(self, operation: str) -> int:
         """
         Asks the user to enter the name of the sub-task or sub-event they would like to select and returns its id or raises an error.
+
+        Parameters
+        ----------
+        operation: str
+            The operation to be performed later on the selected child (select/edit/delete). This information is needed to customise the output of the function in the command line.
 
         Returns
         -------
@@ -112,7 +117,7 @@ class Entity:
         NameError:
             If the name of the sub-task or sub-event the user has entered is not in the current task/event children list.
         """
-        sub_entity_name = input("Enter the name of the subtask or sub-event you would like to select: ")
+        sub_entity_name = input(f"Enter the name of the subtask or sub-event you would like to {operation}: ")
         for child_id in self.children_ids:
             if ids_to_entities[child_id].name == sub_entity_name:
                 return child_id
@@ -190,12 +195,28 @@ class Event(Entity):
         return "Event\n" + super().__repr__() + f"Start: {self.start}\nEnd: {self.end}\n"
 
 
-def ask_name():
+def ask_name() -> str:
+    """
+    Asks the user to enter the name of a task/event.
+
+    Returns
+    -------
+    naem: str
+        The task/event name entered by the user.
+    """
     name = input("Name: ")
     return name
 
 
-def ask_description():
+def ask_description() -> str:
+    """
+    Asks the user to enter the description of a task/event.
+
+    Returns
+    -------
+    description: str
+        The task/event description entered by the user.
+    """
     print("Description (you can enter multiple lines of text, enter an empty line after the last line):")
     description = ""
     while True:
@@ -207,7 +228,15 @@ def ask_description():
     return description
 
 
-def ask_importance():
+def ask_importance() -> int:
+    """
+    Asks the user to enter the importance of a task/event.
+
+    Returns
+    -------
+    importance: int
+        The task/event description entered by the user.
+    """
     while True:
         try:
             importance = input("Importance level from 1 to 10 (leave blank if you would like it to be predicted by AI): ")
@@ -258,14 +287,14 @@ def add_entity(current_id):
     ids_to_entities[current_id].children_ids.add(id)
 
 
-def get_task_deadline():
+def get_task_deadline() -> datetime.date:
     """
-    Asks the user to enter the deadline of the task they would like to create.
+    Asks the user to enter the deadline of a task.
 
     Returns
     -------
     deadline: datetime.date
-        The deadline of the new task.
+        The deadline of the task entered by the user.
     """
     while True:
         try:
@@ -275,7 +304,15 @@ def get_task_deadline():
             print("Please enter the deadline in the specified format.")
 
 
-def get_event_start():
+def get_event_start() -> datetime.datetime:
+    """
+    Asks the user to enter the start of an event.
+
+    Returns
+    -------
+    start: datetime.datetime
+        The start of the event entered by the user.
+    """
     while True:
         try:
             year, month, day, hour, minute = map(int, input("Start date and time (year-month-day-hour-minute as integers): ").split('-'))
@@ -286,7 +323,15 @@ def get_event_start():
     return start
 
 
-def get_event_end():
+def get_event_end() -> datetime.datetime:
+    """
+    Asks the user to enter the end of an event.
+
+    Returns
+    -------
+    end: datetime.datetime
+        The end of the event entered by the user.
+    """
     while True:
         try:
             year, month, day, hour, minute = map(int, input("End date and time (year-month-day-hour-minute as integers): ").split('-'))
@@ -298,6 +343,19 @@ def get_event_end():
 
 
 def edit_entity(entity_id: int):
+    """
+    Asks the user to enter the property of the task/event they would like to edit and edit it.
+
+    Parameters
+    ----------
+    entity_id: int
+        The ID of the entity to edit.
+    
+    Raises
+    ------
+    KeyError:
+        If the task/event doesn't have the entered property.
+    """
     entity = ids_to_entities[entity_id]
     property_ = input("Which property would you like to edit? ")
     if property_ == "name":
@@ -319,6 +377,21 @@ def edit_entity(entity_id: int):
 
 
 def edit_task(task: Task, property_: str):
+    """
+    Allows the user to edit the given property of the given task.
+
+    Parameters
+    ----------
+    task: Task
+        The task to edit.
+    property_: str
+        The property of the task to edit.
+    
+    Raises
+    ------
+    KeyError:
+        If the task doesn't have this property.
+    """
     if property_ == "deadline":
         new_deadline = get_task_deadline()
         task.set_deadline(new_deadline)
@@ -327,6 +400,21 @@ def edit_task(task: Task, property_: str):
 
 
 def edit_event(event: Event, property_: str):
+    """
+    Allows the user to edit the given property of the given event.
+
+    Parameters
+    ----------
+    event: Event
+        The event to edit.
+    property_: str
+        The property of the event to edit.
+    
+    Raises
+    ------
+    KeyError:
+        If the event doesn't have this property.
+    """
     if property_ == "start":
         new_start = get_event_start()
         event.set_start(new_start)
@@ -366,7 +454,7 @@ def main():
 
             case 'edit':
                 try:
-                    entity_id = ids_to_entities[current_id].select_child()
+                    entity_id = ids_to_entities[current_id].select_child("edit")
                     edit_entity(entity_id)
                 except NameError:
                     print("Sorry, there is not such task or event.")
@@ -374,14 +462,19 @@ def main():
                     print("Sorry the entity doesn't have this property.")
 
             case 'delete':
-                pass
+                try:
+                    entity_id = ids_to_entities[current_id].select_child("delete")
+                    ids_to_entities[current_id].remove_child(entity_id)
+                    ids_to_entities.pop(entity_id)
+                except NameError:
+                    print("Sorry, there is not such task or event.")
 
             case 'go back':
                 current_id = ids_to_entities[current_id].parent_id
 
             case 'select':
                 try:
-                    current_id = ids_to_entities[current_id].select_child()
+                    current_id = ids_to_entities[current_id].select_child("select")
                 except NameError:
                     print("Sorry, there is not such task or event.")
 
