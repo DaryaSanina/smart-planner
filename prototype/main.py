@@ -23,9 +23,9 @@ class App:
         self.order_selector = ttk.OptionMenu(
             self.order_frame,
             self.order_option,
-            ORDER_OPTIONS[0].capitalize(),
-            *[option.capitalize() for option in ORDER_OPTIONS],
-            command=lambda option: (self.tasks.sort(option.lower()), self.render_task_list())
+            ORDER_OPTIONS[0],
+            *[option for option in ORDER_OPTIONS],
+            command=lambda option: (self.tasks.sort(option), self.render_task_list())
         )
         self.order_label.pack(side='left')
         self.order_selector.pack(side='left')
@@ -62,7 +62,7 @@ class App:
     
     def add_task(self, task: Task) -> None:
         self.tasks.append(task)
-        self.tasks.sort(self.order_option.get().lower())
+        self.tasks.sort(self.order_option.get())
         self.render_task_list()
     
     def create_task(self) -> None:
@@ -119,19 +119,23 @@ class TaskCreationDialogue(tk.Toplevel):
             importance=int(self.importance_entry.get()) if self.importance_entry.get() != '' else 0,
             deadline=datetime.datetime.strptime(self.deadline_entry.get_date(), '%m/%d/%y').date()
         )
+
+        if self.importance_entry.get() == '':
+            task.set_predicted_importance(self.description_entry.get('1.0', 'end'))
+
         self.app.add_task(task)
         self.destroy()
 
 
 def render_task(frame: ttk.Frame, task: Task) -> None:
-    name_label = ttk.Label(master=frame, text=task.name, font="Calibri 14")
+    name_label = ttk.Label(master=frame, text=task.get_name(), font="Calibri 14")
     name_label.pack(anchor='w')
 
-    deadline = task.get_deadline()
+    deadline = task.get_deadline_str()
     time_constraints_label = ttk.Label(master=frame, text=f"Due: {deadline}", font="Calibri 12")
     time_constraints_label.pack(anchor='w')
 
-    importance_label = ttk.Label(master=frame, text=f"Importance: {task.importance}", font="Calibri 12")
+    importance_label = ttk.Label(master=frame, text=f"Importance: {task.get_importance()}", font="Calibri 12")
     importance_label.pack(anchor='w')
 
 
