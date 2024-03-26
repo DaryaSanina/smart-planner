@@ -7,6 +7,21 @@ from tasks import Task, TaskList, ORDER_OPTIONS
 
 
 class App:
+    """
+    The app.
+
+    Attributes
+    ----------
+    tasks: TaskList
+    window: tk.Tk
+    task_list_label: ttk.Label
+    order_frame: ttk.Frane
+    order_label: ttk.Label
+    order_option: tk.StringVar
+    order_selector: ttk.OptionMenu
+    task_list_frame: ttk.Frame
+    create_task_button: ttk.Button
+    """
     def __init__(self) -> None:
         self.tasks = TaskList()
 
@@ -39,10 +54,17 @@ class App:
         self.create_task_button.pack(anchor='w')
     
     def clear_task_list(self) -> None:
+        """
+        Clears the list of tasks displayed on the screen (not the internal task list)
+        by destroying all the widgets that represent tasks.
+        """
         for widget in self.task_list_frame.winfo_children():
             widget.destroy()
     
     def render_task_list(self) -> None:
+        """
+        Renders the internal task list to the screen.
+        """
         self.clear_task_list()
         for task in self.tasks.tasks:
             task_frame = ttk.Frame(master=self.task_list_frame)
@@ -61,19 +83,55 @@ class App:
             task_frame.pack(pady=10, anchor='w')
     
     def add_task(self, task: Task) -> None:
+        """
+        Adds a task to the internal task list and updates the task list on the screen
+
+        Parameters
+        ----------
+        task: Task
+            The task to be added.
+        """
         self.tasks.append(task)
         self.tasks.sort(self.order_option.get())
         self.render_task_list()
     
     def create_task(self) -> None:
+        """
+        Creates a dialogue for the user to create a new task.
+        """
         dialogue = TaskCreationDialogue(self, self.window)
         dialogue.grab_set()
     
     def run(self) -> None:
+        """
+        Runs the app.
+        """
         self.window.mainloop()
 
 
 class TaskCreationDialogue(tk.Toplevel):
+    """
+    A dialogue to create a task.
+
+    Attributes
+    ----------
+    app: App
+    parent: Tk
+        The parent window.
+    name_frame: ttk.Frame
+    name_label: ttk.Label
+    name_entry: ttk.Entry
+    description_frame: ttk.Frame
+    description_label: ttk.Label
+    description_entry: ttk.Text
+    importance_frame: ttk.Frame
+    importance_label: ttk.Label
+    importance_entry: ttk.Spinbox
+    deadline_frame: ttk.Frame
+    deadline_label: ttk.Label
+    deadline_entry: tkcalendar.Calendar
+    create_button: ttk.Button
+    """
     def __init__(self, app: App, parent) -> None:
         super().__init__(parent)
 
@@ -114,6 +172,11 @@ class TaskCreationDialogue(tk.Toplevel):
         self.create_button.pack(side='bottom')
     
     def create(self) -> None:
+        """
+        Checks the values of all the entry fields in the dialogue window,
+        calls the add_task method of the app with the retrieved values,
+        and destroys the dialogue window.
+        """
         task = Task(
             name=self.name_entry.get(),
             importance=int(self.importance_entry.get()) if self.importance_entry.get() != '' else 0,
@@ -128,6 +191,16 @@ class TaskCreationDialogue(tk.Toplevel):
 
 
 def render_task(frame: ttk.Frame, task: Task) -> None:
+    """
+    Renders a single task on a frame. Used by the render_task_list method of the App class.
+
+    Parameters
+    ----------
+    frame: ttk.Frame
+        The frame for the task to be rendered to.
+    task: Task
+        The task to be rendered.
+    """
     name_label = ttk.Label(master=frame, text=task.get_name(), font="Calibri 14")
     name_label.pack(anchor='w')
 
