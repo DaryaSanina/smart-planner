@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app/home/home_page.dart';
+import 'package:app/settings/settings_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,6 +16,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: const ColorScheme.dark().copyWith(
           primary: const Color(0xFF292929),
+          primaryContainer: Color.fromARGB(255, 61, 61, 61),
           secondary: const Color(0xFF7132A3),
           tertiary: const Color(0xFFFFFFFF),
         ),
