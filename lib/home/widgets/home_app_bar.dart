@@ -11,9 +11,9 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: Theme.of(context).colorScheme.primary,
-      title: Text("Hi <username>!"),
+      title: const Text("Hi <username>!", style: TextStyle(fontSize: 24),),
       actions: [
-        IconButton(onPressed: () {}, icon: Icon(Icons.settings))
+        IconButton(onPressed: () {}, icon: const Icon(Icons.settings))
       ],
     );
   }
