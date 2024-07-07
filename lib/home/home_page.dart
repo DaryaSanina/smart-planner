@@ -16,7 +16,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
-    final List<Widget> tasks = List.generate(20, (i) => Task(name: "Task $i", date: "No deadline"));
+    final List<Widget> tasks = List.generate(5, (i) => Task(name: "Task $i", date: "No deadline"));
     return LayoutBuilder(
       builder: (context, constraints) {
         return Scaffold(
@@ -42,7 +42,11 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               Column(
-                children: tasks,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: tasks + [Padding(
+                  padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.01),
+                  child: IconButton(onPressed: () {}, icon: const Icon(Icons.add)),
+                )],
               ),
             ],
           ),
