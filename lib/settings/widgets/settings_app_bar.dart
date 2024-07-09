@@ -11,7 +11,7 @@ class SettingsAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: Theme.of(context).colorScheme.primary,
-      leading: IconButton(onPressed: () {}, icon: const Icon(Icons.keyboard_arrow_left)),
+      leading: BackButton(),
       title: const Text("Settings", style: TextStyle(fontSize: 24),),
     );
   }

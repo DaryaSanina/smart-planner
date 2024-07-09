@@ -1,3 +1,4 @@
+import 'package:app/home/widgets/settings_button.dart';
 import 'package:flutter/material.dart';
 
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -12,8 +13,8 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: Theme.of(context).colorScheme.primary,
       title: const Text("Hi <username>!", style: TextStyle(fontSize: 24),),
-      actions: [
-        IconButton(onPressed: () {}, icon: const Icon(Icons.settings))
+      actions: const [
+        SettingsButton()
       ],
     );
   }
