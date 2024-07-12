@@ -1,4 +1,3 @@
-import 'package:app/home/home_page.dart';
 import 'package:flutter/material.dart';
 
 class BackButton extends StatelessWidget {
@@ -10,9 +9,7 @@ class BackButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       onPressed: () {
-        Navigator.push(context, MaterialPageRoute(builder: (context) {
-          return const HomePage();
-        }));
+        Navigator.pop(context);
       },
       icon: const Icon(Icons.keyboard_arrow_left)
     );

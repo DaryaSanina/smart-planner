@@ -1,4 +1,6 @@
+import 'package:app/home/widgets/task_list.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class Task extends StatelessWidget {
   final String name;
@@ -28,7 +30,10 @@ class Task extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  IconButton(onPressed: () {}, icon: const Icon(Icons.border_color, size: 20,)),
+                  IconButton(
+                    onPressed: () {},
+                    icon: const Icon(Icons.border_color, size: 20,),
+                  ),
                 ],
               ),
               Text(
@@ -39,7 +44,13 @@ class Task extends StatelessWidget {
               ),
             ],
           ),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.radio_button_unchecked, size: 30,))
+          IconButton(
+            onPressed: () {
+              var taskList = context.read<TaskListModel>();
+              taskList.remove(this);
+            },
+            icon: const Icon(Icons.radio_button_unchecked, size: 30,),
+          )
         ],
       ),
     );
