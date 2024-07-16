@@ -1,26 +1,10 @@
-import 'dart:collection';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'package:app/home/widgets/add_task_button.dart';
 import 'package:app/home/widgets/filter_button.dart';
 import 'package:app/home/widgets/sort_button.dart';
-import 'package:app/home/widgets/task.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-class TaskListModel extends ChangeNotifier {
-  final List<Widget> _tasks = List.generate(5, (i) => Task(name: "Task $i", date: "No deadline"));
-  UnmodifiableListView<Widget> get tasks => UnmodifiableListView(_tasks);
-
-  void add(Task task) {
-    _tasks.add(task);
-    notifyListeners();
-  }
-
-  void remove(Task task) {
-    _tasks.remove(task);
-    notifyListeners();
-  }
-}
+import 'package:app/models/task_list_model.dart';
 
 class TaskList extends StatelessWidget {
   const TaskList({super.key});

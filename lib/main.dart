@@ -1,7 +1,8 @@
-import 'package:app/home/widgets/task_list.dart';
 import 'package:flutter/material.dart';
+
 import 'package:app/home/home_page.dart';
 import 'package:provider/provider.dart';
+import 'package:app/models/task_list_model.dart';
 
 void main() {
   runApp(
