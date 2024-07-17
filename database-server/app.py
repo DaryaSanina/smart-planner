@@ -10,6 +10,19 @@ app = FastAPI()
 handler = Mangum(app)
 cursor = None
 
+@app.get('/get_user/')
+def get_user(username: str="", email: str=""):
+     if username == "" and email == "":
+          return JSONResponse({"response": "Neither username not email were provided."})
+     if username == "":
+          cursor.execute(f"""SELECT * FROM Users WHERE EmailAddress = '{email}'""")
+     elif email == "":
+          cursor.execute(f"""SELECT * FROM Users WHERE Username = '{username}'""")
+     else:
+          cursor.execute(f"""SELECT * FROM Users WHERE Username = '{username}' AND EmailAddress = '{email}'""")
+     result = cursor.fetchall()
+     return JSONResponse(result)
+
 if __name__ == "__main__":
     # Connect to the database
     load_dotenv()
@@ -29,7 +42,7 @@ if __name__ == "__main__":
                         UserID INT AUTO_INCREMENT NOT NULL,
                         Username VARCHAR(32) NOT NULL,
                         EmailAddress VARCHAR(256) NOT NULL,
-                        PasswordHash VARCHAR(512) NOT NULL,
+                        PasswordHash CHAR(64) NOT NULL,
                         PRIMARY KEY (UserID)
                    )""")
     # Tasks table
