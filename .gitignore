@@ -2,6 +2,9 @@ prototype/.env
 prototype/test.py
 prototype/__pycache__
 prototype/.ipynb_checkpoints
+database-server/.env
+database-server/logfile.log
+database-server/test.py
 
 # Miscellaneous
 *.class

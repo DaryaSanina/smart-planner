@@ -5,23 +5,71 @@ from mangum import Mangum
 import mysql.connector
 from dotenv import load_dotenv
 import os
+import re
 
 app = FastAPI()
 handler = Mangum(app)
 cursor = None
 
+
 @app.get('/get_user/')
 def get_user(username: str="", email: str=""):
      if username == "" and email == "":
-          return JSONResponse({"response": "Neither username not email were provided."})
+          return JSONResponse({"reason": "Neither username not email were provided."}, status_code=400)
      if username == "":
           cursor.execute(f"""SELECT * FROM Users WHERE EmailAddress = '{email}'""")
      elif email == "":
           cursor.execute(f"""SELECT * FROM Users WHERE Username = '{username}'""")
      else:
           cursor.execute(f"""SELECT * FROM Users WHERE Username = '{username}' AND EmailAddress = '{email}'""")
-     result = cursor.fetchall()
-     return JSONResponse(result)
+     result = cursor.fetchone()
+     return JSONResponse({"data": result[0]})
+
+
+@app.post('/add_user/')
+def add_user(username: str, email: str, password_hash: str):
+     # Check whether the username is valid
+     if not (3 <= len(username) <= 32):
+          return JSONResponse({"reason": "The username is not between 3 and 32 characters long"}, status_code=400)
+     cursor.execute(f"""SELECT * FROM Users WHERE Username = '{username}'""")
+     if len(cursor.fetchall()) > 0:
+          return JSONResponse({"reason": "A user with this username already exists"}, status_code=400)
+     
+     # Check whether the email is valid
+     EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+     if not re.search(EMAIL_REGEX, email):
+          return JSONResponse({"reason": "The email is not in the format example@address.com"}, status_code=400)
+     cursor.execute(f"""SELECT * FROM Users WHERE EmailAddress = '{email}'""")
+     if len(cursor.fetchall()) > 0:
+          return JSONResponse({"reason": "A user with this email address already exists"}, status_code=400)
+     
+     # Check whether the password hash is valid
+     if len(password_hash) != 64:
+          return JSONResponse({"reason": "The password hash is not 64 characters long"}, status_code=400)
+     
+     # Insert the data
+     try:
+          cursor.execute(f"""INSERT INTO Users VALUES (NULL, '{username}', '{email}', '{password_hash}')""")
+          # db.commit()  # Uncomment before deployment
+          return JSONResponse({}, status_code=201)
+     except Exception as e:
+          print(e)
+          return JSONResponse({"reason": "Unknown error when inserting the data"}, status_code=400)
+
+
+@app.delete('/delete_user/')
+def delete_user(username: str="", email: str=""):
+     if username == "" and email == "":
+          return JSONResponse({"reason": "Neither username not email were provided."}, status_code=400)
+     if username == "":
+          cursor.execute(f"""DELETE FROM Users WHERE EmailAddress = '{email}'""")
+     elif email == "":
+          cursor.execute(f"""DELETE FROM Users WHERE Username = '{username}'""")
+     else:
+          cursor.execute(f"""DELETE FROM Users WHERE Username = '{username}' AND EmailAddress = '{email}'""")
+     return JSONResponse({})
+
+
 
 if __name__ == "__main__":
     # Connect to the database

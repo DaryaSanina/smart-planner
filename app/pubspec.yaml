@@ -30,8 +30,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  sqflite:
-  path:
+  mysql_client: ^0.0.27
+  http: ^1.2.0
   provider:
 
 
