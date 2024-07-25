@@ -256,6 +256,13 @@ def delete_reminder(reminder_id: int):
      return JSONResponse({})
 
 
+@app.get('/get_message/')
+def get_message(message_id: int):
+     cursor.execute(f"""SELECT * FROM Messages WHERE MessageID = {message_id}""")
+     result = cursor.fetchone()
+     return JSONResponse({"data": result[0]})
+
+
 @app.post('/add_message/')
 def add_message(message: Message):
      # Check whether the role is 1 or 2
@@ -269,7 +276,13 @@ def add_message(message: Message):
      
      # Insert the data
      timestamp = message.timestamp.strftime("%Y-%m-%d %H:%M:%S")
-     cursor.execute(f"""INSERT INTO Messages VALUES (NULL, '{message.content}', {message.role}, {message.timestamp}, {message.user_id})""")
+     cursor.execute(f"""INSERT INTO Messages VALUES (NULL, '{message.content}', {message.role}, {timestamp}, {message.user_id})""")
+
+
+@app.delete('/delete_message/')
+def delete_reminder(message_id: int):
+     cursor.execute(f"""DELETE FROM Messages WHERE MessageID = {message_id}""")
+     return JSONResponse({})
 
 
 if __name__ == "__main__":
