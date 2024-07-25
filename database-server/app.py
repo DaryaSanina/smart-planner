@@ -35,6 +35,11 @@ class Tag(BaseModel):
      user_id: int
 
 
+class TaskToTag(BaseModel):
+     task_id: int
+     tag_id: int
+
+
 @app.get('/get_user/')
 def get_user(user_id=0, username="", email=""):
      if user_id == 0 and username == "" and email == "":
@@ -176,6 +181,37 @@ def add_tag(tag: Tag):
 def delete_tag(tag_id: int):
      cursor.execute(f"""DELETE FROM Tags WHERE TagID = {tag_id}""")
      return JSONResponse({})
+
+
+@app.get('/get_task_to_tag_relationship/')
+def get_task_to_tag_relationship(task_to_tag_id: int):
+     cursor.execute(f"""SELECT * FROM TasksToTags WHERE TaskToTagID = {task_to_tag_id}""")
+     result = cursor.fetchone()
+     return JSONResponse({"data": result[0]})
+
+
+@app.delete('/delete_task_to_tag_relationship/')
+def delete_task_to_tag_relationship(task_to_tag_id: int):
+     cursor.execute(f"""DELETE FROM TasksToTags WHERE TaskToTagID = {task_to_tag_id}""")
+     return JSONResponse({})
+
+
+@app.post('/add_task_to_tag_relationship/')
+def add_task_to_tag_relationship(task_to_tag: TaskToTag):
+     # Check whether the task with this ID exists
+     cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = '{task_to_tag.task_id}'""")
+     if len(cursor.fetchall()) == 0:
+          return JSONResponse({"reason": "The task with this ID does not exist"}, status_code=400)
+     
+     # Check whether the tag with this ID exists
+     cursor.execute(f"""SELECT * FROM Tags WHERE TagID = '{task_to_tag.tag_id}'""")
+     if len(cursor.fetchall()) == 0:
+          return JSONResponse({"reason": "The tag with this ID does not exist"}, status_code=400)
+     
+     # Insert the data
+     cursor.execute(f"""INSERT INTO TasksToTags VALUES (NULL, {task_to_tag.task_id}, {task_to_tag.tag_id})""")
+     #db.commit()  # Uncomment before deployment
+     return JSONResponse({}, status_code=201)
 
 
 if __name__ == "__main__":
