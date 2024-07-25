@@ -42,7 +42,14 @@ class TaskToTag(BaseModel):
 
 class Reminder(BaseModel):
      task_id: int
-     reminder_type: int
+     reminder_type: int  # 1 - 10 minutes before, 2 - 1 hour before, 3 - 1 day before, 4 - 1 week before
+
+
+class Message(BaseModel):
+     content: str
+     role: int  # 1 - user, 2 - assistant
+     timestamp: datetime.datetime  # In a POST request, it should be a string of the following format: "YYYY-MM-DD[T]HH:MM:SS"
+     user_id: int
 
 
 @app.get('/get_user/')
@@ -247,6 +254,22 @@ def add_reminder(reminder: Reminder):
 def delete_reminder(reminder_id: int):
      cursor.execute(f"""DELETE FROM Reminders WHERE ReminderID = {reminder_id}""")
      return JSONResponse({})
+
+
+@app.post('/add_message/')
+def add_message(message: Message):
+     # Check whether the role is 1 or 2
+     if message.role != 1 and message.role != 2:
+          return JSONResponse({"reason": "The role should be either 1 (user) or 2 (assistant)"}, status_code=400)
+     
+     # Check whether the user with this ID exists
+     cursor.execute(f"""SELECT * FROM Users WHERE UserID = '{message.user_id}'""")
+     if len(cursor.fetchall()) == 0:
+          return JSONResponse({"reason": "The user with this ID does not exist"}, status_code=400)
+     
+     # Insert the data
+     timestamp = message.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+     cursor.execute(f"""INSERT INTO Messages VALUES (NULL, '{message.content}', {message.role}, {message.timestamp}, {message.user_id})""")
 
 
 if __name__ == "__main__":
