@@ -30,6 +30,11 @@ class Task(BaseModel):
      user_id: int
 
 
+class Tag(BaseModel):
+     name: str
+     user_id: int
+
+
 @app.get('/get_user/')
 def get_user(user_id=0, username="", email=""):
      if user_id == 0 and username == "" and email == "":
@@ -103,7 +108,7 @@ def get_task(task_id=0, name=""):
 def add_task(task: Task):
      # Check whether the task name is valid
      if not (3 <= len(task.name) <= 32):
-          return JSONResponse({"reason": "The username is not between 3 and 32 characters long"}, status_code=400)
+          return JSONResponse({"reason": "The task name is not between 3 and 32 characters long"}, status_code=400)
      
      # Check whether the importance is valid
      if not (0 <= task.importance <= 10):
@@ -121,7 +126,6 @@ def add_task(task: Task):
      # Insert the data
      if task.deadline:
           deadline = task.deadline.strftime("%Y-%m-%d %H:%M:%S")
-          print(deadline)
           cursor.execute(f"""INSERT INTO Tasks VALUES (NULL, '{task.name}', '{task.description}', '{deadline}', NULL, NULL, {task.importance}, {task.user_id})""")
      elif task.start and task.end:
           start = task.start.strftime("%Y-%m-%d %H:%M:%S")
@@ -135,6 +139,23 @@ def add_task(task: Task):
 def delete_task(task_id: int):
      cursor.execute(f"""DELETE FROM Tasks WHERE TaskID = {task_id}""")
      return JSONResponse({})
+
+
+@app.post('/add_tag/')
+def add_tag(tag: Tag):
+     # Check whether the tag name is valid
+     if not (3 <= len(tag.name) <= 32):
+          return JSONResponse({"reason": "The tag name is not between 3 and 32 characters long"}, status_code=400)
+     
+     # Check whether the user with this ID exists
+     cursor.execute(f"""SELECT * FROM Users WHERE UserID = '{tag.user_id}'""")
+     if len(cursor.fetchall()) == 0:
+          return JSONResponse({"reason": "The user with this ID does not exist"}, status_code=400)
+     
+     # Insert the data
+     cursor.execute(f"""INSERT INTO Tasks VALUES (NULL, '{tag.name}', {tag.user_id})""")
+     #db.commit()  # Uncomment before deployment
+     return JSONResponse({}, status_code=201)
 
 
 if __name__ == "__main__":
