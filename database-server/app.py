@@ -132,7 +132,7 @@ def add_task(task: Task):
           return JSONResponse({"reason": "The importance is not between 0 and 10"}, status_code=400)
      
      # Check whether there is either a deadline or a start and an end date and time
-     if not (task.deadline or (task.start and task.end)):
+     if (task.deadline and not task.start and not task.end) or (not task.deadline and task.start and task.end):
           return JSONResponse({"reason": "The task should either have a deadline or a start and an end date and time"}, status_code=400)
      
      # Check whether the user with this ID exists
@@ -148,6 +148,43 @@ def add_task(task: Task):
           start = task.start.strftime("%Y-%m-%d %H:%M:%S")
           end = task.end.strftime("%Y-%m-%d %H:%M:%S")
           cursor.execute(f"""INSERT INTO Tasks VALUES (NULL, '{task.name}', '{task.description}', NULL, '{start}', '{end}', {task.importance}, {task.user_id})""")
+     #db.commit()  # Uncomment before deployment
+     return JSONResponse({}, status_code=201)
+
+
+@app.put('/update_task/')
+def update_task(task_id: int, task_name="", description="", importance=-1, deadline=None, start=None, end=None):
+     # Check whether the task with this ID exists
+     cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = '{task_id}'""")
+     if len(cursor.fetchall()) == 0:
+          return JSONResponse({"reason": "The task with this ID does not exist"}, status_code=400)
+     
+     if task_name != "":
+          if not (3 <= len(task_name) <= 32):
+               return JSONResponse({"reason": "The task name is not between 3 and 32 characters long"}, status_code=400)
+          cursor.execute(f"""UPDATE Tasks SET Name = '{task_name}' WHERE TaskID = {task_id}""")
+     
+     if description != "":
+          cursor.execute(f"""UPDATE Tasks SET Description = '{description}' WHERE TaskID = {task_id}""")
+     
+     if importance != -1:
+          if not (0 <= importance <= 10):
+               db.rollback()
+               return JSONResponse({"reason": "The importance is not between 0 and 10"}, status_code=400)
+          cursor.execute(f"""UPDATE Tasks SET Importance = {importance} WHERE TaskID = {task_id}""")
+     
+     if deadline:
+          if start or end:
+               db.rollback()
+               return JSONResponse({"reason": "The task should either have a deadline or a start and an end date and time"}, status_code=400)
+          cursor.execute(f"""UPDATE Tasks SET Deadline = {deadline} WHERE TaskID = {task_id}""")
+     
+     if start or end:
+          if deadline or not start or not end:
+               db.rollback()
+               return JSONResponse({"reason": "The task should either have a deadline or a start and an end date and time"}, status_code=400)
+          cursor.execute(f"""UPDATE Tasks SET Start = {start}, End = {end} WHERE TaskID = {task_id}""")
+     
      #db.commit()  # Uncomment before deployment
      return JSONResponse({}, status_code=201)
 
