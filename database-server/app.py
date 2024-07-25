@@ -226,6 +226,23 @@ def add_tag(tag: Tag):
      return JSONResponse({}, status_code=201)
 
 
+@app.put('/update_tag/')
+def update_tag(tag_id: int, tag_name: str):
+     # Check whether the tag with this ID exists
+     cursor.execute(f"""SELECT * FROM Tags WHERE TagID = '{tag_id}'""")
+     if len(cursor.fetchall()) == 0:
+          return JSONResponse({"reason": "The tag with this ID does not exist"}, status_code=400)
+     
+     # Check whether the tag name is valid
+     if not (3 <= len(tag_name) <= 32):
+          return JSONResponse({"reason": "The tag name is not between 3 and 32 characters long"}, status_code=400)
+     
+     # Update the database
+     cursor.execute(f"""UPDATE Tags SET Name = '{tag_name}' WHERE TagID = {tag_id}""")
+     #db.commit()  # Uncomment before deployment
+     return JSONResponse({}, status_code=201)
+
+
 @app.delete('/delete_tag/')
 def delete_tag(tag_id: int):
      cursor.execute(f"""DELETE FROM Tags WHERE TagID = {tag_id}""")
