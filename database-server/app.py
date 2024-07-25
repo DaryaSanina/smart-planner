@@ -91,15 +91,15 @@ def delete_user(user_id: int):
 
 
 @app.get('/get_task/')
-def get_task(task_id=0, name=""):
-     if name == "" and task_id == 0:
+def get_task(task_id=0, task_name=""):
+     if task_name == "" and task_id == 0:
           return JSONResponse({"reason": "Neither the name of the task nor its ID were provided."}, status_code=400)
-     if name == "":
+     if task_name == "":
           cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = '{task_id}'""")
      elif task_id == 0:
-          cursor.execute(f"""SELECT * FROM Tasks WHERE Name = '{name}'""")
+          cursor.execute(f"""SELECT * FROM Tasks WHERE Name = '{task_name}'""")
      else:
-          cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = '{task_id}' AND Name = '{name}'""")
+          cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = '{task_id}' AND Name = '{task_name}'""")
      result = cursor.fetchone()
      return JSONResponse({"data": result[0]})
 
@@ -141,6 +141,20 @@ def delete_task(task_id: int):
      return JSONResponse({})
 
 
+@app.get('/get_tag/')
+def get_tag(tag_id=0, tag_name=""):
+     if tag_name == "" and tag_id == 0:
+          return JSONResponse({"reason": "Neither the name of the tag nor its ID were provided."}, status_code=400)
+     if tag_name == "":
+          cursor.execute(f"""SELECT * FROM Tags WHERE TagID = '{tag_id}'""")
+     elif tag_id == 0:
+          cursor.execute(f"""SELECT * FROM Tags WHERE Name = '{tag_name}'""")
+     else:
+          cursor.execute(f"""SELECT * FROM Tags WHERE TagID = '{tag_id}' AND Name = '{tag_name}'""")
+     result = cursor.fetchone()
+     return JSONResponse({"data": result[0]})
+
+
 @app.post('/add_tag/')
 def add_tag(tag: Tag):
      # Check whether the tag name is valid
@@ -156,6 +170,12 @@ def add_tag(tag: Tag):
      cursor.execute(f"""INSERT INTO Tasks VALUES (NULL, '{tag.name}', {tag.user_id})""")
      #db.commit()  # Uncomment before deployment
      return JSONResponse({}, status_code=201)
+
+
+@app.delete('/delete_tag/')
+def delete_tag(tag_id: int):
+     cursor.execute(f"""DELETE FROM Tags WHERE TagID = {tag_id}""")
+     return JSONResponse({})
 
 
 if __name__ == "__main__":
