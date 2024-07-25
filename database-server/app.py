@@ -11,7 +11,19 @@ import datetime
 
 app = FastAPI()
 handler = Mangum(app)
-cursor = None
+
+# Connect to the database
+load_dotenv()
+mysql_password = os.getenv("MYSQL_PASSWORD")
+mysql_host = os.getenv("MYSQL_HOST")
+db = mysql.connector.connect(
+     host=mysql_host,
+     port=3306,
+     user="admin",
+     password=mysql_password,
+     database="smart_planner_database"
+)
+cursor = db.cursor()
 
 
 class User(BaseModel):
@@ -51,8 +63,12 @@ class Message(BaseModel):
      timestamp: datetime.datetime  # In a POST request, it should be a string of the following format: "YYYY-MM-DD[T]HH:MM:SS"
      user_id: int
 
+@app.get('/')
+def default():
+     return JSONResponse("Nothing here.")
 
-@app.get('/get_user/')
+
+@app.get('/get_user')
 def get_user(user_id=0, username="", email=""):
      if user_id == 0 and username == "" and email == "":
           return JSONResponse({"reason": "Neither username not email were provided."}, status_code=400)
@@ -70,11 +86,11 @@ def get_user(user_id=0, username="", email=""):
           cursor.execute(f"""SELECT * FROM Users WHERE UserID = {user_id} AND Username = '{username}'""")
      else:
           cursor.execute(f"""SELECT * FROM Users WHERE UserID = {user_id} Username = '{username}' AND EmailAddress = '{email}'""")
-     result = cursor.fetchone()
-     return JSONResponse({"data": result[0]})
+     result = cursor.fetchall()
+     return JSONResponse({"data": result})
 
 
-@app.post('/add_user/')
+@app.post('/add_user')
 def add_user(user: User):
      # Check whether the username is valid
      if not (3 <= len(user.username) <= 32):
@@ -97,17 +113,17 @@ def add_user(user: User):
      
      # Insert the data
      cursor.execute(f"""INSERT INTO Users VALUES (NULL, '{user.username}', '{user.email}', '{user.password_hash}')""")
-     #db.commit()  # Uncomment before deployment
+     db.commit()  # Uncomment before deployment
      return JSONResponse({}, status_code=201)
 
 
-@app.delete('/delete_user/')
+@app.delete('/delete_user')
 def delete_user(user_id: int):
      cursor.execute(f"""DELETE FROM Users WHERE UserID = {user_id}""")
      return JSONResponse({})
 
 
-@app.get('/get_task/')
+@app.get('/get_task')
 def get_task(task_id=0, task_name=""):
      if task_name == "" and task_id == 0:
           return JSONResponse({"reason": "Neither the name of the task nor its ID were provided."}, status_code=400)
@@ -117,11 +133,11 @@ def get_task(task_id=0, task_name=""):
           cursor.execute(f"""SELECT * FROM Tasks WHERE Name = '{task_name}'""")
      else:
           cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = '{task_id}' AND Name = '{task_name}'""")
-     result = cursor.fetchone()
-     return JSONResponse({"data": result[0]})
+     result = cursor.fetchall()
+     return JSONResponse({"data": result})
 
 
-@app.post('/add_task/')
+@app.post('/add_task')
 def add_task(task: Task):
      # Check whether the task name is valid
      if not (3 <= len(task.name) <= 32):
@@ -148,11 +164,11 @@ def add_task(task: Task):
           start = task.start.strftime("%Y-%m-%d %H:%M:%S")
           end = task.end.strftime("%Y-%m-%d %H:%M:%S")
           cursor.execute(f"""INSERT INTO Tasks VALUES (NULL, '{task.name}', '{task.description}', NULL, '{start}', '{end}', {task.importance}, {task.user_id})""")
-     #db.commit()  # Uncomment before deployment
+     db.commit()  # Uncomment before deployment
      return JSONResponse({}, status_code=201)
 
 
-@app.put('/update_task/')
+@app.put('/update_task')
 def update_task(task_id: int, task_name="", description="", importance=-1, deadline=None, start=None, end=None):
      # Check whether the task with this ID exists
      cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = '{task_id}'""")
@@ -185,17 +201,17 @@ def update_task(task_id: int, task_name="", description="", importance=-1, deadl
                return JSONResponse({"reason": "The task should either have a deadline or a start and an end date and time"}, status_code=400)
           cursor.execute(f"""UPDATE Tasks SET Start = {start}, End = {end} WHERE TaskID = {task_id}""")
      
-     #db.commit()  # Uncomment before deployment
+     db.commit()  # Uncomment before deployment
      return JSONResponse({}, status_code=201)
 
 
-@app.delete('/delete_task/')
+@app.delete('/delete_task')
 def delete_task(task_id: int):
      cursor.execute(f"""DELETE FROM Tasks WHERE TaskID = {task_id}""")
      return JSONResponse({})
 
 
-@app.get('/get_tag/')
+@app.get('/get_tag')
 def get_tag(tag_id=0, tag_name=""):
      if tag_name == "" and tag_id == 0:
           return JSONResponse({"reason": "Neither the name of the tag nor its ID were provided."}, status_code=400)
@@ -205,11 +221,11 @@ def get_tag(tag_id=0, tag_name=""):
           cursor.execute(f"""SELECT * FROM Tags WHERE Name = '{tag_name}'""")
      else:
           cursor.execute(f"""SELECT * FROM Tags WHERE TagID = '{tag_id}' AND Name = '{tag_name}'""")
-     result = cursor.fetchone()
-     return JSONResponse({"data": result[0]})
+     result = cursor.fetchall()
+     return JSONResponse({"data": result})
 
 
-@app.post('/add_tag/')
+@app.post('/add_tag')
 def add_tag(tag: Tag):
      # Check whether the tag name is valid
      if not (3 <= len(tag.name) <= 32):
@@ -222,11 +238,11 @@ def add_tag(tag: Tag):
      
      # Insert the data
      cursor.execute(f"""INSERT INTO Tasks VALUES (NULL, '{tag.name}', {tag.user_id})""")
-     #db.commit()  # Uncomment before deployment
+     db.commit()  # Uncomment before deployment
      return JSONResponse({}, status_code=201)
 
 
-@app.put('/update_tag/')
+@app.put('/update_tag')
 def update_tag(tag_id: int, tag_name: str):
      # Check whether the tag with this ID exists
      cursor.execute(f"""SELECT * FROM Tags WHERE TagID = '{tag_id}'""")
@@ -239,24 +255,24 @@ def update_tag(tag_id: int, tag_name: str):
      
      # Update the database
      cursor.execute(f"""UPDATE Tags SET Name = '{tag_name}' WHERE TagID = {tag_id}""")
-     #db.commit()  # Uncomment before deployment
+     db.commit()  # Uncomment before deployment
      return JSONResponse({}, status_code=201)
 
 
-@app.delete('/delete_tag/')
+@app.delete('/delete_tag')
 def delete_tag(tag_id: int):
      cursor.execute(f"""DELETE FROM Tags WHERE TagID = {tag_id}""")
      return JSONResponse({})
 
 
-@app.get('/get_task_to_tag_relationship/')
+@app.get('/get_task_to_tag_relationship')
 def get_task_to_tag_relationship(task_to_tag_id: int):
      cursor.execute(f"""SELECT * FROM TasksToTags WHERE TaskToTagID = {task_to_tag_id}""")
-     result = cursor.fetchone()
-     return JSONResponse({"data": result[0]})
+     result = cursor.fetchall()
+     return JSONResponse({"data": result})
 
 
-@app.post('/add_task_to_tag_relationship/')
+@app.post('/add_task_to_tag_relationship')
 def add_task_to_tag_relationship(task_to_tag: TaskToTag):
      # Check whether the task with this ID exists
      cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = '{task_to_tag.task_id}'""")
@@ -270,24 +286,24 @@ def add_task_to_tag_relationship(task_to_tag: TaskToTag):
      
      # Insert the data
      cursor.execute(f"""INSERT INTO TasksToTags VALUES (NULL, {task_to_tag.task_id}, {task_to_tag.tag_id})""")
-     #db.commit()  # Uncomment before deployment
+     db.commit()  # Uncomment before deployment
      return JSONResponse({}, status_code=201)
 
 
-@app.delete('/delete_task_to_tag_relationship/')
+@app.delete('/delete_task_to_tag_relationship')
 def delete_task_to_tag_relationship(task_to_tag_id: int):
      cursor.execute(f"""DELETE FROM TasksToTags WHERE TaskToTagID = {task_to_tag_id}""")
      return JSONResponse({})
 
 
-@app.get('/get_reminder/')
+@app.get('/get_reminder')
 def get_reminder(reminder_id: int):
      cursor.execute(f"""SELECT * FROM Reminders WHERE ReminderID = {reminder_id}""")
-     result = cursor.fetchone()
-     return JSONResponse({"data": result[0]})
+     result = cursor.fetchall()
+     return JSONResponse({"data": result})
 
 
-@app.post('/add_reminder/')
+@app.post('/add_reminder')
 def add_reminder(reminder: Reminder):
      # Check whether the task with this ID exists
      cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = '{reminder.task_id}'""")
@@ -300,24 +316,24 @@ def add_reminder(reminder: Reminder):
      
      # Insert the data
      cursor.execute(f"""INSERT INTO Reminders VALUES (NULL, {reminder.task_id}, {reminder.reminder_type})""")
-     #db.commit()  # Uncomment before deployment
+     db.commit()  # Uncomment before deployment
      return JSONResponse({}, status_code=201)
 
 
-@app.delete('/delete_reminder/')
+@app.delete('/delete_reminder')
 def delete_reminder(reminder_id: int):
      cursor.execute(f"""DELETE FROM Reminders WHERE ReminderID = {reminder_id}""")
      return JSONResponse({})
 
 
-@app.get('/get_message/')
+@app.get('/get_message')
 def get_message(message_id: int):
      cursor.execute(f"""SELECT * FROM Messages WHERE MessageID = {message_id}""")
-     result = cursor.fetchone()
-     return JSONResponse({"data": result[0]})
+     result = cursor.fetchall()
+     return JSONResponse({"data": result})
 
 
-@app.post('/add_message/')
+@app.post('/add_message')
 def add_message(message: Message):
      # Check whether the role is 1 or 2
      if message.role != 1 and message.role != 2:
@@ -333,25 +349,13 @@ def add_message(message: Message):
      cursor.execute(f"""INSERT INTO Messages VALUES (NULL, '{message.content}', {message.role}, {timestamp}, {message.user_id})""")
 
 
-@app.delete('/delete_message/')
+@app.delete('/delete_message')
 def delete_reminder(message_id: int):
      cursor.execute(f"""DELETE FROM Messages WHERE MessageID = {message_id}""")
      return JSONResponse({})
 
 
 if __name__ == "__main__":
-    # Connect to the database
-    load_dotenv()
-    mysql_password = os.getenv("MYSQL_PASSWORD")
-    db = mysql.connector.connect(
-        host="127.0.0.1",
-        port=3306,
-        user="root",
-        password=mysql_password,
-        database="smart_planner_database"
-    )
-    cursor = db.cursor()
-
     # Create the tables if they don't exist
     # Users table
     cursor.execute("""CREATE TABLE IF NOT EXISTS Users (
