@@ -31,15 +31,23 @@ class Task(BaseModel):
 
 
 @app.get('/get_user/')
-def get_user(username="", email=""):
-     if username == "" and email == "":
+def get_user(user_id=0, username="", email=""):
+     if user_id == 0 and username == "" and email == "":
           return JSONResponse({"reason": "Neither username not email were provided."}, status_code=400)
-     if username == "":
+     if user_id == 0 and username == "":
           cursor.execute(f"""SELECT * FROM Users WHERE EmailAddress = '{email}'""")
-     elif email == "":
+     elif user_id == 0 and email == "":
           cursor.execute(f"""SELECT * FROM Users WHERE Username = '{username}'""")
-     else:
+     elif username == "" and email == "":
+          cursor.execute(f"""SELECT * FROM Users WHERE UserID = {user_id}""")
+     elif user_id == 0:
           cursor.execute(f"""SELECT * FROM Users WHERE Username = '{username}' AND EmailAddress = '{email}'""")
+     elif username == "":
+          cursor.execute(f"""SELECT * FROM Users WHERE UserID = {user_id} AND EmailAddress = '{email}'""")
+     elif email == "":
+          cursor.execute(f"""SELECT * FROM Users WHERE UserID = {user_id} AND Username = '{username}'""")
+     else:
+          cursor.execute(f"""SELECT * FROM Users WHERE UserID = {user_id} Username = '{username}' AND EmailAddress = '{email}'""")
      result = cursor.fetchone()
      return JSONResponse({"data": result[0]})
 
@@ -67,7 +75,7 @@ def add_user(user: User):
      
      # Insert the data
      cursor.execute(f"""INSERT INTO Users VALUES (NULL, '{user.username}', '{user.email}', '{user.password_hash}')""")
-     db.commit()  # Uncomment before deployment
+     #db.commit()  # Uncomment before deployment
      return JSONResponse({}, status_code=201)
 
 
@@ -75,6 +83,20 @@ def add_user(user: User):
 def delete_user(user_id: int):
      cursor.execute(f"""DELETE FROM Users WHERE UserID = {user_id}""")
      return JSONResponse({})
+
+
+@app.get('/get_task/')
+def get_task(task_id=0, name=""):
+     if name == "" and task_id == 0:
+          return JSONResponse({"reason": "Neither the name of the task nor its ID were provided."}, status_code=400)
+     if name == "":
+          cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = '{task_id}'""")
+     elif task_id == 0:
+          cursor.execute(f"""SELECT * FROM Tasks WHERE Name = '{name}'""")
+     else:
+          cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = '{task_id}' AND Name = '{name}'""")
+     result = cursor.fetchone()
+     return JSONResponse({"data": result[0]})
 
 
 @app.post('/add_task/')
@@ -105,7 +127,7 @@ def add_task(task: Task):
           start = task.start.strftime("%Y-%m-%d %H:%M:%S")
           end = task.end.strftime("%Y-%m-%d %H:%M:%S")
           cursor.execute(f"""INSERT INTO Tasks VALUES (NULL, '{task.name}', '{task.description}', NULL, '{start}', '{end}', {task.importance}, {task.user_id})""")
-     db.commit()  # Uncomment before deployment
+     #db.commit()  # Uncomment before deployment
      return JSONResponse({}, status_code=201)
 
 
