@@ -131,6 +131,12 @@ def add_task(task: Task):
      return JSONResponse({}, status_code=201)
 
 
+@app.delete('/delete_task/')
+def delete_task(task_id: int):
+     cursor.execute(f"""DELETE FROM Tasks WHERE TaskID = {task_id}""")
+     return JSONResponse({})
+
+
 if __name__ == "__main__":
     # Connect to the database
     load_dotenv()
