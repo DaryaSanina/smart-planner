@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:app/login/login_page.dart';
 import 'package:app/home/home_page.dart';
 import 'package:provider/provider.dart';
 import 'package:app/models/task_list_model.dart';
@@ -27,7 +28,7 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: HomePage(),
+      home: LoginPage(),
     );
   }
 }
