@@ -11,9 +11,9 @@ class LoginForm extends StatefulWidget {
 
 class _LoginFormState extends State<LoginForm> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameEmailText = "";
+  final _usernameText = "";
   final _passwordText = "";
-  TextEditingController usernameEmailController = TextEditingController();
+  TextEditingController usernameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
   @override
@@ -27,19 +27,19 @@ class _LoginFormState extends State<LoginForm> {
           children: [
             // Username or email field
             TextFormField(
-              controller: usernameEmailController,
+              controller: usernameController,
               decoration: InputDecoration(
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
-                labelText: "Username or email",
+                labelText: "Username",
               ),
               cursorColor: Theme.of(context).colorScheme.tertiary,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return "Please enter your username or email";
+                  return "Please enter your username";
                 }
                 return null;
               },
-              onChanged: (text) => setState(() => _usernameEmailText),
+              onChanged: (text) => setState(() => _usernameText),
             ),
 
             SizedBox(height: MediaQuery.of(context).size.height * 0.03),
@@ -69,7 +69,7 @@ class _LoginFormState extends State<LoginForm> {
             ElevatedButton(
               onPressed: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return const HomePage();
+                  return HomePage(username: usernameController.text);
                 }));
               },
               style: ElevatedButton.styleFrom(

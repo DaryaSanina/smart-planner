@@ -113,7 +113,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
             ElevatedButton(
               onPressed: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return const HomePage();
+                  return HomePage(username: usernameController.text);
                 }));
               },
               style: ElevatedButton.styleFrom(

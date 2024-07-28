@@ -1,4 +1,3 @@
-import 'package:app/login/login_page.dart';
 import 'package:flutter/material.dart';
 
 import 'package:app/registration/widgets/registration_form.dart';
