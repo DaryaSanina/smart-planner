@@ -25,7 +25,7 @@ class _LoginFormState extends State<LoginForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            // Username or email field
+            // Username field
             TextFormField(
               controller: usernameController,
               decoration: InputDecoration(
@@ -68,9 +68,11 @@ class _LoginFormState extends State<LoginForm> {
             // Log in button
             ElevatedButton(
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return HomePage(username: usernameController.text);
-                }));
+                if (_formKey.currentState!.validate()) {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) {
+                    return HomePage(username: usernameController.text);
+                  }));
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.secondary,

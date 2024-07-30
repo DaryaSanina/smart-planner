@@ -1,5 +1,9 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
+import 'package:http/http.dart' as http;
+import 'package:crypto/crypto.dart';
+
+import 'package:flutter/material.dart';
 import 'package:app/home/home_page.dart';
 
 class RegistrationForm extends StatefulWidget {
@@ -15,10 +19,18 @@ class _RegistrationFormState extends State<RegistrationForm> {
   final _emailText = "";
   final _passwordText = "";
   final _repeatPasswordText = "";
+  bool _usernameExists = false;
+  bool _emailExists = false;
   TextEditingController usernameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController repeatPasswordController = TextEditingController();
+
+  String getPasswordHash(String password) {
+    var bytes = utf8.encode(password);
+    var digest = sha256.convert(bytes);
+    return digest.toString();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,9 +53,19 @@ class _RegistrationFormState extends State<RegistrationForm> {
                 if (value == null || value.isEmpty) {
                   return "Please enter your username";
                 }
+                if (value.length < 3 || value.length > 32) {
+                  return "The username is not between 3 and 32 characters long";
+                }
+                if (_usernameExists) {
+                  return "This username is already being used";
+                }
                 return null;
               },
-              onChanged: (text) => setState(() => _usernameText),
+              onChanged: (text) async {
+                final response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_user?username=$text'));
+                setState(() => _usernameExists = jsonDecode(response.body)['data'].length != 0);
+                setState(() => _usernameText);
+              },
             ),
 
             SizedBox(height: MediaQuery.of(context).size.height * 0.01),
@@ -60,9 +82,19 @@ class _RegistrationFormState extends State<RegistrationForm> {
                 if (value == null || value.isEmpty) {
                   return "Please enter your email";
                 }
+                if (!RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}").hasMatch(value)) {
+                  return "The email is not in a correct format";
+                }
+                if (_emailExists) {
+                  return "This email is already being used";
+                }
                 return null;
               },
-              onChanged: (text) => setState(() => _emailText),
+              onChanged: (text) async {
+                final response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_user?email=$text'));
+                setState(() => _emailExists = jsonDecode(response.body)['data'].length != 0);
+                setState(() => _emailText);
+              },
             ),
 
             SizedBox(height: MediaQuery.of(context).size.height * 0.01),
@@ -80,6 +112,39 @@ class _RegistrationFormState extends State<RegistrationForm> {
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return "Please enter your password";
+                }
+                if (value.length < 8 || value.length > 16) {
+                  return "The password should be between 8 and 16 characters long";
+                }
+                bool hasLowerCase = false;
+                bool hasUpperCase = false;
+                bool hasDigits = false;
+                bool hasSymbols = false;
+                for (int i = 0; i < value.length; i++) {
+                  if ("abcdefghijklmnopqrstuvwxyz".contains(value[i])) {
+                    hasLowerCase = true;
+                  }
+                  if ("ABCDEFGHIJKLMNOPQRSTUVWXYZ".contains(value[i])) {
+                    hasUpperCase = true;
+                  }
+                  if ("1234567890".contains(value[i])) {
+                    hasDigits = true;
+                  }
+                  if ("!£\"\$%^&*()-_+=[]{}#~;:'@,.<>/?\\|".contains(value[i])) {
+                    hasSymbols = true;
+                  }
+                }
+                if (!hasLowerCase) {
+                  return "The password should contain lowercase letters";
+                }
+                if (!hasUpperCase) {
+                  return "The password should contain uppercase letters";
+                }
+                if (!hasDigits) {
+                  return "The password should contain digits";
+                }
+                if (!hasSymbols) {
+                  return "The password should contain special symbols";
                 }
                 return null;
               },
@@ -102,6 +167,9 @@ class _RegistrationFormState extends State<RegistrationForm> {
                 if (value == null || value.isEmpty) {
                   return "Please repeat your password";
                 }
+                if (value != passwordController.text) {
+                  return "The passwords do not match";
+                }
                 return null;
               },
               onChanged: (text) => setState(() => _repeatPasswordText),
@@ -111,10 +179,23 @@ class _RegistrationFormState extends State<RegistrationForm> {
         
             // Register button
             ElevatedButton(
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return HomePage(username: usernameController.text);
-                }));
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  var request = jsonEncode(<String, dynamic>{'username': usernameController.text, 'email': emailController.text, 'password_hash': getPasswordHash(passwordController.text)});
+                  final response = await http.post(
+                    Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/add_user'),
+                    headers: <String, String>{'Content-Type': 'application/json'},
+                    body: request
+                  );
+                  if (response.statusCode != 201) {
+                    return;
+                  }
+                  if (context.mounted) {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) {
+                      return HomePage(username: usernameController.text);
+                    }));
+                  }
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.secondary,

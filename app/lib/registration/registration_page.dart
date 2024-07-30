@@ -17,10 +17,10 @@ class _RegistrationState extends State<RegistrationPage> {
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.primary,
           body: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              SizedBox(
-                height: MediaQuery.of(context).size.height / 3,
-                child: const Center(
+              const SizedBox(
+                child: Center(
                   child: Text(
                     "Smart Planner",
                     style: TextStyle(
@@ -30,14 +30,12 @@ class _RegistrationState extends State<RegistrationPage> {
                 ),
               ),
               SizedBox(
-                height: MediaQuery.of(context).size.height * 0.4,
                 width: MediaQuery.of(context).size.width,
                 child: const Center(
                   child: RegistrationForm(),
                 ),
               ),
               SizedBox(
-                height: MediaQuery.of(context).size.height - MediaQuery.of(context).size.height / 3 - MediaQuery.of(context).size.height * 0.4,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
