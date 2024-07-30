@@ -1,10 +1,10 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:crypto/crypto.dart';
 
 import 'package:flutter/material.dart';
 import 'package:app/home/home_page.dart';
+import 'package:app/encryption.dart';
 
 class RegistrationForm extends StatefulWidget {
   const RegistrationForm({super.key});
@@ -25,12 +25,6 @@ class _RegistrationFormState extends State<RegistrationForm> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController repeatPasswordController = TextEditingController();
-
-  String getPasswordHash(String password) {
-    var bytes = utf8.encode(password);
-    var digest = sha256.convert(bytes);
-    return digest.toString();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -196,6 +190,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
                     }));
                   }
                 }
+                return;
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.secondary,

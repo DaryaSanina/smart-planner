@@ -1,4 +1,9 @@
+import 'dart:convert';
+
+import 'package:app/encryption.dart';
 import 'package:flutter/material.dart';
+
+import 'package:http/http.dart' as http;
 
 import 'package:app/home/home_page.dart';
 
@@ -67,12 +72,24 @@ class _LoginFormState extends State<LoginForm> {
         
             // Log in button
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (_formKey.currentState!.validate()) {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) {
-                    return HomePage(username: usernameController.text);
-                  }));
+                  // Check whether the user exists and that the password hashes match
+                  String passwordHash = getPasswordHash(passwordController.text);
+                  var response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_user?username=${usernameController.text}'));
+                  var jsonResponse = jsonDecode(response.body);
+                  if (jsonResponse['data'].length != 0 && passwordHash == jsonResponse['data'][0][3] && context.mounted) {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) {
+                      return HomePage(username: usernameController.text);
+                    }));
+                  }
+                  else if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Such user does not exist or the password is incorrect')),
+                    );
+                  }
                 }
+                return;
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.secondary,
