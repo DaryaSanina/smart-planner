@@ -268,7 +268,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                         child: Text(
                           task.deadlineTime == null
                             ? "Select time"
-                            : "${task.deadlineTime!.hour % 12}:${task.deadlineTime!.minute} ${task.deadlineTime!.hour < 12 ? 'AM' : 'PM'}",
+                            : "${task.deadlineTime!.hour < 10 ? '0' : ''}${task.deadlineTime!.hour % 12}:${task.deadlineTime!.minute < 10 ? '0' : ''}${task.deadlineTime!.minute} ${task.deadlineTime!.hour < 12 ? 'AM' : 'PM'}",
                           style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
                         ),
                       ),
@@ -323,7 +323,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                         child: Text(
                           task.startTime == null
                             ? "Select time"
-                            : "${task.startTime!.hour % 12}:${task.startTime!.minute} ${task.startTime!.hour < 12 ? 'AM' : 'PM'}",
+                            : "${task.startTime!.hour < 10 ? '0' : ''}${task.startTime!.hour % 12}:${task.startTime!.minute < 10 ? '0' : ''}${task.startTime!.minute} ${task.startTime!.hour < 12 ? 'AM' : 'PM'}",
                           style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
                         ),
                       ),
@@ -377,7 +377,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                         child: Text(
                           task.endTime == null
                             ? "Select time"
-                            : "${task.endTime!.hour % 12}:${task.endTime!.minute} ${task.endTime!.hour < 12 ? 'AM' : 'PM'}",
+                            : "${task.endTime!.hour < 10 ? '0' : ''}${task.endTime!.hour % 12}:${task.endTime!.minute < 10 ? '0' : ''}${task.endTime!.minute} ${task.endTime!.hour < 12 ? 'AM' : 'PM'}",
                           style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
                         ),
                       ),

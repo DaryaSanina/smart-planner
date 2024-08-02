@@ -15,44 +15,46 @@ class Task extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.03, vertical: MediaQuery.of(context).size.width * 0.02),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.width * 0.02),
+      child: TextButton(
+        onPressed: () {},
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.03, vertical: MediaQuery.of(context).size.width * 0.02),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.border_color, size: 20,),
+                  Text(
+                    timings,
+                    style: const TextStyle(
+                      fontSize: 13,
+                    ),
                   ),
                 ],
               ),
-              Text(
-                timings,
-                style: const TextStyle(
-                  fontSize: 13,
-                ),
-              ),
+              IconButton(
+                onPressed: () {
+                  var taskList = context.read<TaskListModel>();
+                  taskList.remove(this);
+                },
+                icon: const Icon(Icons.radio_button_unchecked, size: 30,),
+              )
             ],
           ),
-          IconButton(
-            onPressed: () {
-              var taskList = context.read<TaskListModel>();
-              taskList.remove(this);
-            },
-            icon: const Icon(Icons.radio_button_unchecked, size: 30,),
-          )
-        ],
+        ),
       ),
     );
   }
