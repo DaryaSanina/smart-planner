@@ -45,6 +45,7 @@ class TaskListModel extends ChangeNotifier {
     List responseList = jsonDecode(response.body)['data'];
     _tasks.clear();
     for (int i = 0; i < responseList.length; ++i) {
+      int taskID = responseList[i][0];
       String name = responseList[i][1];
       String timings;
       if (responseList[i][3] != null) {  // There is a deadline
@@ -53,7 +54,7 @@ class TaskListModel extends ChangeNotifier {
       else {
         timings = "${responseDateToDateString(responseList[i][4])} - ${responseDateToDateString(responseList[i][5])}";
       }
-      _tasks.add(Task(name: name, timings: timings));
+      _tasks.add(Task(taskID: taskID, name: name, timings: timings, userID: userID));
     }
     notifyListeners();
   }
@@ -64,7 +65,7 @@ class TaskListModel extends ChangeNotifier {
     int taskID = jsonDecode(response.body)['data'][0][0];
 
     // Remove the task
-    http.delete(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/delete_task?task_id=$taskID'));
+    await http.delete(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/delete_task?task_id=$taskID'));
     _tasks.remove(task);
     notifyListeners();
   }

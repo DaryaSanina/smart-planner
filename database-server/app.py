@@ -167,7 +167,7 @@ def add_task(task: Task):
           return JSONResponse({"reason": f"The task should either have a deadline or a start and an end date and time"}, status_code=400)
      
      # Check whether the user with this ID exists
-     cursor.execute(f"""SELECT * FROM Users WHERE UserID = '{task.user_id}'""")
+     cursor.execute(f"""SELECT * FROM Users WHERE UserID = {task.user_id}""")
      if len(cursor.fetchall()) == 0:
           return JSONResponse({"reason": "The user with this ID does not exist"}, status_code=400)
      
@@ -190,34 +190,36 @@ def update_task(task_id: int, task_name="", description="", importance=-1, deadl
      if len(cursor.fetchall()) == 0:
           return JSONResponse({"reason": "The task with this ID does not exist"}, status_code=400)
      
+     updates = []
+     
      if task_name != "":
           if not (3 <= len(task_name) <= 32):
                return JSONResponse({"reason": "The task name is not between 3 and 32 characters long"}, status_code=400)
-          cursor.execute(f"""UPDATE Tasks SET Name = '{task_name}' WHERE TaskID = {task_id}""")
+          updates.append(f"Name = '{task_name}'")
      
      if description != "":
-          cursor.execute(f"""UPDATE Tasks SET Description = '{description}' WHERE TaskID = {task_id}""")
+          updates.append(f"Description = '{description}'")
      
      if importance != -1:
           if not (0 <= importance <= 10):
-               db.rollback()
                return JSONResponse({"reason": "The importance is not between 0 and 10"}, status_code=400)
-          cursor.execute(f"""UPDATE Tasks SET Importance = {importance} WHERE TaskID = {task_id}""")
+          updates.append(f"Importance = {importance}")
      
      if deadline:
           if start or end:
-               db.rollback()
                return JSONResponse({"reason": "The task should either have a deadline or a start and an end date and time"}, status_code=400)
-          cursor.execute(f"""UPDATE Tasks SET Deadline = {deadline} WHERE TaskID = {task_id}""")
+          updates.append(f"Deadline = '{deadline}'")
      
      if start or end:
           if deadline or not start or not end:
-               db.rollback()
                return JSONResponse({"reason": "The task should either have a deadline or a start and an end date and time"}, status_code=400)
-          cursor.execute(f"""UPDATE Tasks SET Start = {start}, End = {end} WHERE TaskID = {task_id}""")
+          updates.append(f"Start = '{start}', End = '{end}'")
      
-     db.commit()  # Uncomment before deployment
-     return JSONResponse({}, status_code=201)
+     if len(updates) > 0:
+          statement = "UPDATE Tasks SET " + ", ".join(updates) + f" WHERE TaskID = {task_id}"
+          cursor.execute(statement)
+          db.commit()  # Uncomment before deployment
+     return JSONResponse(status_code=201)
 
 
 @app.delete('/delete_task')
@@ -231,11 +233,11 @@ def get_tag(tag_id=0, tag_name=""):
      if tag_name == "" and tag_id == 0:
           return JSONResponse({"reason": "Neither the name of the tag nor its ID were provided."}, status_code=400)
      if tag_name == "":
-          cursor.execute(f"""SELECT * FROM Tags WHERE TagID = '{tag_id}'""")
+          cursor.execute(f"""SELECT * FROM Tags WHERE TagID = {tag_id}""")
      elif tag_id == 0:
           cursor.execute(f"""SELECT * FROM Tags WHERE Name = '{tag_name}'""")
      else:
-          cursor.execute(f"""SELECT * FROM Tags WHERE TagID = '{tag_id}' AND Name = '{tag_name}'""")
+          cursor.execute(f"""SELECT * FROM Tags WHERE TagID = {tag_id} AND Name = '{tag_name}'""")
      result = cursor.fetchall()
      return JSONResponse({"data": result})
 
@@ -247,7 +249,7 @@ def add_tag(tag: Tag):
           return JSONResponse({"reason": "The tag name is not between 3 and 32 characters long"}, status_code=400)
      
      # Check whether the user with this ID exists
-     cursor.execute(f"""SELECT * FROM Users WHERE UserID = '{tag.user_id}'""")
+     cursor.execute(f"""SELECT * FROM Users WHERE UserID = {tag.user_id}""")
      if len(cursor.fetchall()) == 0:
           return JSONResponse({"reason": "The user with this ID does not exist"}, status_code=400)
      
@@ -260,7 +262,7 @@ def add_tag(tag: Tag):
 @app.put('/update_tag')
 def update_tag(tag_id: int, tag_name: str):
      # Check whether the tag with this ID exists
-     cursor.execute(f"""SELECT * FROM Tags WHERE TagID = '{tag_id}'""")
+     cursor.execute(f"""SELECT * FROM Tags WHERE TagID = {tag_id}""")
      if len(cursor.fetchall()) == 0:
           return JSONResponse({"reason": "The tag with this ID does not exist"}, status_code=400)
      
@@ -290,12 +292,12 @@ def get_task_to_tag_relationship(task_to_tag_id: int):
 @app.post('/add_task_to_tag_relationship')
 def add_task_to_tag_relationship(task_to_tag: TaskToTag):
      # Check whether the task with this ID exists
-     cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = '{task_to_tag.task_id}'""")
+     cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = {task_to_tag.task_id}""")
      if len(cursor.fetchall()) == 0:
           return JSONResponse({"reason": "The task with this ID does not exist"}, status_code=400)
      
      # Check whether the tag with this ID exists
-     cursor.execute(f"""SELECT * FROM Tags WHERE TagID = '{task_to_tag.tag_id}'""")
+     cursor.execute(f"""SELECT * FROM Tags WHERE TagID = {task_to_tag.tag_id}""")
      if len(cursor.fetchall()) == 0:
           return JSONResponse({"reason": "The tag with this ID does not exist"}, status_code=400)
      
@@ -321,7 +323,7 @@ def get_reminder(reminder_id: int):
 @app.post('/add_reminder')
 def add_reminder(reminder: Reminder):
      # Check whether the task with this ID exists
-     cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = '{reminder.task_id}'""")
+     cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = {reminder.task_id}""")
      if len(cursor.fetchall()) == 0:
           return JSONResponse({"reason": "The task with this ID does not exist"}, status_code=400)
      
@@ -355,7 +357,7 @@ def add_message(message: Message):
           return JSONResponse({"reason": "The role should be either 1 (user) or 2 (assistant)"}, status_code=400)
      
      # Check whether the user with this ID exists
-     cursor.execute(f"""SELECT * FROM Users WHERE UserID = '{message.user_id}'""")
+     cursor.execute(f"""SELECT * FROM Users WHERE UserID = {message.user_id}""")
      if len(cursor.fetchall()) == 0:
           return JSONResponse({"reason": "The user with this ID does not exist"}, status_code=400)
      

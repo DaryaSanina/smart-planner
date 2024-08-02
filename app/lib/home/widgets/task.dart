@@ -1,3 +1,5 @@
+import 'package:app/home/widgets/task_editing_dialog.dart';
+import 'package:app/models/task_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -6,18 +8,29 @@ import 'package:app/models/task_list_model.dart';
 class Task extends StatelessWidget {
   final String name;
   final String timings;
+  final int userID;
+  final int taskID;
   const Task({
-    this.name = "Task",
-    this.timings = "No deadline",
     super.key,
+    required this.name,
+    required this.timings,
+    required this.userID,
+    required this.taskID
   });
 
   @override
   Widget build(BuildContext context) {
+    final taskModel = context.watch<TaskModel>();
     return Padding(
       padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.width * 0.02),
       child: TextButton(
-        onPressed: () {},
+        onPressed: () async {
+          await taskModel.getDetails(taskID);
+          await showDialog<String>(
+            context: context,
+            builder: (context) => TaskEditingDialog(userID: userID, task_widget: this),
+          );
+        },
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.03, vertical: MediaQuery.of(context).size.width * 0.02),
           child: Row(

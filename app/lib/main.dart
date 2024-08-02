@@ -1,4 +1,4 @@
-import 'package:app/home/widgets/new_task_dialog.dart';
+import 'package:app/models/task_model.dart';
 import 'package:flutter/material.dart';
 
 import 'package:app/login/login_page.dart';

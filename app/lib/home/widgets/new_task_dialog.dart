@@ -1,10 +1,10 @@
 import 'dart:convert';
 
 import 'package:app/models/task_list_model.dart';
+import 'package:app/models/task_model.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 String dateTimeToString(DateTime date, TimeOfDay? time) {
@@ -38,69 +38,6 @@ String dateTimeToString(DateTime date, TimeOfDay? time) {
   result += ":00";
 
   return result;
-}
-
-class TaskModel extends ChangeNotifier {
-  String name = "";
-  String description = "";
-  int importance = 5;
-  bool isDeadline = true;
-  DateTime? deadlineDate;
-  TimeOfDay? deadlineTime;
-  DateTime? startDate;
-  TimeOfDay? startTime;
-  DateTime? endDate;
-  TimeOfDay? endTime;
-
-  void setName(String newName) {
-    name = newName;
-    notifyListeners();
-  }
-
-  void setDescription(String newDescription) {
-    description = newDescription;
-    notifyListeners();
-  }
-
-  void setImportance(int newImportance) {
-    importance = newImportance;
-    notifyListeners();
-  }
-
-  void setTimeConstraintsMode(bool newIsDeadline) {
-    isDeadline = newIsDeadline;
-    notifyListeners();
-  }
-
-  void setDeadlineDate(DateTime newDate) {
-    deadlineDate = newDate;
-    notifyListeners();
-  }
-
-  void setDeadlineTime(TimeOfDay newTime) {
-    deadlineTime = newTime;
-    notifyListeners();
-  }
-
-  void setStartDate(DateTime newDate) {
-    startDate = newDate;
-    notifyListeners();
-  }
-
-  void setStartTime(TimeOfDay newTime) {
-    startTime = newTime;
-    notifyListeners();
-  }
-
-  void setEndDate(DateTime newDate) {
-    endDate = newDate;
-    notifyListeners();
-  }
-
-  void setEndTime(TimeOfDay newTime) {
-    endTime = newTime;
-    notifyListeners();
-  }
 }
 
 class NewTaskDialog extends StatefulWidget {

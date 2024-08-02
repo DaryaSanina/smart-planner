@@ -1,4 +1,5 @@
 import 'package:app/home/widgets/new_task_dialog.dart';
+import 'package:app/models/task_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -13,6 +14,7 @@ class TaskList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var taskList = context.watch<TaskListModel>();
+    final task = context.watch<TaskModel>();
     return ListView(
       children: [
         Row(
@@ -39,7 +41,7 @@ class TaskList extends StatelessWidget {
             // New task button
             child: IconButton(
               onPressed: () async {
-                
+                task.clear();
                 await showDialog<String>(
                   context: context,
                   builder: (context) => NewTaskDialog(userID: userID),
