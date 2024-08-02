@@ -119,7 +119,9 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
   @override
   Widget build(BuildContext context) {
     final task = context.watch<TaskModel>();
+
     final taskList = context.watch<TaskListModel>();
+
     return AlertDialog(
       title: const Text("Create a new task"),
 
@@ -202,7 +204,15 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                     value: true,
                     groupValue: task.isDeadline,
                     activeColor: Theme.of(context).colorScheme.tertiary,
-                    onChanged: (bool? value) => setState(() => task.isDeadline = value!),
+                    onChanged: (bool? value) => setState(() {
+                      task.isDeadline = value!;
+                      task.deadlineDate = null;
+                      task.deadlineTime = null;
+                      task.startDate = null;
+                      task.startTime = null;
+                      task.endDate = null;
+                      task.endTime = null;
+                    }),
                   ),
                 ),
                 ListTile(
@@ -211,7 +221,15 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                     value: false,
                     groupValue: task.isDeadline,
                     activeColor: Theme.of(context).colorScheme.tertiary,
-                    onChanged: (bool? value) => setState(() => task.isDeadline = value!),
+                    onChanged: (bool? value) => setState(() {
+                      task.isDeadline = value!;
+                      task.deadlineDate = null;
+                      task.deadlineTime = null;
+                      task.startDate = null;
+                      task.startTime = null;
+                      task.endDate = null;
+                      task.endTime = null;
+                    }),
                   ),
                 ),
               ],
