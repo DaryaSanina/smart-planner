@@ -8,6 +8,7 @@ import os
 import re
 from pydantic import BaseModel
 import datetime
+from typing import Optional
 
 app = FastAPI()
 handler = Mangum(app)
@@ -34,10 +35,10 @@ class User(BaseModel):
 
 class Task(BaseModel):
      name: str
-     description: str | None
-     deadline: datetime.datetime | None  # In a POST request, it should be a string of the following format: "YYYY-MM-DD[T]HH:MM:SS"
-     start: datetime.datetime | None  # In a POST request, it should be a string of the following format: "YYYY-MM-DD[T]HH:MM:SS"
-     end: datetime.datetime | None  # In a POST request, it should be a string of the following format: "YYYY-MM-DD[T]HH:MM:SS"
+     description: Optional[str] = None
+     deadline: Optional[datetime.datetime] = None  # In a POST request, it should be a string of the following format: "YYYY-MM-DD[T]HH:MM:SS"
+     start: Optional[datetime.datetime] = None  # In a POST request, it should be a string of the following format: "YYYY-MM-DD[T]HH:MM:SS"
+     end: Optional[datetime.datetime] = None  # In a POST request, it should be a string of the following format: "YYYY-MM-DD[T]HH:MM:SS"
      importance: int
      user_id: int
 
@@ -124,16 +125,30 @@ def delete_user(user_id: int):
 
 
 @app.get('/get_task')
-def get_task(task_id=0, task_name=""):
-     if task_name == "" and task_id == 0:
+def get_task(task_id=0, task_name="", user_id=0):
+     if task_name == "" and task_id == 0 and user_id == 0:
           return JSONResponse({"reason": "Neither the name of the task nor its ID were provided."}, status_code=400)
-     if task_name == "":
-          cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = '{task_id}'""")
-     elif task_id == 0:
+     if task_name == "" and user_id == 0:
+          cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = {task_id}""")
+     elif task_id == 0 and user_id == 0:
           cursor.execute(f"""SELECT * FROM Tasks WHERE Name = '{task_name}'""")
+     elif task_id == 0 and task_name == "":
+          cursor.execute(f"""SELECT * FROM Tasks WHERE UserID = {user_id}""")
+     elif task_name == "":
+          cursor.execute(f"""SELECT * FROM Tasks WHERE UserID = {user_id} AND TaskID = {task_id}""")
+     elif task_id == 0:
+          cursor.execute(f"""SELECT * FROM Tasks WHERE Name = '{task_name}' AND UserID = {user_id}""")
+     elif user_id == 0:
+          cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = {task_id} AND Name = '{task_name}'""")
      else:
-          cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = '{task_id}' AND Name = '{task_name}'""")
+          cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = {task_id} AND Name = '{task_name}' AND UserID = {user_id}""")
      result = cursor.fetchall()
+     result = list(result)
+     for i in range(len(result)):
+          result[i] = list(result[i])
+          for j in range(len(result[i])):
+               if type(result[i][j]) == datetime.datetime:
+                    result[i][j] = result[i][j].strftime("%Y-%m-%dT%H:%M:%S")
      return JSONResponse({"data": result})
 
 
@@ -148,8 +163,8 @@ def add_task(task: Task):
           return JSONResponse({"reason": "The importance is not between 0 and 10"}, status_code=400)
      
      # Check whether there is either a deadline or a start and an end date and time
-     if (task.deadline and not task.start and not task.end) or (not task.deadline and task.start and task.end):
-          return JSONResponse({"reason": "The task should either have a deadline or a start and an end date and time"}, status_code=400)
+     if not((task.deadline is not None and task.start is None and task.end is None) or (task.deadline is None and task.start is not None and task.end is not None)):
+          return JSONResponse({"reason": f"The task should either have a deadline or a start and an end date and time"}, status_code=400)
      
      # Check whether the user with this ID exists
      cursor.execute(f"""SELECT * FROM Users WHERE UserID = '{task.user_id}'""")
