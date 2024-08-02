@@ -1,6 +1,44 @@
+import 'dart:convert';
+
+import 'package:app/models/task_list_model.dart';
+import 'package:http/http.dart' as http;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
+
+String dateTimeToString(DateTime date, TimeOfDay? time) {
+  String result = date.year.toString();
+  result += "-";
+  if (date.month < 10) {
+    result += "0";
+  }
+  result += date.month.toString();
+  result += "-";
+  if (date.day < 10) {
+    result += "0";
+  }
+  result += date.day.toString();
+  result += "T";
+
+  if (time != null) {
+    if (time.hour < 10) {
+      result += "0";
+    }
+    result += time.hour.toString();
+    result += ":";
+    if (time.minute < 10) {
+      result += "0";
+    }
+    result += time.minute.toString();
+  }
+  else {
+    result += "00:00";
+  }
+  result += ":00";
+
+  return result;
+}
 
 class TaskModel extends ChangeNotifier {
   String name = "";
@@ -66,7 +104,8 @@ class TaskModel extends ChangeNotifier {
 }
 
 class NewTaskDialog extends StatefulWidget {
-  const NewTaskDialog({super.key});
+  const NewTaskDialog({super.key, required this.userID});
+  final int userID;
 
   @override State<StatefulWidget> createState() => _NewTaskDialogState();
 }
@@ -80,6 +119,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
   @override
   Widget build(BuildContext context) {
     final task = context.watch<TaskModel>();
+    final taskList = context.watch<TaskListModel>();
     return AlertDialog(
       title: const Text("Create a new task"),
 
@@ -96,10 +136,19 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
               decoration: InputDecoration(
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
                 labelText: "Task name",
-                counterText: '${task.name.toString().length} character(s)'
+                counterText: "${32 - task.name.length} character(s) left"
               ),
               cursorColor: Theme.of(context).colorScheme.tertiary,
               onChanged: (text) => setState(() => task.setName(text)),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return "Please enter the task name";
+                }
+                if (value.length < 3 || value.length > 32) {
+                  return "The length of the task name is not between 3 and 32 characters";
+                }
+                return null;
+              },
             ),
 
             SizedBox(height: MediaQuery.of(context).size.height * 0.01),
@@ -112,10 +161,13 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
               decoration: InputDecoration(
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
                 labelText: "Description",
-                counterText: '${task.description.length.toString()} character(s)'
+                counterText: "${task.description.length} character(s)"
               ),
               cursorColor: Theme.of(context).colorScheme.tertiary,
               onChanged: (text) => setState(() => task.description = text),
+              validator: (value) {
+                return null;
+              },
             ),
 
             SizedBox(height: MediaQuery.of(context).size.height * 0.01),
@@ -347,8 +399,54 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
 
         // Create button
         TextButton(
-          onPressed: () {
-            Navigator.pop(context);
+          onPressed: () async {
+            if (_formKey.currentState!.validate()) {
+              if (task.deadlineDate != null && (task.startDate == null && task.startTime == null) && (task.endDate == null && task.endTime == null)
+                || (task.deadlineDate == null && task.deadlineTime == null) && task.startDate != null && task.endDate != null) {
+                  // Form a task creation request
+                  var requestDict = {
+                    'name': task.name,
+                    'importance': task.importance,
+                    'user_id': widget.userID
+                  };
+
+                  if (task.description.isNotEmpty) {
+                    requestDict['description'] = task.description;
+                  }
+
+                  if (task.isDeadline) {
+                    requestDict['deadline'] = dateTimeToString(task.deadlineDate!, task.deadlineTime);  // Add deadline
+                  }
+                  else {
+                    requestDict['start'] = dateTimeToString(task.startDate!, task.startTime); // Add start date and time
+                    requestDict['end'] = dateTimeToString(task.endDate!, task.endTime); // Add start date and time
+                  }
+
+                  // Send the request
+                  var request = jsonEncode(requestDict);
+                  http.Response response = await http.post(
+                    Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/add_task'),
+                    headers: <String, String>{'Content-Type': 'application/json'},
+                    body: request
+                  );
+
+                  if (response.statusCode != 201) {
+                    return;
+                  }
+
+                  if (context.mounted) {
+                    // Update the task list
+                    taskList.update(widget.userID);
+                    Navigator.pop(context);
+                  }
+                }
+              else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("There should either be a deadline or a start and an end.")),
+                );
+              }
+              return;
+            }
           },
           child: Text("Create", style: TextStyle(color: Theme.of(context).colorScheme.tertiary)),
         ),

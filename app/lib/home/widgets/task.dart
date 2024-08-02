@@ -5,10 +5,10 @@ import 'package:app/models/task_list_model.dart';
 
 class Task extends StatelessWidget {
   final String name;
-  final String date;
+  final String timings;
   const Task({
     this.name = "Task",
-    this.date = "No deadline",
+    this.timings = "No deadline",
     super.key,
   });
 
@@ -38,7 +38,7 @@ class Task extends StatelessWidget {
                 ],
               ),
               Text(
-                date,
+                timings,
                 style: const TextStyle(
                   fontSize: 13,
                 ),

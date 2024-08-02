@@ -1,8 +1,10 @@
 import 'dart:convert';
 
 import 'package:app/encryption.dart';
+import 'package:app/models/task_list_model.dart';
 import 'package:flutter/material.dart';
 
+import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:app/home/home_page.dart';
@@ -23,6 +25,7 @@ class _LoginFormState extends State<LoginForm> {
 
   @override
   Widget build(BuildContext context) {
+    final taskList = context.watch<TaskListModel>();
     return Form(
       key: _formKey,
       child: Padding(
@@ -79,8 +82,11 @@ class _LoginFormState extends State<LoginForm> {
                   var response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_user?username=${usernameController.text}'));
                   var jsonResponse = jsonDecode(response.body);
                   if (jsonResponse['data'].length != 0 && passwordHash == jsonResponse['data'][0][3] && context.mounted) {
+                    // Update the task list
+                    taskList.update(jsonResponse['data'][0][0]);
+
                     Navigator.push(context, MaterialPageRoute(builder: (context) {
-                      return HomePage(username: usernameController.text);
+                      return HomePage(username: usernameController.text, userID: jsonResponse['data'][0][0]);
                     }));
                   }
                   else if (context.mounted) {

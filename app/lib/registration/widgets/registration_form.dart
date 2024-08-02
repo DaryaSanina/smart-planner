@@ -181,12 +181,13 @@ class _RegistrationFormState extends State<RegistrationForm> {
                     headers: <String, String>{'Content-Type': 'application/json'},
                     body: request
                   );
+                  int userID = jsonDecode((await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_user?username=${usernameController.text}'))).body)['data'][0][0];
                   if (response.statusCode != 201) {
                     return;
                   }
                   if (context.mounted) {
                     Navigator.push(context, MaterialPageRoute(builder: (context) {
-                      return HomePage(username: usernameController.text);
+                      return HomePage(username: usernameController.text, userID: userID);
                     }));
                   }
                 }
