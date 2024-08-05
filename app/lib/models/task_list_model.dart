@@ -60,12 +60,11 @@ class TaskListModel extends ChangeNotifier {
   }
 
   void remove(Task task) async {
-    // Get task ID
-    http.Response response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_task?task_name=${task.name}'));
-    int taskID = jsonDecode(response.body)['data'][0][0];
-
     // Remove the task
-    await http.delete(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/delete_task?task_id=$taskID'));
+    await http.delete(
+      Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/delete_task?task_id=${task.taskID}'),
+      headers: {'Content-Type': 'application/json'}
+    );
     _tasks.remove(task);
     notifyListeners();
   }

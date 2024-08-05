@@ -121,6 +121,7 @@ def add_user(user: User):
 @app.delete('/delete_user')
 def delete_user(user_id: int):
      cursor.execute(f"""DELETE FROM Users WHERE UserID = {user_id}""")
+     db.commit()
      return JSONResponse({})
 
 
@@ -225,6 +226,7 @@ def update_task(task_id: int, task_name="", description="", importance=-1, deadl
 @app.delete('/delete_task')
 def delete_task(task_id: int):
      cursor.execute(f"""DELETE FROM Tasks WHERE TaskID = {task_id}""")
+     db.commit()
      return JSONResponse({})
 
 
@@ -279,6 +281,7 @@ def update_tag(tag_id: int, tag_name: str):
 @app.delete('/delete_tag')
 def delete_tag(tag_id: int):
      cursor.execute(f"""DELETE FROM Tags WHERE TagID = {tag_id}""")
+     db.commit()
      return JSONResponse({})
 
 
@@ -310,6 +313,7 @@ def add_task_to_tag_relationship(task_to_tag: TaskToTag):
 @app.delete('/delete_task_to_tag_relationship')
 def delete_task_to_tag_relationship(task_to_tag_id: int):
      cursor.execute(f"""DELETE FROM TasksToTags WHERE TaskToTagID = {task_to_tag_id}""")
+     db.commit()
      return JSONResponse({})
 
 
@@ -340,6 +344,7 @@ def add_reminder(reminder: Reminder):
 @app.delete('/delete_reminder')
 def delete_reminder(reminder_id: int):
      cursor.execute(f"""DELETE FROM Reminders WHERE ReminderID = {reminder_id}""")
+     db.commit()
      return JSONResponse({})
 
 
@@ -369,6 +374,7 @@ def add_message(message: Message):
 @app.delete('/delete_message')
 def delete_reminder(message_id: int):
      cursor.execute(f"""DELETE FROM Messages WHERE MessageID = {message_id}""")
+     db.commit()
      return JSONResponse({})
 
 
