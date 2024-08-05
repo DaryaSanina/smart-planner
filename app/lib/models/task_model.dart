@@ -31,7 +31,6 @@ class TaskModel extends ChangeNotifier {
   Future<void> getDetails(int taskID) async {
     var response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_task?task_id=$taskID'));
     var details = jsonDecode(response.body)['data'][0];
-    print(details[2]);
     name = details[1];
     description = details[2].toString();
     importance = details[6];

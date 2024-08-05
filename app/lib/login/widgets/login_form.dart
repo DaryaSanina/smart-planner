@@ -1,11 +1,8 @@
-import 'dart:convert';
-
-import 'package:app/encryption.dart';
+import 'package:app/login/util.dart';
 import 'package:app/models/task_list_model.dart';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
 
 import 'package:app/home/home_page.dart';
 
@@ -22,10 +19,12 @@ class _LoginFormState extends State<LoginForm> {
   final _passwordText = "";
   TextEditingController usernameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
     final taskList = context.watch<TaskListModel>();
+    int userID;
     return Form(
       key: _formKey,
       child: Padding(
@@ -77,19 +76,31 @@ class _LoginFormState extends State<LoginForm> {
             ElevatedButton(
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
-                  // Check whether the user exists and that the password hashes match
-                  String passwordHash = getPasswordHash(passwordController.text);
-                  var response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_user?username=${usernameController.text}'));
-                  var jsonResponse = jsonDecode(response.body);
-                  if (jsonResponse['data'].length != 0 && passwordHash == jsonResponse['data'][0][3] && context.mounted) {
-                    // Update the task list
-                    taskList.update(jsonResponse['data'][0][0]);
+                  // Check whether the details are correct
+                  setState(() {
+                    _isLoading = true;
+                  });
+                  userID = await login(usernameController.text, passwordController.text);
 
-                    Navigator.push(context, MaterialPageRoute(builder: (context) {
-                      return HomePage(username: usernameController.text, userID: jsonResponse['data'][0][0]);
-                    }));
+                  if (userID != -1) {  // The details are correct
+                    // Update the task list
+                    await taskList.update(userID);
+
+                    setState(() {
+                      _isLoading = false;
+                    });
+
+                    if (context.mounted) {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) {
+                        return HomePage(username: usernameController.text, userID: userID);
+                      }));
+                    }
                   }
-                  else if (context.mounted) {
+                  else if (context.mounted) {  // The details are incorrect
+                    setState(() {
+                      _isLoading = false;
+                    });
+
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Such user does not exist or the password is incorrect')),
                     );
@@ -103,7 +114,22 @@ class _LoginFormState extends State<LoginForm> {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Text(
+                child: _isLoading
+                ? Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Log in",
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Theme.of(context).colorScheme.tertiary,
+                      ),
+                    ),
+                    SizedBox(width: MediaQuery.of(context).size.width * 0.03),
+                    CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary),
+                  ],
+                )
+                : Text(
                   "Log in",
                   style: TextStyle(
                     fontSize: 20,
@@ -111,7 +137,7 @@ class _LoginFormState extends State<LoginForm> {
                   ),
                 ),
               ),
-            ),
+            )
           ],
         ),
       )

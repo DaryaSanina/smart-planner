@@ -40,9 +40,9 @@ String dateTimeToString(DateTime date, TimeOfDay? time) {
 }
 
 class TaskEditingDialog extends StatefulWidget {
-  const TaskEditingDialog({super.key, required this.userID, required this.task_widget});
+  const TaskEditingDialog({super.key, required this.userID, required this.taskWidget});
   final int userID;
-  final Task task_widget;
+  final Task taskWidget;
 
   @override State<StatefulWidget> createState() => _TaskEditingDialogState();
 }
@@ -365,7 +365,7 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                 || (task.deadlineDate == null && task.deadlineTime == null) && task.startDate != null && task.endDate != null) {
                   // Form a task creation request
                   String url = 'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/update_task';
-                  url += '?task_id=${widget.task_widget.taskID}';
+                  url += '?task_id=${widget.taskWidget.taskID}';
                   url += '&task_name=${task.name}';
 
                   if (task.description.isNotEmpty) {

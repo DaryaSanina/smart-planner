@@ -32,7 +32,7 @@ String responseDateToDateString(String responseDate) {
 }
 
 class TaskListModel extends ChangeNotifier {
-  List<Widget> _tasks = [];
+  final List<Widget> _tasks = [];
   UnmodifiableListView<Widget> get tasks => UnmodifiableListView(_tasks);
 
   void add(Task task) {
@@ -40,7 +40,7 @@ class TaskListModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void update(int userID) async {
+  Future<void> update(int userID) async {
     http.Response response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_task?user_id=$userID'));
     List responseList = jsonDecode(response.body)['data'];
     _tasks.clear();

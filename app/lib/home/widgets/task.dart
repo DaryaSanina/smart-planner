@@ -28,7 +28,7 @@ class Task extends StatelessWidget {
           await taskModel.getDetails(taskID);
           await showDialog<String>(
             context: context,
-            builder: (context) => TaskEditingDialog(userID: userID, task_widget: this),
+            builder: (context) => TaskEditingDialog(userID: userID, taskWidget: this),
           );
         },
         child: Padding(

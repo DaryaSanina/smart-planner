@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
 import 'package:app/home/home_page.dart';
-import 'package:app/encryption.dart';
+import 'package:app/login/util.dart';
 
 class RegistrationForm extends StatefulWidget {
   const RegistrationForm({super.key});
