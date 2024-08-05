@@ -52,6 +52,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
   TextEditingController taskNameController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
   TextEditingController importanceController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -358,6 +359,9 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
             if (_formKey.currentState!.validate()) {
               if (task.deadlineDate != null && (task.startDate == null && task.startTime == null) && (task.endDate == null && task.endTime == null)
                 || (task.deadlineDate == null && task.deadlineTime == null) && task.startDate != null && task.endDate != null) {
+                  setState(() {
+                    _isLoading = true;
+                  });
                   // Form a task creation request
                   var requestDict = {
                     'name': task.name,
@@ -384,14 +388,21 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                     headers: <String, String>{'Content-Type': 'application/json'},
                     body: request
                   );
+                  await Future.delayed(Duration(seconds: 5));
 
                   if (response.statusCode != 201) {
+                    setState(() {
+                      _isLoading = false;
+                    });
                     return;
                   }
 
                   if (context.mounted) {
                     // Update the task list
                     taskList.update(widget.userID);
+                    setState(() {
+                      _isLoading = false;
+                    });
                     Navigator.pop(context);
                   }
                 }
@@ -405,7 +416,9 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
           },
           child: Text("Create", style: TextStyle(color: Theme.of(context).colorScheme.tertiary)),
         ),
-      ]
+      ] + (_isLoading
+      ? [CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary)]
+      : [])
     );
   }
 }
