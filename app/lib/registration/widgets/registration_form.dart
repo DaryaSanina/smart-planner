@@ -1,10 +1,9 @@
 import 'dart:convert';
-
+import 'package:app/login/util.dart';
+import 'package:app/registration/util.dart';
 import 'package:http/http.dart' as http;
-
 import 'package:flutter/material.dart';
 import 'package:app/home/home_page.dart';
-import 'package:app/login/util.dart';
 
 class RegistrationForm extends StatefulWidget {
   const RegistrationForm({super.key});
@@ -21,6 +20,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
   final _repeatPasswordText = "";
   bool _usernameExists = false;
   bool _emailExists = false;
+  bool _isLoading = false;
   TextEditingController usernameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
@@ -28,6 +28,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
 
   @override
   Widget build(BuildContext context) {
+    int userID;
     return Form(
       key: _formKey,
       child: Padding(
@@ -175,21 +176,19 @@ class _RegistrationFormState extends State<RegistrationForm> {
             ElevatedButton(
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
-                  var request = jsonEncode(<String, dynamic>{'username': usernameController.text, 'email': emailController.text, 'password_hash': getPasswordHash(passwordController.text)});
-                  final response = await http.post(
-                    Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/add_user'),
-                    headers: <String, String>{'Content-Type': 'application/json'},
-                    body: request
-                  );
-                  int userID = jsonDecode((await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_user?username=${usernameController.text}'))).body)['data'][0][0];
-                  if (response.statusCode != 201) {
-                    return;
-                  }
+                  setState(() {
+                    _isLoading = true;
+                  });
+                  register(usernameController.text, emailController.text, passwordController.text);
+                  userID = await login(usernameController.text, passwordController.text);
                   if (context.mounted) {
                     Navigator.push(context, MaterialPageRoute(builder: (context) {
                       return HomePage(username: usernameController.text, userID: userID);
                     }));
                   }
+                  setState(() {
+                    _isLoading = false;
+                  });
                 }
                 return;
               },
@@ -199,12 +198,26 @@ class _RegistrationFormState extends State<RegistrationForm> {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Text(
+                child: _isLoading
+                ? Text(
                   "Register",
                   style: TextStyle(
                     fontSize: 20,
                     color: Theme.of(context).colorScheme.tertiary,
                   ),
+                )
+                : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Register",
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Theme.of(context).colorScheme.tertiary,
+                      ),
+                    ),
+                    CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary),
+                  ],
                 ),
               ),
             ),

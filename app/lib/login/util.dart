@@ -1,12 +1,6 @@
-import 'package:crypto/crypto.dart';
-import 'package:http/http.dart' as http;
+import 'package:app/util.dart';
 import 'dart:convert';
-
-String getPasswordHash(String password) {
-  var bytes = utf8.encode(password);
-  var digest = sha256.convert(bytes);
-  return digest.toString();
-}
+import 'package:http/http.dart' as http;
 
 Future<int> login(String username, String password) async {
   String passwordHash = getPasswordHash(password);
