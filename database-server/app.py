@@ -220,7 +220,7 @@ def update_task(task_id: int, task_name="", description="", importance=-1, deadl
           statement = "UPDATE Tasks SET " + ", ".join(updates) + f" WHERE TaskID = {task_id}"
           cursor.execute(statement)
           db.commit()  # Uncomment before deployment
-     return JSONResponse(status_code=201)
+     return JSONResponse({}, status_code=201)
 
 
 @app.delete('/delete_task')

@@ -397,9 +397,10 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                     return;
                   }
 
+                  // Update the task list
+                  await taskList.update(widget.userID);
+
                   if (context.mounted) {
-                    // Update the task list
-                    taskList.update(widget.userID);
                     setState(() {
                       _isLoading = false;
                     });
