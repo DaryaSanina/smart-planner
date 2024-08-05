@@ -388,7 +388,6 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                     headers: <String, String>{'Content-Type': 'application/json'},
                     body: request
                   );
-                  await Future.delayed(Duration(seconds: 5));
 
                   if (response.statusCode != 201) {
                     setState(() {
