@@ -417,7 +417,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
         ),
       ] + (_isLoading
       ? [CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary)]
-      : [])
+      : []),
     );
   }
 }

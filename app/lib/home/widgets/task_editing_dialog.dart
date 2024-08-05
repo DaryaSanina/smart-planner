@@ -52,6 +52,7 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
   TextEditingController taskNameController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
   TextEditingController importanceController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -363,6 +364,10 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
             if (_formKey.currentState!.validate()) {
               if (task.deadlineDate != null && (task.startDate == null && task.startTime == null) && (task.endDate == null && task.endTime == null)
                 || (task.deadlineDate == null && task.deadlineTime == null) && task.startDate != null && task.endDate != null) {
+                  setState(() {
+                    _isLoading = true;
+                  });
+
                   // Form a task creation request
                   String url = 'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/update_task';
                   url += '?task_id=${widget.taskWidget.taskID}';
@@ -386,12 +391,18 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                   );
 
                   if (response.statusCode != 201) {
+                    setState(() {
+                      _isLoading = false;
+                    });
                     return;
                   }
 
                   if (context.mounted) {
                     // Update the task list
                     taskList.update(widget.userID);
+                    setState(() {
+                      _isLoading = false;
+                    });
                     Navigator.pop(context);
                   }
                 }
@@ -405,7 +416,9 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
           },
           child: Text("OK", style: TextStyle(color: Theme.of(context).colorScheme.tertiary)),
         ),
-      ]
+      ] + (_isLoading
+      ? [CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary)]
+      : []),
     );
   }
 }
