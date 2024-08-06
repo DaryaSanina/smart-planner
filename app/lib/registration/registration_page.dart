@@ -15,6 +15,7 @@ class _RegistrationState extends State<RegistrationPage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         return Scaffold(
+          resizeToAvoidBottomInset: false,
           backgroundColor: Theme.of(context).colorScheme.primary,
           body: Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,

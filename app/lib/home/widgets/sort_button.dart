@@ -22,7 +22,7 @@ class SortButton extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            Icons.reorder,
+            Icons.sort,
             color: Theme.of(context).colorScheme.tertiary
           ),
           SizedBox(width: MediaQuery.of(context).size.width * 0.01),

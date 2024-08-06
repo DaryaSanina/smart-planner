@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:app/home/widgets/task.dart';
 import 'package:app/models/task_list_model.dart';
 import 'package:app/models/task_model.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
@@ -182,169 +184,178 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
             Container(
               child: task.isDeadline
                 // Deadline date and time picker
-                ? Row(
-                    children: [
-                      const Text("Deadline: ", style: TextStyle(fontSize: 18)),
-                      TextButton(
-                        onPressed: () => setState(() async => task.setDeadlineDate((await showDatePicker(
-                          context: context,
-                          firstDate: DateTime(2000), lastDate: DateTime(2100),
-                          initialDate: task.deadlineDate,
-                          builder: (context, child) {
-                            return Theme(
-                              data: Theme.of(context).copyWith(
-                                colorScheme: const ColorScheme.dark().copyWith(
-                                  primary: Theme.of(context).colorScheme.secondary,
-                                  onPrimary: Theme.of(context).colorScheme.tertiary,
-                                  onSurface: Theme.of(context).colorScheme.tertiary,
+                ? SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                      children: [
+                        const Text("Deadline: ", style: TextStyle(fontSize: 18)),
+                        TextButton(
+                          onPressed: () => setState(() async => task.setDeadlineDate((await showDatePicker(
+                            context: context,
+                            firstDate: DateTime(2000), lastDate: DateTime(2100),
+                            initialDate: task.deadlineDate,
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: const ColorScheme.dark().copyWith(
+                                    primary: Theme.of(context).colorScheme.secondary,
+                                    onPrimary: Theme.of(context).colorScheme.tertiary,
+                                    onSurface: Theme.of(context).colorScheme.tertiary,
+                                  ),
                                 ),
-                              ),
-                              child: child!,
-                            );
-                          }
-                        ))!)),
-                        child: Text(
-                          task.deadlineDate == null
-                            ? "Select date"
-                            : "${task.deadlineDate!.day}/${task.deadlineDate!.month}/${task.deadlineDate!.year}",
-                          style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                                child: child!,
+                              );
+                            }
+                          ))!)),
+                          child: Text(
+                            task.deadlineDate == null
+                              ? "Select date"
+                              : "${task.deadlineDate!.day}/${task.deadlineDate!.month}/${task.deadlineDate!.year}",
+                            style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                          ),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: () => setState(() async => task.setDeadlineTime((await showTimePicker(
-                          context: context,
-                          initialTime: (task.deadlineTime != const TimeOfDay(hour: 0, minute: 0) ? task.deadlineTime! : TimeOfDay.now()),
-                          builder: (context, child) {
-                            return Theme(
-                              data: Theme.of(context).copyWith(
-                                colorScheme: const ColorScheme.dark().copyWith(
-                                  primaryContainer: Theme.of(context).colorScheme.secondary,
-                                  tertiaryContainer: Theme.of(context).colorScheme.secondary,
+                        TextButton(
+                          onPressed: () => setState(() async => task.setDeadlineTime((await showTimePicker(
+                            context: context,
+                            initialTime: (task.deadlineTime != const TimeOfDay(hour: 0, minute: 0) ? task.deadlineTime! : TimeOfDay.now()),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: const ColorScheme.dark().copyWith(
+                                    primaryContainer: Theme.of(context).colorScheme.secondary,
+                                    tertiaryContainer: Theme.of(context).colorScheme.secondary,
+                                  ),
                                 ),
-                              ),
-                              child: child!,
-                            );
-                          }
-                        ))!)),
-                        child: Text(
-                          task.deadlineTime == null
-                            ? "Select time"
-                            : "${task.deadlineTime!.hour < 10 ? '0' : ''}${task.deadlineTime!.hour % 12}:${task.deadlineTime!.minute < 10 ? '0' : ''}${task.deadlineTime!.minute} ${task.deadlineTime!.hour < 12 ? 'AM' : 'PM'}",
-                          style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                                child: child!,
+                              );
+                            }
+                          ))!)),
+                          child: Text(
+                            task.deadlineTime == null
+                              ? "Select time"
+                              : "${task.deadlineTime!.hour < 10 ? '0' : ''}${task.deadlineTime!.hour % 12}:${task.deadlineTime!.minute < 10 ? '0' : ''}${task.deadlineTime!.minute} ${task.deadlineTime!.hour < 12 ? 'AM' : 'PM'}",
+                            style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                          ),
                         ),
-                      ),
-                    ],
-                  )
+                      ],
+                    ),
+                )
               : Column(
                 children: [
                   // Start date and time picker
-                  Row(
-                    children: [
-                      const Text("Start: ", style: TextStyle(fontSize: 18)),
-                      TextButton(
-                        onPressed: () => setState(() async => task.setStartDate((await showDatePicker(
-                          context: context,
-                          initialDate: task.startDate,
-                          firstDate: DateTime(2000), lastDate: DateTime(2100),
-                          builder: (context, child) {
-                            return Theme(
-                              data: Theme.of(context).copyWith(
-                                colorScheme: const ColorScheme.dark().copyWith(
-                                  primary: Theme.of(context).colorScheme.secondary,
-                                  onPrimary: Theme.of(context).colorScheme.tertiary,
-                                  onSurface: Theme.of(context).colorScheme.tertiary,
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        const Text("Start: ", style: TextStyle(fontSize: 18)),
+                        TextButton(
+                          onPressed: () => setState(() async => task.setStartDate((await showDatePicker(
+                            context: context,
+                            initialDate: task.startDate,
+                            firstDate: DateTime(2000), lastDate: DateTime(2100),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: const ColorScheme.dark().copyWith(
+                                    primary: Theme.of(context).colorScheme.secondary,
+                                    onPrimary: Theme.of(context).colorScheme.tertiary,
+                                    onSurface: Theme.of(context).colorScheme.tertiary,
+                                  ),
                                 ),
-                              ),
-                              child: child!,
-                            );
-                          }
-                        ))!)),
-                        child: Text(
-                          task.startDate == null
-                            ? "Select date"
-                            : "${task.startDate!.day}/${task.startDate!.month}/${task.startDate!.year}",
-                          style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                                child: child!,
+                              );
+                            }
+                          ))!)),
+                          child: Text(
+                            task.startDate == null
+                              ? "Select date"
+                              : "${task.startDate!.day}/${task.startDate!.month}/${task.startDate!.year}",
+                            style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                          ),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: () => setState(() async => task.setStartTime((await showTimePicker(
-                          context: context,
-                          initialTime: (task.startTime != const TimeOfDay(hour: 0, minute: 0) ? task.startTime! : TimeOfDay.now()),
-                          builder: (context, child) {
-                            return Theme(
-                              data: Theme.of(context).copyWith(
-                                colorScheme: const ColorScheme.dark().copyWith(
-                                  primaryContainer: Theme.of(context).colorScheme.secondary,
-                                  tertiaryContainer: Theme.of(context).colorScheme.secondary,
+                        TextButton(
+                          onPressed: () => setState(() async => task.setStartTime((await showTimePicker(
+                            context: context,
+                            initialTime: (task.startTime != const TimeOfDay(hour: 0, minute: 0) ? task.startTime! : TimeOfDay.now()),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: const ColorScheme.dark().copyWith(
+                                    primaryContainer: Theme.of(context).colorScheme.secondary,
+                                    tertiaryContainer: Theme.of(context).colorScheme.secondary,
+                                  ),
                                 ),
-                              ),
-                              child: child!,
-                            );
-                          }
-                        ))!)),
-                        child: Text(
-                          task.startTime == null
-                            ? "Select time"
-                            : "${task.startTime!.hour < 10 ? '0' : ''}${task.startTime!.hour % 12}:${task.startTime!.minute < 10 ? '0' : ''}${task.startTime!.minute} ${task.startTime!.hour < 12 ? 'AM' : 'PM'}",
-                          style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                                child: child!,
+                              );
+                            }
+                          ))!)),
+                          child: Text(
+                            task.startTime == null
+                              ? "Select time"
+                              : "${task.startTime!.hour < 10 ? '0' : ''}${task.startTime!.hour % 12}:${task.startTime!.minute < 10 ? '0' : ''}${task.startTime!.minute} ${task.startTime!.hour < 12 ? 'AM' : 'PM'}",
+                            style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
 
                   // End date and time picker
-                  Row(
-                    children: [
-                      const Text("End: ", style: TextStyle(fontSize: 18)),
-                      TextButton(
-                        onPressed: () => setState(() async => task.setEndDate((await showDatePicker(
-                          context: context,
-                          initialDate: task.endDate,
-                          firstDate: DateTime(2000), lastDate: DateTime(2100),
-                          builder: (context, child) {
-                            return Theme(
-                              data: Theme.of(context).copyWith(
-                                colorScheme: const ColorScheme.dark().copyWith(
-                                  primary: Theme.of(context).colorScheme.secondary,
-                                  onPrimary: Theme.of(context).colorScheme.tertiary,
-                                  onSurface: Theme.of(context).colorScheme.tertiary,
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        const Text("End: ", style: TextStyle(fontSize: 18)),
+                        TextButton(
+                          onPressed: () => setState(() async => task.setEndDate((await showDatePicker(
+                            context: context,
+                            initialDate: task.endDate,
+                            firstDate: DateTime(2000), lastDate: DateTime(2100),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: const ColorScheme.dark().copyWith(
+                                    primary: Theme.of(context).colorScheme.secondary,
+                                    onPrimary: Theme.of(context).colorScheme.tertiary,
+                                    onSurface: Theme.of(context).colorScheme.tertiary,
+                                  ),
                                 ),
-                              ),
-                              child: child!,
-                            );
-                          }
-                        ))!)),
-                        child: Text(
-                          task.endDate == null
-                            ? "Select date"
-                            : "${task.endDate!.day}/${task.endDate!.month}/${task.endDate!.year}",
-                          style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                                child: child!,
+                              );
+                            }
+                          ))!)),
+                          child: Text(
+                            task.endDate == null
+                              ? "Select date"
+                              : "${task.endDate!.day}/${task.endDate!.month}/${task.endDate!.year}",
+                            style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                          ),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: () => setState(() async => task.setEndTime((await showTimePicker(
-                          context: context,
-                          initialTime: (task.endTime != const TimeOfDay(hour: 0, minute: 0) ? task.endTime! : TimeOfDay.now()),
-                          builder: (context, child) {
-                            return Theme(
-                              data: Theme.of(context).copyWith(
-                                colorScheme: const ColorScheme.dark().copyWith(
-                                  primaryContainer: Theme.of(context).colorScheme.secondary,
-                                  tertiaryContainer: Theme.of(context).colorScheme.secondary,
+                        TextButton(
+                          onPressed: () => setState(() async => task.setEndTime((await showTimePicker(
+                            context: context,
+                            initialTime: (task.endTime != const TimeOfDay(hour: 0, minute: 0) ? task.endTime! : TimeOfDay.now()),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: const ColorScheme.dark().copyWith(
+                                    primaryContainer: Theme.of(context).colorScheme.secondary,
+                                    tertiaryContainer: Theme.of(context).colorScheme.secondary,
+                                  ),
                                 ),
-                              ),
-                              child: child!,
-                            );
-                          }
-                        ))!)),
-                        child: Text(
-                          task.endTime == null
-                            ? "Select time"
-                            : "${task.endTime!.hour < 10 ? '0' : ''}${task.endTime!.hour % 12}:${task.endTime!.minute < 10 ? '0' : ''}${task.endTime!.minute} ${task.endTime!.hour < 12 ? 'AM' : 'PM'}",
-                          style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                                child: child!,
+                              );
+                            }
+                          ))!)),
+                          child: Text(
+                            task.endTime == null
+                              ? "Select time"
+                              : "${task.endTime!.hour < 10 ? '0' : ''}${task.endTime!.hour % 12}:${task.endTime!.minute < 10 ? '0' : ''}${task.endTime!.minute} ${task.endTime!.hour < 12 ? 'AM' : 'PM'}",
+                            style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -398,8 +409,6 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                   );
 
                   if (response.statusCode != 201) {
-                    print(response.statusCode);
-                    print(response.body);
                     setState(() {
                       _isLoading = false;
                     });
