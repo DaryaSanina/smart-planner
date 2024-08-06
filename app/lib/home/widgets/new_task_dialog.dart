@@ -367,9 +367,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                     'user_id': widget.userID
                   };
 
-                  if (task.description.isNotEmpty) {
-                    requestDict['description'] = task.description;
-                  }
+                  requestDict['description'] = task.description;
 
                   if (task.isDeadline) {
                     requestDict['deadline'] = dateTimeToString(task.deadlineDate!, task.deadlineTime);  // Add deadline

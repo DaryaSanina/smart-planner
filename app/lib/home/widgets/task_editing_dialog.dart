@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:app/home/widgets/task.dart';
 import 'package:app/models/task_list_model.dart';
 import 'package:app/models/task_model.dart';
@@ -370,27 +372,33 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
 
                   // Form a task creation request
                   String url = 'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/update_task';
-                  url += '?task_id=${widget.taskWidget.taskID}';
-                  url += '&task_name=${task.name}';
 
-                  if (task.description.isNotEmpty) {
-                    url += '&description=${task.description}';
-                  }
+                  var requestDict = {
+                    "task_id": widget.taskWidget.taskID,
+                    "name": task.name,
+                    "description": task.description
+                  };
 
                   if (task.isDeadline) {
-                    url += '&deadline=${dateTimeToString(task.deadlineDate!, task.deadlineTime)}';  // Add deadline
+                    requestDict["deadline"] = dateTimeToString(task.deadlineDate!, task.deadlineTime);  // Add deadline
                   }
                   else {
-                    url += '&start=${dateTimeToString(task.startDate!, task.startTime)}';  // Add start date and time
-                    url += '&end=${dateTimeToString(task.endDate!, task.endTime)}';  // Add end date and time
+                    requestDict["start"] = dateTimeToString(task.startDate!, task.startTime);  // Add start date and time
+                    requestDict["end"] = dateTimeToString(task.endDate!, task.endTime);  // Add end date and time
                   }
+
+                  var request = jsonEncode(requestDict);
 
                   // Send the request
                   http.Response response = await http.put(
                     Uri.parse(url),
+                    headers: <String, String>{'Content-Type': 'application/json'},
+                    body: request,
                   );
 
                   if (response.statusCode != 201) {
+                    print(response.statusCode);
+                    print(response.body);
                     setState(() {
                       _isLoading = false;
                     });

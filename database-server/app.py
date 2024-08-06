@@ -43,6 +43,16 @@ class Task(BaseModel):
      user_id: int
 
 
+class ExistingTask(BaseModel):
+     task_id: int
+     name: Optional[str] = None
+     description: Optional[str] = None
+     deadline: Optional[datetime.datetime] = None  # In a POST request, it should be a string of the following format: "YYYY-MM-DD[T]HH:MM:SS"
+     start: Optional[datetime.datetime] = None  # In a POST request, it should be a string of the following format: "YYYY-MM-DD[T]HH:MM:SS"
+     end: Optional[datetime.datetime] = None  # In a POST request, it should be a string of the following format: "YYYY-MM-DD[T]HH:MM:SS"
+     importance: Optional[int] = None
+
+
 class Tag(BaseModel):
      name: str
      user_id: int
@@ -185,39 +195,39 @@ def add_task(task: Task):
 
 
 @app.put('/update_task')
-def update_task(task_id: int, task_name="", description="", importance=-1, deadline=None, start=None, end=None):
+def update_task(task: ExistingTask):
      # Check whether the task with this ID exists
-     cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = '{task_id}'""")
+     cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = '{task.task_id}'""")
      if len(cursor.fetchall()) == 0:
           return JSONResponse({"reason": "The task with this ID does not exist"}, status_code=400)
      
      updates = []
      
-     if task_name != "":
-          if not (3 <= len(task_name) <= 32):
+     if task.name is not None:
+          if not (3 <= len(task.name) <= 32):
                return JSONResponse({"reason": "The task name is not between 3 and 32 characters long"}, status_code=400)
-          updates.append(f"Name = '{task_name}'")
+          updates.append(f"Name = '{task.name}'")
      
-     if description != "":
-          updates.append(f"Description = '{description}'")
+     if task.description is not None:
+          updates.append(f"Description = '{task.description}'")
      
-     if importance != -1:
-          if not (0 <= importance <= 10):
+     if task.importance is not None:
+          if not (0 <= task.importance <= 10):
                return JSONResponse({"reason": "The importance is not between 0 and 10"}, status_code=400)
-          updates.append(f"Importance = {importance}")
+          updates.append(f"Importance = {task.importance}")
      
-     if deadline:
-          if start or end:
+     if task.deadline:
+          if task.start or task.end:
                return JSONResponse({"reason": "The task should either have a deadline or a start and an end date and time"}, status_code=400)
-          updates.append(f"Deadline = '{deadline}'")
+          updates.append(f"Deadline = '{task.deadline}'")
      
-     if start or end:
-          if deadline or not start or not end:
+     if task.start or task.end:
+          if task.deadline or not task.start or not task.end:
                return JSONResponse({"reason": "The task should either have a deadline or a start and an end date and time"}, status_code=400)
-          updates.append(f"Start = '{start}', End = '{end}'")
+          updates.append(f"Start = '{task.start}', End = '{task.end}'")
      
      if len(updates) > 0:
-          statement = "UPDATE Tasks SET " + ", ".join(updates) + f" WHERE TaskID = {task_id}"
+          statement = "UPDATE Tasks SET " + ", ".join(updates) + f" WHERE TaskID = {task.task_id}"
           cursor.execute(statement)
           db.commit()  # Uncomment before deployment
      return JSONResponse({}, status_code=201)
