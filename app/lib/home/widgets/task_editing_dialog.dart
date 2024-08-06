@@ -3,8 +3,6 @@ import 'dart:convert';
 import 'package:app/home/widgets/task.dart';
 import 'package:app/models/task_list_model.dart';
 import 'package:app/models/task_model.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';

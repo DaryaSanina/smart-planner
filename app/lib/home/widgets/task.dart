@@ -1,4 +1,5 @@
 import 'package:app/home/widgets/task_editing_dialog.dart';
+import 'package:app/models/show_importance_model.dart';
 import 'package:app/models/task_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -29,6 +30,7 @@ class Task extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final taskModel = context.watch<TaskModel>();
+    final showImportanceModel = context.watch<ShowImportanceModel>();
     return Padding(
       padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.width * 0.02),
       child: TextButton(
@@ -47,6 +49,7 @@ class Task extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Task name
                   Row(
                     children: [
                       Text(
@@ -58,6 +61,18 @@ class Task extends StatelessWidget {
                       ),
                     ],
                   ),
+
+                  // Importance
+                  ((showImportanceModel.showImportance)
+                  ? Text(
+                      "Importance: $importance",
+                      style: const TextStyle(
+                        fontSize: 13,
+                      ),
+                    )
+                  : const SizedBox.shrink()),
+
+                  // Timings
                   Text(
                     timings,
                     style: const TextStyle(
@@ -66,6 +81,8 @@ class Task extends StatelessWidget {
                   ),
                 ],
               ),
+
+              // Remove task button
               IconButton(
                 onPressed: () {
                   var taskList = context.read<TaskListModel>();

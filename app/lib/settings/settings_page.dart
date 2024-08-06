@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app/settings/widgets/settings_app_bar.dart';
 import 'package:app/settings/widgets/account_settings_button.dart';
-import 'package:app/settings/widgets/hide_importance_button.dart';
+import 'package:app/settings/widgets/show_importance_button.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -24,7 +24,7 @@ class _SettingsPageState extends State<SettingsPage> {
               children: [
                 const AccountSettingsButton(),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.025),
-                const HideImportanceButton(),
+                const ShowImportanceButton(),
               ]
             ),
           ),
