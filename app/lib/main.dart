@@ -38,6 +38,10 @@ class MyApp extends StatelessWidget {
             foregroundColor: const Color(0xFFFFFFFF), // button text color
           ),
         ),
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: Color(0xFF000000),
+          selectionColor: Color(0xFF7132A3),
+        ),
         useMaterial3: true,
       ),
       home: const LoginPage(),
