@@ -376,7 +376,8 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                   var requestDict = {
                     "task_id": widget.taskWidget.taskID,
                     "name": task.name,
-                    "description": task.description
+                    "description": task.description,
+                    "importance": task.importance,
                   };
 
                   if (task.isDeadline) {
