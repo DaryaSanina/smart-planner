@@ -12,7 +12,7 @@ class SortButton extends StatelessWidget {
       onPressed: () async {
         await showDialog<String>(
           context: context,
-          builder: (context) => SortingDialog(),
+          builder: (context) => const SortingDialog(),
         );
       },
       style: ElevatedButton.styleFrom(
