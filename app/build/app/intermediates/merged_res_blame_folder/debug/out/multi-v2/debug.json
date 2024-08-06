@@ -193,7 +193,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\dasha\\Documents\\A Levels\\Computer Science\\NEA\\smart-planner\\android\\app\\src\\main\\res\\values\\styles.xml",
+                    "source": "C:\\Users\\dasha\\Documents\\A Levels\\Computer Science\\NEA\\smart-planner\\app\\android\\app\\src\\main\\res\\values\\styles.xml",
                     "from": {
                         "startLines": "3,14",
                         "startColumns": "4,4",
@@ -787,7 +787,7 @@
             "outputFile": "com.example.app-merged_res-11:/values-night-v8_values-night-v8.arsc.flat",
             "map": [
                 {
-                    "source": "C:\\Users\\dasha\\Documents\\A Levels\\Computer Science\\NEA\\smart-planner\\android\\app\\src\\main\\res\\values-night\\styles.xml",
+                    "source": "C:\\Users\\dasha\\Documents\\A Levels\\Computer Science\\NEA\\smart-planner\\app\\android\\app\\src\\main\\res\\values-night\\styles.xml",
                     "from": {
                         "startLines": "3,14",
                         "startColumns": "4,4",

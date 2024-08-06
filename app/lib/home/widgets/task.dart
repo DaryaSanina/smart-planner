@@ -10,12 +10,20 @@ class Task extends StatelessWidget {
   final String timings;
   final int userID;
   final int taskID;
+  final int importance;
+  final DateTime? deadline;
+  final DateTime? start;
+  final DateTime? end;
   const Task({
     super.key,
     required this.name,
     required this.timings,
     required this.userID,
-    required this.taskID
+    required this.taskID,
+    required this.importance,
+    this.deadline,
+    this.start,
+    this.end
   });
 
   @override

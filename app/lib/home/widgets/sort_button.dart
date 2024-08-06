@@ -1,3 +1,4 @@
+import 'package:app/home/widgets/sorting_dialog.dart';
 import 'package:flutter/material.dart';
 
 class SortButton extends StatelessWidget {
@@ -8,7 +9,12 @@ class SortButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () {},
+      onPressed: () async {
+        await showDialog<String>(
+          context: context,
+          builder: (context) => SortingDialog(),
+        );
+      },
       style: ElevatedButton.styleFrom(
         backgroundColor: Theme.of(context).colorScheme.secondary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

@@ -20,12 +20,14 @@ class TaskList extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            // Sort button
             Row(
               children: [
                 SizedBox(width: MediaQuery.of(context).size.width * 0.03),
                 const SortButton(),
               ],
             ),
+            // Filter button
             Row(
               children: [
                 const FilterButton(),

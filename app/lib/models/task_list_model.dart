@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flython/flython.dart' as flython;
 import 'package:app/home/widgets/task.dart';
 import 'package:flutter/material.dart';
 
@@ -31,8 +32,15 @@ String responseDateToDateString(String responseDate) {
   return "$day $month $year, $hour:$minute";
 }
 
+class KMeansSorter extends flython.Flython {
+  Future<dynamic> sort(List<List<int>> data) async {
+    var command = {"data": data};
+    return await runCommand(command);
+  }
+}
+
 class TaskListModel extends ChangeNotifier {
-  final List<Widget> _tasks = [];
+  List<Task> _tasks = [];
   UnmodifiableListView<Widget> get tasks => UnmodifiableListView(_tasks);
 
   void add(Task task) {
@@ -48,13 +56,18 @@ class TaskListModel extends ChangeNotifier {
       int taskID = responseList[i][0];
       String name = responseList[i][1];
       String timings;
+      int importance = responseList[i][6];
       if (responseList[i][3] != null) {  // There is a deadline
         timings = "Due ${responseDateToDateString(responseList[i][3])}";
+        DateTime deadline = DateTime.parse(responseList[i][3]);
+        _tasks.add(Task(taskID: taskID, name: name, timings: timings, userID: userID, importance: importance, deadline: deadline));
       }
       else {
         timings = "${responseDateToDateString(responseList[i][4])} - ${responseDateToDateString(responseList[i][5])}";
+        DateTime start = DateTime.parse(responseList[i][4]);
+        DateTime end = DateTime.parse(responseList[i][5]);
+        _tasks.add(Task(taskID: taskID, name: name, timings: timings, userID: userID, importance: importance, start: start, end: end));
       }
-      _tasks.add(Task(taskID: taskID, name: name, timings: timings, userID: userID));
     }
     notifyListeners();
   }
@@ -66,6 +79,88 @@ class TaskListModel extends ChangeNotifier {
       headers: {'Content-Type': 'application/json'}
     );
     _tasks.remove(task);
+    notifyListeners();
+  }
+
+  void sortByImportance() {
+    _tasks.sort((Task task1, Task task2) {
+      if (-(task1.importance.compareTo(task2.importance)) == 0) {
+        int value = 0;
+        if (task1.deadline != null && task2.deadline != null) {
+          value = task1.deadline!.compareTo(task2.deadline!);
+        }
+        else if (task1.deadline != null) {
+          value = task1.deadline!.compareTo(task2.end!);
+        }
+        else if (task2.deadline != null) {
+          value = task1.end!.compareTo(task2.deadline!);
+        }
+        else if (task1.end!.isAtSameMomentAs(task2.end!)) {
+          value = task1.start!.compareTo(task2.start!);
+        }
+        else {
+          value = task1.end!.compareTo(task2.end!);
+        }
+        return value;
+      }
+      else {
+        return -(task1.importance.compareTo(task2.importance));
+      }
+    });
+    notifyListeners();
+  }
+
+  void sortByDeadline() {
+    _tasks.sort((Task task1, Task task2) {
+      int value = 0;
+      if (task1.deadline != null && task2.deadline != null) {
+        value = task1.deadline!.compareTo(task2.deadline!);
+      }
+      else if (task1.deadline != null) {
+        value = task1.deadline!.compareTo(task2.end!);
+      }
+      else if (task2.deadline != null) {
+        value = task1.end!.compareTo(task2.deadline!);
+      }
+      else if (task1.end!.isAtSameMomentAs(task2.end!)) {
+        value = task1.start!.compareTo(task2.start!);
+      }
+      else {
+        value = task1.end!.compareTo(task2.end!);
+      }
+      if (value == 0) {
+        return -(task1.importance.compareTo(task2.importance));
+      }
+      else {
+        return value;
+      }
+    });
+    notifyListeners();
+  }
+
+  Future<void> sortWithAI() async {
+    sortByDeadline();
+    List<List<int>> data = [];
+    for (int i = 0; i < _tasks.length; ++i) {
+      if (_tasks[i].deadline != null) {
+        data.add([_tasks[i].importance, _tasks[i].deadline!.difference(DateTime.now()).inMinutes]);
+      }
+      else {
+        data.add([_tasks[i].importance, _tasks[i].end!.difference(DateTime.now()).inMinutes]);
+      }
+    }
+    var request = jsonEncode({"data": data});
+    var response = await http.post(
+      Uri.parse('https://ejo5jpfxthbv3vdjlwg453xbea0boivt.lambda-url.eu-north-1.on.aws/k_means'),
+      headers: {'Content-Type': 'application/json'},
+      body: request,
+    );
+    List<dynamic> order = jsonDecode(response.body);
+    List<Task> newTasks = [];
+    for (int i = 0; i < order.length; ++i) {
+      newTasks.add(_tasks[order[i]]);
+    }
+    _tasks = newTasks;
     notifyListeners();
   }
 }
