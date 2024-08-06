@@ -38,12 +38,21 @@ class TaskModel extends ChangeNotifier {
     if (isDeadline) {
       deadlineDate = DateTime(int.parse(details[3].toString().substring(0, 4)), int.parse(details[3].toString().substring(5, 7)), int.parse(details[3].toString().substring(8, 10)));
       deadlineTime = TimeOfDay(hour: int.parse(details[3].toString().substring(11, 13)), minute: int.parse(details[3].toString().substring(14, 16)));
+      if (deadlineTime == const TimeOfDay(hour: 0, minute: 0)) {
+        deadlineTime = null;
+      }
     }
     else {
       startDate = DateTime(int.parse(details[4].toString().substring(0, 4)), int.parse(details[4].toString().substring(5, 7)), int.parse(details[4].toString().substring(8, 10)));
       startTime = TimeOfDay(hour: int.parse(details[4].toString().substring(11, 13)), minute: int.parse(details[4].toString().substring(14, 16)));
+      if (startTime == const TimeOfDay(hour: 0, minute: 0)) {
+        startTime = null;
+      }
       endDate = DateTime(int.parse(details[5].toString().substring(0, 4)), int.parse(details[5].toString().substring(5, 7)), int.parse(details[5].toString().substring(8, 10)));
       endTime = TimeOfDay(hour: int.parse(details[5].toString().substring(11, 13)), minute: int.parse(details[5].toString().substring(14, 16)));
+      if (endTime == const TimeOfDay(hour: 0, minute: 0)) {
+        endTime = null;
+      }
     }
     notifyListeners();
   }
