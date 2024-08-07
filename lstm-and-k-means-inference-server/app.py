@@ -5,10 +5,74 @@ from mangum import Mangum
 from pydantic import BaseModel
 import numpy as np
 import random
+import pickle as pkl
 from autograd import Tensor
 
-app = FastAPI()
-handler = Mangum(app)
+
+class TaskImportancePredictor:
+    """
+    This class is used to predict the importance of a task.
+
+    Attributes
+    ----------
+    word2index: dict
+        Maps a word to its index in the vocabulary.
+    embedding: layers.Embedding
+        An embedding layer of the neural network.
+    model: layers.Sequential
+        The main layers of the neural network.
+    output_layer: layers.Linear
+        The output layer of the neural network.
+    tokens: list[int]
+        A list of indices from the vocabulary that represents the prompt given to the model.
+    """
+    def __init__(self, text: str=None) -> None:
+        with open('word2index.pkl', 'rb') as file:
+            self.word2index = pkl.load(file)
+        with open('importance_embedding.pkl', 'rb') as file:
+            self.embedding = pkl.load(file)
+        with open('importance_model.pkl', 'rb') as file:
+            self.model = pkl.load(file)
+        with open('importance_output.pkl', 'rb') as file:
+            self.output_layer = pkl.load(file)
+        
+        if text is not None:
+            self.load_tokens(text)
+        else:
+            self.tokens = None
+    
+    def load_tokens(self, text: str) -> None:
+        """
+        Assigns the tokens of this instance so that they match the text. Any words that are not in the vocabulary are removed.
+
+        Parameters
+        ----------
+        text: str
+            The prompt the model needs to perform inference on.
+        """
+        alphanumeric = ''.join([character if character.isalnum() else ' ' for character in text.lower()])
+        word_tokens = [word for word in alphanumeric.split() if word != '']
+        self.tokens = [self.word2index[word] for word in word_tokens if word in self.word2index.keys()]
+    
+    def predict(self) -> float:
+        """
+        Predicts the importance of a task based on the loaded prompt (task name + task description).
+
+        Returns
+        -------
+        float:
+            The importance of the task from 0 to 10.
+        """
+        assert self.tokens is not None, "You need to load the tokens of the input first (use the load_tokens method)."
+
+        hidden = self.model.init_hidden(batch_size=1)
+        for t in range(len(self.tokens)):
+            input = Tensor([self.tokens[t]], autograd=True)
+            lstm_input = self.embedding.forward(input=input)
+            hidden = self.model.forward(input=lstm_input, hidden=hidden)
+        output = self.output_layer.forward(hidden[0])
+
+        return float(output.data)
 
 
 class KMeansClassifier:
@@ -135,8 +199,16 @@ class KMeansClassifier:
         return self.clusters, self.centroids
 
 
-class Data(BaseModel):
+class TaskDescription(BaseModel):
+    description: str
+
+class KMeansData(BaseModel):
     data: list[list[int]]
+
+
+app = FastAPI()
+handler = Mangum(app)
+importance_predictor = TaskImportancePredictor()
 
 
 @app.get('/')
@@ -145,7 +217,7 @@ def default():
 
 
 @app.post('/k_means')
-def run(data: Data):
+def k_means(data: KMeansData):
     print(data)
     try:
         print(1)
@@ -176,6 +248,13 @@ def run(data: Data):
     except Exception as e:
         print(e)
         return JSONResponse(str(e), status_code=500)
+
+
+@app.post('/predict_importance')
+def predict_importance(data: TaskDescription):
+    importance_predictor.load_tokens(data.description)
+    prediction = round(importance_predictor.predict())
+    return JSONResponse({"importance": prediction})
 
 
 if __name__ == "__main__":

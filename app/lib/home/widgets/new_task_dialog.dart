@@ -51,6 +51,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
   TextEditingController descriptionController = TextEditingController();
   TextEditingController importanceController = TextEditingController();
   bool _isLoading = false;
+  bool _importanceIsLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -111,21 +112,65 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
             SizedBox(height: MediaQuery.of(context).size.height * 0.01),
 
             // Importance field
-            DropdownMenu<int>(
-              label: const Text("Importance"),
-              initialSelection: task.importance,
-              controller: importanceController,
-              requestFocusOnTap: true,
-              inputDecorationTheme: InputDecorationTheme(
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
-              ),
-              dropdownMenuEntries: List.generate(11, (i) => i).map((int item) {
-                return DropdownMenuEntry(
-                  value: item,
-                  label: item.toString(),
-                );
-              }).toList(),
-              onSelected: (int? newValue) => setState(() => task.setImportance(newValue!)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                DropdownMenu<int>(
+                  label: const Text("Importance"),
+                  initialSelection: task.importance,
+                  controller: importanceController,
+                  requestFocusOnTap: true,
+                  inputDecorationTheme: InputDecorationTheme(
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+                  ),
+                  dropdownMenuEntries: List.generate(11, (i) => i).map((int item) {
+                    return DropdownMenuEntry(
+                      value: item,
+                      label: item.toString(),
+                    );
+                  }).toList(),
+                  onSelected: (int? newValue) => setState(() => task.setImportance(newValue!)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () async {
+                    setState(() {
+                      _importanceIsLoading = true;
+                    });
+                    var request = jsonEncode({"description": task.name + '. ' + task.description});
+                    var response = await http.post(
+                      Uri.parse('https://ejo5jpfxthbv3vdjlwg453xbea0boivt.lambda-url.eu-north-1.on.aws/predict_importance'),
+                      headers: {'Content-Type': 'application/json'},
+                      body: request
+                    );
+                    int newImportance = jsonDecode(response.body)["importance"];
+                    setState(() => task.setImportance(newImportance));
+                    setState(() {
+                      _importanceIsLoading = false;
+                    });
+                  },
+                  child: _importanceIsLoading
+                  ? Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("Generate with AI", style: TextStyle(color: Theme.of(context).colorScheme.tertiary)),
+                      SizedBox(
+                        width: 100,
+                        height: 3,
+                        child: LinearProgressIndicator(
+                          backgroundColor: Theme.of(context).colorScheme.secondary,
+                          color: Theme.of(context).colorScheme.tertiary,
+                          minHeight: 3,
+                        )
+                      ),
+                    ],
+                  )
+                  : Text("Generate with AI", style: TextStyle(color: Theme.of(context).colorScheme.tertiary)),
+                ),
+              ],
             ),
 
             SizedBox(height: MediaQuery.of(context).size.height * 0.05),
@@ -390,7 +435,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                   var request = jsonEncode(requestDict);
                   http.Response response = await http.post(
                     Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/add_task'),
-                    headers: <String, String>{'Content-Type': 'application/json'},
+                    headers: {'Content-Type': 'application/json'},
                     body: request
                   );
 

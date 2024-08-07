@@ -5,6 +5,8 @@ prototype/.ipynb_checkpoints
 database-server/.env
 database-server/logfile.log
 database-server/test.py
+lstm-and-k-means-inference-server/.env
+importance-prediction-model/
 
 # Miscellaneous
 *.class
