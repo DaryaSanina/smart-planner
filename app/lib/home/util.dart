@@ -11,6 +11,11 @@ Future<int> addTag(String name, int userID) async {
   return response.statusCode;
 }
 
+Future<String> getTagName(int tagID) async {
+  var response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_tag?tag_id=$tagID'));
+  return jsonDecode(response.body)['data'][0][1];
+}
+
 Future<int> addTaskToTagRelationship(int taskID, int tagID) async {
   var request = jsonEncode({"task_id": taskID, "tag_id": tagID});
   var response = await http.post(

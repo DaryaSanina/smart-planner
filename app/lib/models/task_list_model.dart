@@ -1,5 +1,7 @@
 import 'dart:collection';
 import 'dart:convert';
+import 'package:app/home/util.dart';
+import 'package:app/models/util.dart';
 import 'package:http/http.dart' as http;
 import 'package:app/home/widgets/task.dart';
 import 'package:flutter/material.dart';
@@ -50,16 +52,21 @@ class TaskListModel extends ChangeNotifier {
       String name = responseList[i][1];
       String timings;
       int importance = responseList[i][6];
+      List tagIDs = await getTaskTags(taskID);
+      List<String> tags = [];
+      for (int tagID in tagIDs) {
+        tags.add(await getTagName(tagID));
+      }
       if (responseList[i][3] != null) {  // There is a deadline
         timings = "Due ${responseDateToDateString(responseList[i][3])}";
         DateTime deadline = DateTime.parse(responseList[i][3]);
-        _tasks.add(Task(taskID: taskID, name: name, timings: timings, userID: userID, importance: importance, deadline: deadline));
+        _tasks.add(Task(taskID: taskID, name: name, timings: timings, userID: userID, importance: importance, deadline: deadline, tags: tags));
       }
       else {
         timings = "${responseDateToDateString(responseList[i][4])} - ${responseDateToDateString(responseList[i][5])}";
         DateTime start = DateTime.parse(responseList[i][4]);
         DateTime end = DateTime.parse(responseList[i][5]);
-        _tasks.add(Task(taskID: taskID, name: name, timings: timings, userID: userID, importance: importance, start: start, end: end));
+        _tasks.add(Task(taskID: taskID, name: name, timings: timings, userID: userID, importance: importance, start: start, end: end, tags: tags));
       }
     }
     notifyListeners();
