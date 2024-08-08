@@ -1,4 +1,5 @@
 import 'package:app/models/show_importance_model.dart';
+import 'package:app/models/tag_list_model.dart';
 import 'package:app/models/task_model.dart';
 import 'package:flutter/material.dart';
 
@@ -13,6 +14,7 @@ void main() {
         ChangeNotifierProvider(create: (context) => TaskListModel()),
         ChangeNotifierProvider(create: (context) => TaskModel()),
         ChangeNotifierProvider(create: (context) => ShowImportanceModel()),
+        ChangeNotifierProvider(create: (context) => TagListModel()),
       ],
       child: const MyApp(),
     )

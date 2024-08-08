@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:app/models/util.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -14,6 +14,7 @@ class TaskModel extends ChangeNotifier {
   TimeOfDay? startTime;
   DateTime? endDate;
   TimeOfDay? endTime;
+  List<int> tags = [];
 
   void clear() {
     name = "";
@@ -54,6 +55,7 @@ class TaskModel extends ChangeNotifier {
         endTime = null;
       }
     }
+    tags = await getTaskTags(taskID);
     notifyListeners();
   }
 
@@ -104,6 +106,16 @@ class TaskModel extends ChangeNotifier {
 
   void setEndTime(TimeOfDay newTime) {
     endTime = newTime;
+    notifyListeners();
+  }
+
+  void addTag(int tagID) {
+    tags.add(tagID);
+    notifyListeners();
+  }
+
+  void removeTag(int tagID) {
+    tags.remove(tagID);
     notifyListeners();
   }
 }

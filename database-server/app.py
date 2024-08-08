@@ -125,7 +125,7 @@ def add_user(user: User):
      # Insert the data
      cursor.execute(f"""INSERT INTO Users VALUES (NULL, '{user.username}', '{user.email}', '{user.password_hash}')""")
      db.commit()  # Uncomment before deployment
-     return JSONResponse({}, status_code=201)
+     return JSONResponse({"id": cursor.lastrowid}, status_code=201)
 
 
 @app.delete('/delete_user')
@@ -191,7 +191,7 @@ def add_task(task: Task):
           end = task.end.strftime("%Y-%m-%d %H:%M:%S")
           cursor.execute(f"""INSERT INTO Tasks VALUES (NULL, '{task.name}', '{task.description}', NULL, '{start}', '{end}', {task.importance}, {task.user_id})""")
      db.commit()  # Uncomment before deployment
-     return JSONResponse({}, status_code=201)
+     return JSONResponse({"id": cursor.lastrowid}, status_code=201)
 
 
 @app.put('/update_task')
@@ -241,13 +241,21 @@ def delete_task(task_id: int):
 
 
 @app.get('/get_tag')
-def get_tag(tag_id=0, tag_name=""):
-     if tag_name == "" and tag_id == 0:
-          return JSONResponse({"reason": "Neither the name of the tag nor its ID were provided."}, status_code=400)
-     if tag_name == "":
+def get_tag(tag_id=0, tag_name="", user_id=0):
+     if tag_name == "" and tag_id == 0 and user_id == 0:
+          return JSONResponse({"reason": "Neither the name of the tag nor its ID nor user ID were provided."}, status_code=400)
+     if tag_name == "" and user_id == 0:
           cursor.execute(f"""SELECT * FROM Tags WHERE TagID = {tag_id}""")
-     elif tag_id == 0:
+     elif tag_id == 0 and user_id == 0:
           cursor.execute(f"""SELECT * FROM Tags WHERE Name = '{tag_name}'""")
+     elif tag_name == "" and tag_id == 0:
+          cursor.execute(f"""SELECT * FROM Tags WHERE UserID = {user_id}""")
+     elif user_id == 0:
+          cursor.execute(f"""SELECT * FROM Tags WHERE TagID = {tag_id} AND Name = '{tag_name}'""")
+     elif tag_id == 0:
+          cursor.execute(f"""SELECT * FROM Tags WHERE UserID = {tag_id} AND Name = '{tag_name}'""")
+     elif tag_name == "":
+          cursor.execute(f"""SELECT * FROM Tags WHERE TagID = {tag_id} AND UserID = {user_id}""")
      else:
           cursor.execute(f"""SELECT * FROM Tags WHERE TagID = {tag_id} AND Name = '{tag_name}'""")
      result = cursor.fetchall()
@@ -266,9 +274,9 @@ def add_tag(tag: Tag):
           return JSONResponse({"reason": "The user with this ID does not exist"}, status_code=400)
      
      # Insert the data
-     cursor.execute(f"""INSERT INTO Tasks VALUES (NULL, '{tag.name}', {tag.user_id})""")
+     cursor.execute(f"""INSERT INTO Tags VALUES (NULL, '{tag.name}', {tag.user_id})""")
      db.commit()  # Uncomment before deployment
-     return JSONResponse({}, status_code=201)
+     return JSONResponse({"id": cursor.lastrowid}, status_code=201)
 
 
 @app.put('/update_tag')
@@ -296,8 +304,15 @@ def delete_tag(tag_id: int):
 
 
 @app.get('/get_task_to_tag_relationship')
-def get_task_to_tag_relationship(task_to_tag_id: int):
-     cursor.execute(f"""SELECT * FROM TasksToTags WHERE TaskToTagID = {task_to_tag_id}""")
+def get_task_to_tag_relationship(task_to_tag_id: int=None, task_id: int=None, tag_id: int=None):
+     if task_to_tag_id:
+          cursor.execute(f"""SELECT * FROM TasksToTags WHERE TaskToTagID = {task_to_tag_id}""")
+     elif task_id and tag_id:
+          cursor.execute(f"""SELECT * FROM TasksToTags WHERE TaskID = {task_id} AND TagID = {tag_id}""")
+     elif task_id:
+          cursor.execute(f"""SELECT * FROM TasksToTags WHERE TaskID = {task_id}""")
+     elif tag_id:
+          cursor.execute(f"""SELECT * FROM TasksToTags WHERE TagID = {tag_id}""")
      result = cursor.fetchall()
      return JSONResponse({"data": result})
 
@@ -317,7 +332,7 @@ def add_task_to_tag_relationship(task_to_tag: TaskToTag):
      # Insert the data
      cursor.execute(f"""INSERT INTO TasksToTags VALUES (NULL, {task_to_tag.task_id}, {task_to_tag.tag_id})""")
      db.commit()  # Uncomment before deployment
-     return JSONResponse({}, status_code=201)
+     return JSONResponse({"id": cursor.lastrowid}, status_code=201)
 
 
 @app.delete('/delete_task_to_tag_relationship')
@@ -348,7 +363,7 @@ def add_reminder(reminder: Reminder):
      # Insert the data
      cursor.execute(f"""INSERT INTO Reminders VALUES (NULL, {reminder.task_id}, {reminder.reminder_type})""")
      db.commit()  # Uncomment before deployment
-     return JSONResponse({}, status_code=201)
+     return JSONResponse({"id": cursor.lastrowid}, status_code=201)
 
 
 @app.delete('/delete_reminder')

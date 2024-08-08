@@ -1,7 +1,6 @@
 import 'dart:collection';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flython/flython.dart' as flython;
 import 'package:app/home/widgets/task.dart';
 import 'package:flutter/material.dart';
 
@@ -32,12 +31,6 @@ String responseDateToDateString(String responseDate) {
   return "$day $month $year, $hour:$minute";
 }
 
-class KMeansSorter extends flython.Flython {
-  Future<dynamic> sort(List<List<int>> data) async {
-    var command = {"data": data};
-    return await runCommand(command);
-  }
-}
 
 class TaskListModel extends ChangeNotifier {
   List<Task> _tasks = [];

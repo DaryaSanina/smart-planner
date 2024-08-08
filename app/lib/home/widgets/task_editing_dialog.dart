@@ -1,8 +1,11 @@
 import 'dart:convert';
 
+import 'package:app/home/util.dart';
 import 'package:app/home/widgets/task.dart';
+import 'package:app/models/tag_list_model.dart';
 import 'package:app/models/task_list_model.dart';
 import 'package:app/models/task_model.dart';
+import 'package:app/models/util.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
@@ -56,14 +59,16 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
   TextEditingController importanceController = TextEditingController();
   bool _isLoading = false;
   bool _importanceIsLoading = false;
+  TextEditingController newTagController = TextEditingController();
+  String newTagName = "";
 
   @override
   Widget build(BuildContext context) {
     final task = context.watch<TaskModel>();
     taskNameController.text = task.name;
     descriptionController.text = task.description;
-
     final taskList = context.watch<TaskListModel>();
+    final tagList = context.watch<TagListModel>();
 
     return AlertDialog(
       title: const Text("Edit task"),
@@ -153,7 +158,6 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                       body: request
                     );
                     int newImportance = jsonDecode(response.body)["importance"];
-                    await Future.delayed(Duration(seconds: 2));
                     setState(() => task.setImportance(newImportance));
                     setState(() {
                       _importanceIsLoading = false;
@@ -404,6 +408,69 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                 ],
               ),
             ),
+
+            SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+
+            // Tags
+            const Text("Tags", style: TextStyle(fontSize: 18)),
+            Column(
+              children: List.generate(
+                tagList.tags.length,
+                (i) => CheckboxListTile(
+                  title: Text(tagList.tags[i].name),
+                  activeColor: Theme.of(context).colorScheme.secondary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                  value: task.tags.contains(tagList.tags[i].tagID),
+                  onChanged: (bool? value) {
+                    if (value!) {
+                      setState(() {
+                        task.addTag(tagList.tags[i].tagID);
+                      });
+                    }
+                    else {
+                      setState(() {
+                        task.removeTag(tagList.tags[i].tagID);
+                      });
+                    }
+                  },
+                )
+              ),
+            ),
+            
+            // Add a new tag
+            Row(
+              children: [
+                IconButton(
+                  onPressed: () async {
+                    if (newTagName.length >= 3 && newTagName.length <= 32) {
+                      int statusCode = await addTag(newTagName, widget.userID);
+                      if (statusCode != 201) {
+                        return;
+                      }
+                      tagList.update(widget.userID);
+                    }
+                    else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Tag name should be between 3 and 32 characters long.")),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.add),
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.3,
+                  height: 50,
+                  child: TextField(
+                    controller: newTagController,
+                    decoration: const InputDecoration(
+                      hintText: "Add a new tag",
+                    ),
+                    cursorColor: Theme.of(context).colorScheme.tertiary,
+                    onChanged: (text) => setState(() => newTagName = text),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -457,6 +524,14 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                       _isLoading = false;
                     });
                     return;
+                  }
+
+                  // Update task tags
+                  for (int tagID in await getTaskTags(widget.taskWidget.taskID)) {
+                    deleteTaskToTagRelationship(widget.taskWidget.taskID, tagID);
+                  }
+                  for (int tagID in task.tags) {
+                    addTaskToTagRelationship(widget.taskWidget.taskID, tagID);
                   }
 
                   // Update the task list
