@@ -163,6 +163,14 @@ def get_task(task_id=0, task_name="", user_id=0):
      return JSONResponse({"data": result})
 
 
+@app.get('/get_tasks_by_tag')
+def get_task_by_tag(tag_id: int):
+     cursor.execute(f"""SELECT * FROM Tasks JOIN TasksToTags ON (Tasks.TaskID = TasksToTags.TaskID) WHERE TagID = {tag_id}""")
+     result = cursor.fetchall()
+     result = list(result)
+     return JSONResponse({"data": result})
+
+
 @app.post('/add_task')
 def add_task(task: Task):
      # Check whether the task name is valid

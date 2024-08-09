@@ -1,4 +1,4 @@
-import 'package:app/home/widgets/sorting_dialog.dart';
+import 'package:app/home/widgets/sort_dialog.dart';
 import 'package:flutter/material.dart';
 
 class SortButton extends StatelessWidget {
@@ -12,7 +12,7 @@ class SortButton extends StatelessWidget {
       onPressed: () async {
         await showDialog<String>(
           context: context,
-          builder: (context) => const SortingDialog(),
+          builder: (context) => const SortDialog(),
         );
       },
       style: ElevatedButton.styleFrom(

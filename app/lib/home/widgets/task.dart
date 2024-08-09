@@ -110,7 +110,6 @@ class Task extends StatelessWidget {
 
               // Remove task button
               SizedBox(
-                width: MediaQuery.of(context).size.width * 0.2,
                 child: IconButton(
                   onPressed: () {
                     var taskList = context.read<TaskListModel>();

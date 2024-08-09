@@ -1,4 +1,5 @@
 import 'package:app/home/widgets/new_task_dialog.dart';
+import 'package:app/home/widgets/task.dart';
 import 'package:app/models/tag_list_model.dart';
 import 'package:app/models/task_model.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,20 @@ class TaskList extends StatelessWidget {
     var taskList = context.watch<TaskListModel>();
     final task = context.watch<TaskModel>();
     final tagList = context.watch<TagListModel>();
+    List<Task> tasksToShow = [];
+    if (!tagList.filtered.containsValue(true)) {  // If no tags are selected, show all tasks
+      tasksToShow = taskList.tasks;
+    }
+    else {  // If some tags are selected, show only tasks with the selected tags
+      for (int i = 0; i < taskList.tasks.length; ++i) {
+        for (int j = 0; j < tagList.tags.length; ++j) {
+          if (tagList.filtered[tagList.tags[j].tagID]! && taskList.tasks[i].tags.contains(tagList.tags[j].name)) {
+            tasksToShow.add(taskList.tasks[i]);
+            break;
+          }
+        }
+      }
+    }
     return ListView(
       children: [
         Row(
@@ -32,7 +47,7 @@ class TaskList extends StatelessWidget {
             // Filter button
             Row(
               children: [
-                const FilterButton(),
+                FilterButton(userID: userID),
                 SizedBox(width: MediaQuery.of(context).size.width * 0.03),
               ],
             ),
@@ -40,7 +55,8 @@ class TaskList extends StatelessWidget {
         ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: taskList.tasks + [Padding(
+          children: tasksToShow.cast<Widget>()
+          + [Padding(
             padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.01),
             // New task button
             child: IconButton(

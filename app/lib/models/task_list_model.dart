@@ -36,7 +36,7 @@ String responseDateToDateString(String responseDate) {
 
 class TaskListModel extends ChangeNotifier {
   List<Task> _tasks = [];
-  UnmodifiableListView<Widget> get tasks => UnmodifiableListView(_tasks);
+  UnmodifiableListView<Task> get tasks => UnmodifiableListView(_tasks);
 
   void add(Task task) {
     _tasks.add(task);
@@ -79,6 +79,10 @@ class TaskListModel extends ChangeNotifier {
       headers: {'Content-Type': 'application/json'}
     );
     _tasks.remove(task);
+    notifyListeners();
+  }
+
+  void refresh() {
     notifyListeners();
   }
 
