@@ -1,9 +1,12 @@
 import 'dart:convert';
+
+import 'package:app/home/home_page.dart';
 import 'package:app/login/util.dart';
 import 'package:app/registration/util.dart';
+
 import 'package:http/http.dart' as http;
+
 import 'package:flutter/material.dart';
-import 'package:app/home/home_page.dart';
 
 class RegistrationForm extends StatefulWidget {
   const RegistrationForm({super.key});
@@ -14,10 +17,6 @@ class RegistrationForm extends StatefulWidget {
 
 class _RegistrationFormState extends State<RegistrationForm> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameText = "";
-  final _emailText = "";
-  final _passwordText = "";
-  final _repeatPasswordText = "";
   bool _usernameExists = false;
   bool _emailExists = false;
   bool _isLoading = false;
@@ -45,21 +44,21 @@ class _RegistrationFormState extends State<RegistrationForm> {
               ),
               cursorColor: Theme.of(context).colorScheme.tertiary,
               validator: (value) {
-                if (value == null || value.isEmpty) {
+                if (value == null || value.isEmpty) {  // Check whether the field is empty
                   return "Please enter your username";
                 }
-                if (value.length < 3 || value.length > 32) {
+                if (value.length < 3 || value.length > 32) {  // Check whether the username is between 3 and 32 characters long
                   return "The username is not between 3 and 32 characters long";
                 }
-                if (_usernameExists) {
-                  return "This username is already being used";
+                if (_usernameExists) {  // Check whether the username has already been taken
+                  return "This username has already been taken";
                 }
                 return null;
               },
               onChanged: (text) async {
+                // Check whether the username has already been taken
                 final response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_user?username=$text'));
                 setState(() => _usernameExists = jsonDecode(response.body)['data'].length != 0);
-                setState(() => _usernameText);
               },
             ),
 
@@ -74,21 +73,21 @@ class _RegistrationFormState extends State<RegistrationForm> {
               ),
               cursorColor: Theme.of(context).colorScheme.tertiary,
               validator: (value) {
-                if (value == null || value.isEmpty) {
+                if (value == null || value.isEmpty) {  // Check whether the field is empty
                   return "Please enter your email";
                 }
-                if (!RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}").hasMatch(value)) {
+                if (!RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}").hasMatch(value)) {  // Check whether the email matches the format address@example.com
                   return "The email is not in a correct format";
                 }
-                if (_emailExists) {
-                  return "This email is already being used";
+                if (_emailExists) {  // Check whether the email is already being used by another account
+                  return "This email is already being used by another account";
                 }
                 return null;
               },
               onChanged: (text) async {
+                // Check whether the email is already being used by another account
                 final response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_user?email=$text'));
                 setState(() => _emailExists = jsonDecode(response.body)['data'].length != 0);
-                setState(() => _emailText);
               },
             ),
 
@@ -105,12 +104,14 @@ class _RegistrationFormState extends State<RegistrationForm> {
               obscureText: true,
               obscuringCharacter: '*',
               validator: (value) {
-                if (value == null || value.isEmpty) {
+                if (value == null || value.isEmpty) {  // Check whether the field is empty
                   return "Please enter your password";
                 }
-                if (value.length < 8 || value.length > 16) {
+                if (value.length < 8 || value.length > 16) {  // Check whether the password is between 8 and 16 characters long
                   return "The password should be between 8 and 16 characters long";
                 }
+
+                // Check whether the password contains lowercase and uppercase letters, digits and special symbols (e.g., !, -, #, etc.)
                 bool hasLowerCase = false;
                 bool hasUpperCase = false;
                 bool hasDigits = false;
@@ -143,7 +144,6 @@ class _RegistrationFormState extends State<RegistrationForm> {
                 }
                 return null;
               },
-              onChanged: (text) => setState(() => _passwordText),
             ),
 
             SizedBox(height: MediaQuery.of(context).size.height * 0.01),
@@ -159,15 +159,15 @@ class _RegistrationFormState extends State<RegistrationForm> {
               obscureText: true,
               obscuringCharacter: '*',
               validator: (value) {
-                if (value == null || value.isEmpty) {
+                if (value == null || value.isEmpty) {  // Check whether the field is empty
                   return "Please repeat your password";
                 }
-                if (value != passwordController.text) {
+                if (value != passwordController.text) {  // Check whether the data matches the data in the password field
                   return "The passwords do not match";
                 }
                 return null;
               },
-              onChanged: (text) => setState(() => _repeatPasswordText),
+              onChanged: (text) => setState(() {}),
             ),
 
             SizedBox(height: MediaQuery.of(context).size.height * 0.03),
@@ -177,18 +177,20 @@ class _RegistrationFormState extends State<RegistrationForm> {
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
                   setState(() {
-                    _isLoading = true;
+                    _isLoading = true;  // Show a circular progress indicator
                   });
-                  register(usernameController.text, emailController.text, passwordController.text);
-                  userID = await login(usernameController.text, passwordController.text);
+                  await register(usernameController.text, emailController.text, passwordController.text);  // Register the user
+                  userID = await login(usernameController.text, passwordController.text);  // Log the user in
+                  setState(() {
+                    _isLoading = false; // Hide the circular progress indicator
+                  });
+
+                  // Navigate the user to the home page
                   if (context.mounted) {
                     Navigator.push(context, MaterialPageRoute(builder: (context) {
                       return HomePage(username: usernameController.text, userID: userID);
                     }));
                   }
-                  setState(() {
-                    _isLoading = false;
-                  });
                 }
                 return;
               },
@@ -199,14 +201,8 @@ class _RegistrationFormState extends State<RegistrationForm> {
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: _isLoading
-                ? Text(
-                  "Register",
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Theme.of(context).colorScheme.tertiary,
-                  ),
-                )
-                : Row(
+                // If _isLoading is true, show a circular progress indicator next to the "Register" text
+                ? Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
@@ -218,6 +214,14 @@ class _RegistrationFormState extends State<RegistrationForm> {
                     ),
                     CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary),
                   ],
+                )
+                // Otherwise, just show the "Register" text
+                : Text(
+                  "Register",
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Theme.of(context).colorScheme.tertiary,
+                  ),
                 ),
               ),
             ),

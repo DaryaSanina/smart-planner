@@ -1,6 +1,7 @@
 import 'package:app/models/tag_list_model.dart';
-import 'package:app/models/task_list_model.dart';
+
 import 'package:flutter/material.dart';
+
 import 'package:provider/provider.dart';
 
 class FilterDialog extends StatefulWidget {
@@ -14,13 +15,14 @@ class _FilterDialogState extends State<FilterDialog> {
 
   @override
   Widget build(BuildContext context) {
+    // Load the tag list model
     final tagList = context.watch<TagListModel>();
-    final taskList = context.watch<TaskListModel>();
 
     return AlertDialog(
       title: const Text("Filter"),
 
       content: Column(
+        // Show all the available tags as checkboxes
         children: List.generate(
           tagList.tags.length,
           (i) => CheckboxListTile(
@@ -30,7 +32,7 @@ class _FilterDialogState extends State<FilterDialog> {
             value: tagList.filtered[tagList.tags[i].tagID],
             onChanged: (bool? value) {
               setState(() {
-                tagList.updateFilteredValue(tagList.tags[i].tagID, value!);
+                tagList.updateFilteredValue(tagList.tags[i].tagID, value!);  // Update the filter
               });
             },
           )
@@ -40,16 +42,15 @@ class _FilterDialogState extends State<FilterDialog> {
       actions: <Widget>[
         TextButton(
           onPressed: () {
-            tagList.resetFilter();
-            taskList.refresh();
-            Navigator.pop(context);
+            tagList.resetFilter();  // Empty the filter
+            Navigator.pop(context);  // Hide the dialog
           },
           child: const Text("Reset"),
         ),
+
         TextButton(
           onPressed: () {
-            taskList.refresh();
-            Navigator.pop(context);
+            Navigator.pop(context);  // Hide the dialog
           },
           child: const Text("Apply"),
         ),

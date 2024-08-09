@@ -218,15 +218,11 @@ def default():
 
 @app.post('/k_means')
 def k_means(data: KMeansData):
-    print(data)
     try:
-        print(1)
         data = [list(task) for task in data.data]
-        print(data)
         classifier = KMeansClassifier(data_list=data, k=4)
         classifier.generate_centroids()
         clusters, centroids = classifier.cluster()
-        print(clusters, centroids)
 
         high_importance_clusters = list(sorted(list(range(4)), key=lambda x: centroids.data[int(x)][0], reverse=True))[:2]
         important_urgent_cluster = min(high_importance_clusters, key=lambda x: centroids.data[int(x)][1])
@@ -246,7 +242,6 @@ def k_means(data: KMeansData):
         return JSONResponse(order)
     
     except Exception as e:
-        print(e)
         return JSONResponse(str(e), status_code=500)
 
 

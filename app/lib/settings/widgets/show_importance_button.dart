@@ -1,5 +1,7 @@
-import 'package:app/models/show_importance_model.dart';
+import 'package:app/models/importance_visibility_model.dart';
+
 import 'package:flutter/material.dart';
+
 import 'package:provider/provider.dart';
 
 class ShowImportanceButton extends StatelessWidget {
@@ -29,7 +31,7 @@ class ShowImportanceButton extends StatelessWidget {
               "Show task importance",
               style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18)
             ),
-            const ImportanceSwitch(),
+            const ImportanceVisibilitySwitch(),
           ],
         ),
       ),
@@ -37,23 +39,25 @@ class ShowImportanceButton extends StatelessWidget {
   }
 }
 
-class ImportanceSwitch extends StatefulWidget {
-  const ImportanceSwitch({super.key});
+class ImportanceVisibilitySwitch extends StatefulWidget {
+  const ImportanceVisibilitySwitch({super.key});
 
   @override
-  State<ImportanceSwitch> createState() => _ImportanceSwitchState();
+  State<ImportanceVisibilitySwitch> createState() => _ImportanceVisibilitySwitchState();
 }
 
-class _ImportanceSwitchState extends State<ImportanceSwitch> {
+class _ImportanceVisibilitySwitchState extends State<ImportanceVisibilitySwitch> {
   @override
   Widget build(BuildContext context) {
-    final showImportanceModel = context.watch<ShowImportanceModel>();
+    final importanceVisibilityModel = context.watch<ShowImportanceModel>();  // Load the importance visibility model
     return Switch(
-      value: showImportanceModel.showImportance,
+      value: importanceVisibilityModel.showImportance,
+
       activeTrackColor: Theme.of(context).colorScheme.secondary,
       activeColor: Theme.of(context).colorScheme.tertiary,
+
       onChanged: (bool value) {
-        showImportanceModel.change(value);
+        importanceVisibilityModel.change(value);  // Change task importance visibility
       },
     );
   }

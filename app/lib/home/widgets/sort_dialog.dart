@@ -16,7 +16,9 @@ class _SortDialogState extends State<SortDialog> {
 
   @override
   Widget build(BuildContext context) {
+    // Load the task list model
     final tasks = context.watch<TaskListModel>();
+
     return AlertDialog(
       title: const Text("Sort tasks"),
 
@@ -67,7 +69,7 @@ class _SortDialogState extends State<SortDialog> {
         TextButton(
           onPressed: () async {
             setState(() {
-              _isLoading = true;
+              _isLoading = true;  // Show a circular progress indicator
             });
             // Sort by importance
             if (_sortingType == SortingType.importance) {
@@ -77,21 +79,24 @@ class _SortDialogState extends State<SortDialog> {
             if (_sortingType == SortingType.deadline) {
               tasks.sortByDeadline();
             }
-            // Sort with K Means clustering into 4 Eisenhower matrix categories
+            // Sort the tasks by importance and deadline
+            // by using the K-Means clustering algorithm to divide the tasks into 4 Eisenhower Matrix categories
+            // and then arrange them in the following order:
+            // important and urgent -> important but not urgent -> urgent but not important -> not important and not urgent
             if (_sortingType == SortingType.ai) {
               await tasks.sortWithAI();
             }
             setState(() {
-              _isLoading = false;
+              _isLoading = false;  // Hide the circular progress indicator
             });
             if (context.mounted) {
-              Navigator.pop(context);
+              Navigator.pop(context);  // Hide the dialog
             }
           },
           child: Text("Sort", style: TextStyle(color: Theme.of(context).colorScheme.tertiary)),
         ),
       ] + (_isLoading
-      ? [CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary)]
+      ? [CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary)]  // Show a circular progress indicator while the task list is being sorted
       :[]),
     );
   }

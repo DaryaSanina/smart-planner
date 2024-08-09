@@ -9,12 +9,15 @@ class SortButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
+      // When the button is pressed
       onPressed: () async {
+        // Show the task sorting dialog
         await showDialog<String>(
           context: context,
           builder: (context) => const SortDialog(),
         );
       },
+      
       style: ElevatedButton.styleFrom(
         backgroundColor: Theme.of(context).colorScheme.secondary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

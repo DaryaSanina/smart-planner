@@ -1,7 +1,7 @@
-import 'package:app/registration/registration_page.dart';
-import 'package:flutter/material.dart';
-
 import 'package:app/login/widgets/login_form.dart';
+import 'package:app/registration/registration_page.dart';
+
+import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,10 +16,12 @@ class _LoginState extends State<LoginPage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         return Scaffold(
-          resizeToAvoidBottomInset: false,
+          resizeToAvoidBottomInset: false,  // Stops the screen from overflowing when the keyboard is shown
           backgroundColor: Theme.of(context).colorScheme.primary,
+
           body: Column(
             children: [
+              // Logo
               SizedBox(
                 height: MediaQuery.of(context).size.height / 3,
                 child: const Center(
@@ -31,6 +33,8 @@ class _LoginState extends State<LoginPage> {
                   ),
                 ),
               ),
+
+              // Login form
               SizedBox(
                 height: MediaQuery.of(context).size.height / 3,
                 width: MediaQuery.of(context).size.width,
@@ -38,6 +42,8 @@ class _LoginState extends State<LoginPage> {
                   child: LoginForm(),
                 ),
               ),
+
+              // If the user does not have an account yet
               SizedBox(
                 height: MediaQuery.of(context).size.height / 3,
                 child: Row(
@@ -50,11 +56,13 @@ class _LoginState extends State<LoginPage> {
                         color: Theme.of(context).colorScheme.tertiary,
                       ),
                     ),
+
+                    // Button that navigates the user to the registration page
                     ElevatedButton(
                       onPressed: () {
                         Navigator.push(context, MaterialPageRoute(builder: (context) {
-                        return const RegistrationPage();
-                      }));
+                          return const RegistrationPage();
+                        }));
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.secondary,

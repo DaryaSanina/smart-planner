@@ -1,11 +1,12 @@
 import 'package:app/home/widgets/task_editing_dialog.dart';
-import 'package:app/models/show_importance_model.dart';
+import 'package:app/models/importance_visibility_model.dart';
 import 'package:app/models/tag_list_model.dart';
 import 'package:app/models/task_model.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:provider/provider.dart';
 import 'package:app/models/task_list_model.dart';
+
+import 'package:flutter/material.dart';
+
+import 'package:provider/provider.dart';
 
 class Task extends StatefulWidget {
   final String name;
@@ -38,22 +39,27 @@ class _TaskState extends State<Task> {
 
   @override
   Widget build(BuildContext context) {
+    // Load the models so that the widget can update dynamically
     final taskModel = context.watch<TaskModel>();
     final showImportanceModel = context.watch<ShowImportanceModel>();
     final taskListModel = context.watch<TaskListModel>();
     final tagListModel = context.watch<TagListModel>();
+
     return Padding(
       padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.width * 0.02),
       child: TextButton(
+        // When the user has tapped on the task
         onPressed: () async {
-          await tagListModel.update(widget.userID);
-          await taskModel.getDetails(widget.taskID);
+          await tagListModel.update(widget.userID);  // Update the tag list model
+          await taskModel.getDetails(widget.taskID);  // Update the task model
+          // Show the task editing dialog
           await showDialog<String>(
             context: context,
             builder: (context) => TaskEditingDialog(userID: widget.userID, taskWidget: widget),
           );
-          await taskListModel.update(widget.userID);
+          await taskListModel.update(widget.userID);  // Update the task list model
         },
+
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.03, vertical: MediaQuery.of(context).size.width * 0.02),
           child: Row(
@@ -115,25 +121,29 @@ class _TaskState extends State<Task> {
                 ),
               ),
 
-              // Remove task button
+              // A checkbox to remove the task
               Transform.scale(
                 scale: 1.3,
                 child: Checkbox(
-                  activeColor: Colors.lightGreen,
+                  activeColor: Theme.of(context).colorScheme.secondary,
                   shape: const CircleBorder(),
                   value: checkboxValue,
+
+                  // Remove the task when the checkbox is checked
                   onChanged: (value) async {
+
+                    // Check the checkbox
                     setState(() {
                       checkboxValue = value!;
                     });
-                    await Future.delayed(const Duration(milliseconds: 500));
-                    var taskList = context.read<TaskListModel>();
-                    taskList.remove(widget);
+                    await Future.delayed(const Duration(milliseconds: 1000));  // Wait for 1 second while showing the checkbox animation
+                    taskListModel.remove(widget);  // Remove the task
+
+                    // Uncheck the checkbox (this prevents the checkbox of the next task from being checked after this one is removed)
                     setState(() {
                       checkboxValue = !value!;
                     });
                   },
-                  //icon: const Icon(Icons.radio_button_unchecked, size: 30,),
                 ),
               )
             ],
