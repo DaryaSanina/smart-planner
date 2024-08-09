@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:app/registration/widgets/registration_form.dart';
+
+import 'package:flutter/material.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -15,10 +15,13 @@ class _RegistrationState extends State<RegistrationPage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         return Scaffold(
+          resizeToAvoidBottomInset: false,
           backgroundColor: Theme.of(context).colorScheme.primary,
+
           body: Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
+              // Logo
               const SizedBox(
                 child: Center(
                   child: Text(
@@ -29,12 +32,16 @@ class _RegistrationState extends State<RegistrationPage> {
                   ),
                 ),
               ),
+
+              // Registration form
               SizedBox(
                 width: MediaQuery.of(context).size.width,
                 child: const Center(
                   child: RegistrationForm(),
                 ),
               ),
+
+              // If the user already has an account
               SizedBox(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -46,6 +53,8 @@ class _RegistrationState extends State<RegistrationPage> {
                         color: Theme.of(context).colorScheme.tertiary,
                       ),
                     ),
+
+                    // Button that navigates the user to the login page
                     ElevatedButton(
                       onPressed: () {
                         Navigator.pop(context);

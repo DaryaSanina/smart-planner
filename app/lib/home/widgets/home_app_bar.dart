@@ -1,14 +1,15 @@
 import 'package:app/home/widgets/settings_button.dart';
+
 import 'package:flutter/material.dart';
 
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   const HomeAppBar({
-    this.height = kToolbarHeight,
+    this.appBarHeight = kToolbarHeight,
     super.key,
     required this.username,
   });
 
-  final double height;
+  final double appBarHeight;
   final String username;
 
   @override
@@ -22,5 +23,5 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
   @override
-  Size get preferredSize => Size.fromHeight(height);
+  Size get preferredSize => Size.fromHeight(appBarHeight);
 }

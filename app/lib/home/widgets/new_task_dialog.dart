@@ -1,44 +1,10 @@
-import 'dart:convert';
-
-import 'package:app/models/task_list_model.dart';
+import 'package:app/home/util.dart';
+import 'package:app/models/tag_list_model.dart';
 import 'package:app/models/task_model.dart';
-import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
+
 import 'package:provider/provider.dart';
-
-String dateTimeToString(DateTime date, TimeOfDay? time) {
-  String result = date.year.toString();
-  result += "-";
-  if (date.month < 10) {
-    result += "0";
-  }
-  result += date.month.toString();
-  result += "-";
-  if (date.day < 10) {
-    result += "0";
-  }
-  result += date.day.toString();
-  result += "T";
-
-  if (time != null) {
-    if (time.hour < 10) {
-      result += "0";
-    }
-    result += time.hour.toString();
-    result += ":";
-    if (time.minute < 10) {
-      result += "0";
-    }
-    result += time.minute.toString();
-  }
-  else {
-    result += "00:00";
-  }
-  result += ":00";
-
-  return result;
-}
 
 class NewTaskDialog extends StatefulWidget {
   const NewTaskDialog({super.key, required this.userID});
@@ -53,12 +19,15 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
   TextEditingController descriptionController = TextEditingController();
   TextEditingController importanceController = TextEditingController();
   bool _isLoading = false;
+  bool _importanceIsLoading = false;
+  TextEditingController newTagController = TextEditingController();
+  String _newTagName = "";
 
   @override
   Widget build(BuildContext context) {
+    // Load the models so that the page can update dynamically
     final task = context.watch<TaskModel>();
-
-    final taskList = context.watch<TaskListModel>();
+    final tagList = context.watch<TagListModel>();
 
     return AlertDialog(
       title: const Text("Create a new task"),
@@ -79,12 +48,12 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                 counterText: "${32 - task.name.length} character(s) left"
               ),
               cursorColor: Theme.of(context).colorScheme.tertiary,
-              onChanged: (text) => setState(() => task.setName(text)),
+              onChanged: (text) => setState(() => task.setName(text)),  // Update the task model
               validator: (value) {
-                if (value == null || value.isEmpty) {
+                if (value == null || value.isEmpty) {  // Check whether the field is empty
                   return "Please enter the task name";
                 }
-                if (value.length < 3 || value.length > 32) {
+                if (value.length < 3 || value.length > 32) {  // Check whether the task name is between 3 and 32 characters long
                   return "The length of the task name is not between 3 and 32 characters";
                 }
                 return null;
@@ -104,7 +73,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                 counterText: "${task.description.length} character(s)"
               ),
               cursorColor: Theme.of(context).colorScheme.tertiary,
-              onChanged: (text) => setState(() => task.description = text),
+              onChanged: (text) => setState(() => task.setDescription(text)),  // Update the task model
               validator: (value) {
                 return null;
               },
@@ -121,13 +90,53 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
               inputDecorationTheme: InputDecorationTheme(
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
               ),
+              // List all possible importance levels - numbers from 0 to 10
               dropdownMenuEntries: List.generate(11, (i) => i).map((int item) {
                 return DropdownMenuEntry(
                   value: item,
                   label: item.toString(),
                 );
               }).toList(),
-              onSelected: (int? newValue) => setState(() => task.setImportance(newValue!)),
+              onSelected: (int? newValue) => setState(() => task.setImportance(newValue!)),  // Update the task model
+            ),
+
+            SizedBox(height: MediaQuery.of(context).size.height * 0.03),
+
+            // Button to generate task importance using a LSTM model on a server
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () async {
+                setState(() {
+                  _importanceIsLoading = true;  // Show a linear progress indicator
+                });
+                int newImportance = await getTaskImportancePrediction(task.name, task.description);  // Get a task importance prediction
+                setState(() => task.setImportance(newImportance));  // Update the task model
+                setState(() {
+                  _importanceIsLoading = false;  // Hide the linear progress indicator
+                });
+              },
+              child: _importanceIsLoading
+              // If _isLoading is true, show a linear progress indicator below the "Generate with AI" text
+              ? Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Predict importance with AI", style: TextStyle(color: Theme.of(context).colorScheme.tertiary)),
+                  SizedBox(
+                    width: 150,
+                    height: 3,
+                    child: LinearProgressIndicator(
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                      color: Theme.of(context).colorScheme.tertiary,
+                      minHeight: 3,
+                    )
+                  ),
+                ],
+              )
+              // Otherwise, just show the "Generate with AI" text
+              : Text("Predict importance with AI", style: TextStyle(color: Theme.of(context).colorScheme.tertiary)),
             ),
 
             SizedBox(height: MediaQuery.of(context).size.height * 0.05),
@@ -143,13 +152,8 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                     groupValue: task.isDeadline,
                     activeColor: Theme.of(context).colorScheme.tertiary,
                     onChanged: (bool? value) => setState(() {
-                      task.isDeadline = value!;
-                      task.deadlineDate = null;
-                      task.deadlineTime = null;
-                      task.startDate = null;
-                      task.startTime = null;
-                      task.endDate = null;
-                      task.endTime = null;
+                      task.setTimeConstraintsMode(value!);
+                      task.clearTimings();
                     }),
                   ),
                 ),
@@ -160,13 +164,8 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                     groupValue: task.isDeadline,
                     activeColor: Theme.of(context).colorScheme.tertiary,
                     onChanged: (bool? value) => setState(() {
-                      task.isDeadline = value!;
-                      task.deadlineDate = null;
-                      task.deadlineTime = null;
-                      task.startDate = null;
-                      task.startTime = null;
-                      task.endDate = null;
-                      task.endTime = null;
+                      task.setTimeConstraintsMode(value!);
+                      task.clearTimings();
                     }),
                   ),
                 ),
@@ -178,169 +177,262 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
             Container(
               child: task.isDeadline
                 // Deadline date and time picker
-                ? Row(
-                    children: [
-                      const Text("Deadline: ", style: TextStyle(fontSize: 18)),
-                      TextButton(
-                        onPressed: () => setState(() async => task.setDeadlineDate((await showDatePicker(
-                          context: context,
-                          firstDate: DateTime(2000), lastDate: DateTime(2100),
-                          builder: (context, child) {
-                            return Theme(
-                              data: Theme.of(context).copyWith(
-                                colorScheme: const ColorScheme.dark().copyWith(
-                                  primary: Theme.of(context).colorScheme.secondary,
-                                  onPrimary: Theme.of(context).colorScheme.tertiary,
-                                  onSurface: Theme.of(context).colorScheme.tertiary,
+                ? SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                      children: [
+                        const Text("Deadline: ", style: TextStyle(fontSize: 18)),
+
+                        // Deadline date picker
+                        TextButton(
+                          onPressed: () => setState(() async => task.setDeadlineDate((await showDatePicker(
+                            context: context,
+                            firstDate: DateTime(2000), lastDate: DateTime(2100),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: const ColorScheme.dark().copyWith(
+                                    primary: Theme.of(context).colorScheme.secondary,
+                                    onPrimary: Theme.of(context).colorScheme.tertiary,
+                                    onSurface: Theme.of(context).colorScheme.tertiary,
+                                  ),
                                 ),
-                              ),
-                              child: child!,
-                            );
-                          }
-                        ))!)),
-                        child: Text(
-                          task.deadlineDate == null
-                            ? "Select date"
-                            : "${task.deadlineDate!.day}/${task.deadlineDate!.month}/${task.deadlineDate!.year}",
-                          style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                                child: child!,
+                              );
+                            }
+                          ))!)),
+                          // Show the selected date or "Select date" if no date is selected
+                          child: Text(
+                            task.deadlineDate == null
+                              ? "Select date"
+                              : "${task.deadlineDate!.day}/${task.deadlineDate!.month}/${task.deadlineDate!.year}",
+                            style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                          ),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: () => setState(() async => task.setDeadlineTime((await showTimePicker(
-                          context: context,
-                          initialTime: TimeOfDay.now(),
-                          builder: (context, child) {
-                            return Theme(
-                              data: Theme.of(context).copyWith(
-                                colorScheme: const ColorScheme.dark().copyWith(
-                                  primaryContainer: Theme.of(context).colorScheme.secondary,
-                                  tertiaryContainer: Theme.of(context).colorScheme.secondary,
+
+                        // Deadline time picker
+                        TextButton(
+                          onPressed: () => setState(() async => task.setDeadlineTime((await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.now(),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: const ColorScheme.dark().copyWith(
+                                    primaryContainer: Theme.of(context).colorScheme.secondary,
+                                    tertiaryContainer: Theme.of(context).colorScheme.secondary,
+                                  ),
                                 ),
-                              ),
-                              child: child!,
-                            );
-                          }
-                        ))!)),
-                        child: Text(
-                          task.deadlineTime == null
-                            ? "Select time"
-                            : "${task.deadlineTime!.hour < 10 ? '0' : ''}${task.deadlineTime!.hour % 12}:${task.deadlineTime!.minute < 10 ? '0' : ''}${task.deadlineTime!.minute} ${task.deadlineTime!.hour < 12 ? 'AM' : 'PM'}",
-                          style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                                child: child!,
+                              );
+                            }
+                          ))!)),
+                          // Show the selected time or "Select time" if no time is selected
+                          child: Text(
+                            task.deadlineTime == null
+                              ? "Select time"
+                              : "${task.deadlineTime!.hour < 10 ? '0' : ''}${task.deadlineTime!.hour % 12}:${task.deadlineTime!.minute < 10 ? '0' : ''}${task.deadlineTime!.minute} ${task.deadlineTime!.hour < 12 ? 'AM' : 'PM'}",
+                            style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                          ),
                         ),
-                      ),
-                    ],
-                  )
+                      ],
+                    ),
+                )
+              
               : Column(
                 children: [
                   // Start date and time picker
-                  Row(
-                    children: [
-                      const Text("Start: ", style: TextStyle(fontSize: 18)),
-                      TextButton(
-                        onPressed: () => setState(() async => task.setStartDate((await showDatePicker(
-                          context: context,
-                          firstDate: DateTime(2000), lastDate: DateTime(2100),
-                          builder: (context, child) {
-                            return Theme(
-                              data: Theme.of(context).copyWith(
-                                colorScheme: const ColorScheme.dark().copyWith(
-                                  primary: Theme.of(context).colorScheme.secondary,
-                                  onPrimary: Theme.of(context).colorScheme.tertiary,
-                                  onSurface: Theme.of(context).colorScheme.tertiary,
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        const Text("Start: ", style: TextStyle(fontSize: 18)),
+
+                        // Start date picker
+                        TextButton(
+                          onPressed: () => setState(() async => task.setStartDate((await showDatePicker(
+                            context: context,
+                            firstDate: DateTime(2000), lastDate: DateTime(2100),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: const ColorScheme.dark().copyWith(
+                                    primary: Theme.of(context).colorScheme.secondary,
+                                    onPrimary: Theme.of(context).colorScheme.tertiary,
+                                    onSurface: Theme.of(context).colorScheme.tertiary,
+                                  ),
                                 ),
-                              ),
-                              child: child!,
-                            );
-                          }
-                        ))!)),
-                        child: Text(
-                          task.startDate == null
-                            ? "Select date"
-                            : "${task.startDate!.day}/${task.startDate!.month}/${task.startDate!.year}",
-                          style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                                child: child!,
+                              );
+                            }
+                          ))!)),
+                          // Show the selected date or "Select date" if no date is selected
+                          child: Text(
+                            task.startDate == null
+                              ? "Select date"
+                              : "${task.startDate!.day}/${task.startDate!.month}/${task.startDate!.year}",
+                            style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                          ),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: () => setState(() async => task.setStartTime((await showTimePicker(
-                          context: context,
-                          initialTime: TimeOfDay.now(),
-                          builder: (context, child) {
-                            return Theme(
-                              data: Theme.of(context).copyWith(
-                                colorScheme: const ColorScheme.dark().copyWith(
-                                  primaryContainer: Theme.of(context).colorScheme.secondary,
-                                  tertiaryContainer: Theme.of(context).colorScheme.secondary,
+
+                        // Start time picker
+                        TextButton(
+                          onPressed: () => setState(() async => task.setStartTime((await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.now(),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: const ColorScheme.dark().copyWith(
+                                    primaryContainer: Theme.of(context).colorScheme.secondary,
+                                    tertiaryContainer: Theme.of(context).colorScheme.secondary,
+                                  ),
                                 ),
-                              ),
-                              child: child!,
-                            );
-                          }
-                        ))!)),
-                        child: Text(
-                          task.startTime == null
-                            ? "Select time"
-                            : "${task.startTime!.hour < 10 ? '0' : ''}${task.startTime!.hour % 12}:${task.startTime!.minute < 10 ? '0' : ''}${task.startTime!.minute} ${task.startTime!.hour < 12 ? 'AM' : 'PM'}",
-                          style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                                child: child!,
+                              );
+                            }
+                          ))!)),
+                          // Show the selected time or "Select time" if no time is selected
+                          child: Text(
+                            task.startTime == null
+                              ? "Select time"
+                              : "${task.startTime!.hour < 10 ? '0' : ''}${task.startTime!.hour % 12}:${task.startTime!.minute < 10 ? '0' : ''}${task.startTime!.minute} ${task.startTime!.hour < 12 ? 'AM' : 'PM'}",
+                            style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
 
                   // End date and time picker
-                  Row(
-                    children: [
-                      const Text("End: ", style: TextStyle(fontSize: 18)),
-                      TextButton(
-                        onPressed: () => setState(() async => task.setEndDate((await showDatePicker(
-                          context: context,
-                          firstDate: DateTime(2000), lastDate: DateTime(2100),
-                          builder: (context, child) {
-                            return Theme(
-                              data: Theme.of(context).copyWith(
-                                colorScheme: const ColorScheme.dark().copyWith(
-                                  primary: Theme.of(context).colorScheme.secondary,
-                                  onPrimary: Theme.of(context).colorScheme.tertiary,
-                                  onSurface: Theme.of(context).colorScheme.tertiary,
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        const Text("End: ", style: TextStyle(fontSize: 18)),
+
+                        // End date picker
+                        TextButton(
+                          onPressed: () => setState(() async => task.setEndDate((await showDatePicker(
+                            context: context,
+                            firstDate: DateTime(2000), lastDate: DateTime(2100),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: const ColorScheme.dark().copyWith(
+                                    primary: Theme.of(context).colorScheme.secondary,
+                                    onPrimary: Theme.of(context).colorScheme.tertiary,
+                                    onSurface: Theme.of(context).colorScheme.tertiary,
+                                  ),
                                 ),
-                              ),
-                              child: child!,
-                            );
-                          }
-                        ))!)),
-                        child: Text(
-                          task.endDate == null
-                            ? "Select date"
-                            : "${task.endDate!.day}/${task.endDate!.month}/${task.endDate!.year}",
-                          style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                                child: child!,
+                              );
+                            }
+                          ))!)),
+                          // Show the selected date or "Select date" if no date is selected
+                          child: Text(
+                            task.endDate == null
+                              ? "Select date"
+                              : "${task.endDate!.day}/${task.endDate!.month}/${task.endDate!.year}",
+                            style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                          ),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: () => setState(() async => task.setEndTime((await showTimePicker(
-                          context: context,
-                          initialTime: TimeOfDay.now(),
-                          builder: (context, child) {
-                            return Theme(
-                              data: Theme.of(context).copyWith(
-                                colorScheme: const ColorScheme.dark().copyWith(
-                                  primaryContainer: Theme.of(context).colorScheme.secondary,
-                                  tertiaryContainer: Theme.of(context).colorScheme.secondary,
+
+                        // End time picker
+                        TextButton(
+                          onPressed: () => setState(() async => task.setEndTime((await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.now(),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: const ColorScheme.dark().copyWith(
+                                    primaryContainer: Theme.of(context).colorScheme.secondary,
+                                    tertiaryContainer: Theme.of(context).colorScheme.secondary,
+                                  ),
                                 ),
-                              ),
-                              child: child!,
-                            );
-                          }
-                        ))!)),
-                        child: Text(
-                          task.endTime == null
-                            ? "Select time"
-                            : "${task.endTime!.hour < 10 ? '0' : ''}${task.endTime!.hour % 12}:${task.endTime!.minute < 10 ? '0' : ''}${task.endTime!.minute} ${task.endTime!.hour < 12 ? 'AM' : 'PM'}",
-                          style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                                child: child!,
+                              );
+                            }
+                          ))!)),
+                          // Show the selected time or "Select time" if no time is selected
+                          child: Text(
+                            task.endTime == null
+                              ? "Select time"
+                              : "${task.endTime!.hour < 10 ? '0' : ''}${task.endTime!.hour % 12}:${task.endTime!.minute < 10 ? '0' : ''}${task.endTime!.minute} ${task.endTime!.hour < 12 ? 'AM' : 'PM'}",
+                            style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18, decoration: TextDecoration.underline)
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
+            ),
+
+            SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+
+            // Tags for the new task
+            const Text("Tags", style: TextStyle(fontSize: 18)),
+            Column(
+              // Generate the list of available tags
+              children: List.generate(
+                tagList.tags.length,
+                (i) => CheckboxListTile(
+                  title: Text(tagList.tags[i].name),
+                  activeColor: Theme.of(context).colorScheme.secondary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                  value: task.tags.contains(tagList.tags[i].tagID),
+                  onChanged: (bool? value) {
+                    // Update the task model
+                    if (value!) {
+                      setState(() {
+                        task.addTag(tagList.tags[i].tagID);
+                      });
+                    }
+                    else {
+                      setState(() {
+                        task.removeTag(tagList.tags[i].tagID);
+                      });
+                    }
+                  },
+                )
+              ),
+            ),
+            
+            // Add a new tag
+            Row(
+              children: [
+                IconButton(
+                  onPressed: () async {
+                    if (_newTagName.length >= 3 && _newTagName.length <= 32) {  // Check whether the name of the tag is between 3 and 32 characters long
+                      await addTag(_newTagName, widget.userID);  // Add the tag to the database on the server
+                      tagList.update(widget.userID);  // Update the the tag list model
+                    }
+                    else {
+                      // Show the user a message saying that the tag name is incorrect
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Tag name should be between 3 and 32 characters long.")),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.add),
+                ),
+
+                // New tag name input field
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.3,
+                  height: 50,
+                  child: TextField(
+                    controller: newTagController,
+                    decoration: const InputDecoration(
+                      hintText: "Add a new tag",
+                    ),
+                    cursorColor: Theme.of(context).colorScheme.tertiary,
+                    onChanged: (text) => setState(() => _newTagName = text),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -349,7 +441,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
       actions: <Widget>[
         // Cancel button
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context),  // Hide the dialog
           child: Text("Cancel", style: TextStyle(color: Theme.of(context).colorScheme.tertiary)),
         ),
 
@@ -357,54 +449,32 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
         TextButton(
           onPressed: () async {
             if (_formKey.currentState!.validate()) {
+              // If the selected timings are correct (there is either a deadline or a start and an end)
               if (task.deadlineDate != null && (task.startDate == null && task.startTime == null) && (task.endDate == null && task.endTime == null)
                 || (task.deadlineDate == null && task.deadlineTime == null) && task.startDate != null && task.endDate != null) {
+
                   setState(() {
-                    _isLoading = true;
+                    _isLoading = true;  // Show a circular progress indicator
                   });
-                  // Form a task creation request
-                  var requestDict = {
-                    'name': task.name,
-                    'importance': task.importance,
-                    'user_id': widget.userID
-                  };
 
-                  if (task.description.isNotEmpty) {
-                    requestDict['description'] = task.description;
-                  }
+                  // Add the task to the database
+                  int taskID = await addTask(task.name, task.description, task.importance, widget.userID,
+                                            task.isDeadline, task.deadlineDate, task.deadlineTime,
+                                            task.startDate, task.startTime, task.endDate, task.endTime);
 
-                  if (task.isDeadline) {
-                    requestDict['deadline'] = dateTimeToString(task.deadlineDate!, task.deadlineTime);  // Add deadline
-                  }
-                  else {
-                    requestDict['start'] = dateTimeToString(task.startDate!, task.startTime); // Add start date and time
-                    requestDict['end'] = dateTimeToString(task.endDate!, task.endTime); // Add start date and time
-                  }
-
-                  // Send the request
-                  var request = jsonEncode(requestDict);
-                  http.Response response = await http.post(
-                    Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/add_task'),
-                    headers: <String, String>{'Content-Type': 'application/json'},
-                    body: request
-                  );
-
-                  if (response.statusCode != 201) {
-                    setState(() {
-                      _isLoading = false;
-                    });
-                    return;
+                  // Add task to tag relationships to the database
+                  for (final int tagID in task.tags) {
+                    await addTaskToTagRelationship(taskID, tagID);
                   }
 
                   if (context.mounted) {
-                    // Update the task list
-                    taskList.update(widget.userID);
                     setState(() {
-                      _isLoading = false;
+                      _isLoading = false;  // Hide the circular progress indicator
                     });
-                    Navigator.pop(context);
+                    Navigator.pop(context);  // Hide the dialog
                   }
                 }
+              // If the selected timings are incorrect, show the user an error message
               else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("There should either be a deadline or a start and an end.")),
@@ -416,7 +486,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
           child: Text("Create", style: TextStyle(color: Theme.of(context).colorScheme.tertiary)),
         ),
       ] + (_isLoading
-      ? [CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary)]
+      ? [CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary)]  // Show a circular progress indicator while the task is being created
       : []),
     );
   }

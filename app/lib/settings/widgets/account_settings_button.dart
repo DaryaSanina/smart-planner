@@ -8,11 +8,14 @@ class AccountSettingsButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
+
       onPressed: () {},
+
       style: ElevatedButton.styleFrom(
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
+      
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.height * 0.01),
         child: Row(

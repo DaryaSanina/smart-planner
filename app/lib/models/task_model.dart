@@ -1,100 +1,144 @@
+import 'dart:collection';
 import 'dart:convert';
-
+import 'package:app/models/util.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class TaskModel extends ChangeNotifier {
-  String name = "";
-  String description = "";
-  int importance = 5;
-  bool isDeadline = true;
-  DateTime? deadlineDate;
-  TimeOfDay? deadlineTime;
-  DateTime? startDate;
-  TimeOfDay? startTime;
-  DateTime? endDate;
-  TimeOfDay? endTime;
+  String _name = "";
+  get name => _name;
+  String _description = "";
+  get description => _description;
+  int _importance = 5;
+  get importance => _importance;
+  bool _isDeadline = true;
+  get isDeadline => _isDeadline;
+  DateTime? _deadlineDate;
+  get deadlineDate => _deadlineDate;
+  TimeOfDay? _deadlineTime;
+  get deadlineTime => _deadlineTime;
+  DateTime? _startDate;
+  get startDate => _startDate;
+  TimeOfDay? _startTime;
+  get startTime => _startTime;
+  DateTime? _endDate;
+  get endDate => _endDate;
+  TimeOfDay? _endTime;
+  get endTime => _endTime;
+  List<int> _tags = [];
+  UnmodifiableListView get tags => UnmodifiableListView(_tags);
 
   void clear() {
-    name = "";
-    description = "";
-    importance = 5;
-    isDeadline = true;
-    deadlineDate = null;
-    deadlineTime = null;
-    startDate = null;
-    startTime = null;
-    endDate = null;
-    endTime = null;
+    _name = "";
+    _description = "";
+    _importance = 5;
+    _isDeadline = true;
+    _deadlineDate = null;
+    _deadlineTime = null;
+    _startDate = null;
+    _startTime = null;
+    _endDate = null;
+    _endTime = null;
+    notifyListeners();
+  }
+
+  void clearTimings() {
+    _deadlineDate = null;
+    _deadlineTime = null;
+    _startDate = null;
+    _startTime = null;
+    _endDate = null;
+    _endTime = null;
+    notifyListeners();
   }
 
   Future<void> getDetails(int taskID) async {
     var response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_task?task_id=$taskID'));
     var details = jsonDecode(response.body)['data'][0];
-    name = details[1];
-    description = details[2].toString();
-    importance = details[6];
-    isDeadline = details[3] != null;
-    if (isDeadline) {
-      deadlineDate = DateTime(int.parse(details[3].toString().substring(0, 4)), int.parse(details[3].toString().substring(5, 7)), int.parse(details[3].toString().substring(8, 10)));
-      deadlineTime = TimeOfDay(hour: int.parse(details[3].toString().substring(11, 13)), minute: int.parse(details[3].toString().substring(14, 16)));
+    _name = details[1];
+    _description = details[2].toString();
+    _importance = details[6];
+    _isDeadline = details[3] != null;
+    if (_isDeadline) {
+      _deadlineDate = DateTime(int.parse(details[3].toString().substring(0, 4)), int.parse(details[3].toString().substring(5, 7)), int.parse(details[3].toString().substring(8, 10)));
+      _deadlineTime = TimeOfDay(hour: int.parse(details[3].toString().substring(11, 13)), minute: int.parse(details[3].toString().substring(14, 16)));
+      if (_deadlineTime == const TimeOfDay(hour: 0, minute: 0)) {
+        _deadlineTime = null;
+      }
     }
     else {
-      startDate = DateTime(int.parse(details[4].toString().substring(0, 4)), int.parse(details[4].toString().substring(5, 7)), int.parse(details[4].toString().substring(8, 10)));
-      startTime = TimeOfDay(hour: int.parse(details[4].toString().substring(11, 13)), minute: int.parse(details[4].toString().substring(14, 16)));
-      endDate = DateTime(int.parse(details[5].toString().substring(0, 4)), int.parse(details[5].toString().substring(5, 7)), int.parse(details[5].toString().substring(8, 10)));
-      endTime = TimeOfDay(hour: int.parse(details[5].toString().substring(11, 13)), minute: int.parse(details[5].toString().substring(14, 16)));
+      _startDate = DateTime(int.parse(details[4].toString().substring(0, 4)), int.parse(details[4].toString().substring(5, 7)), int.parse(details[4].toString().substring(8, 10)));
+      _startTime = TimeOfDay(hour: int.parse(details[4].toString().substring(11, 13)), minute: int.parse(details[4].toString().substring(14, 16)));
+      if (_startTime == const TimeOfDay(hour: 0, minute: 0)) {
+        _startTime = null;
+      }
+      _endDate = DateTime(int.parse(details[5].toString().substring(0, 4)), int.parse(details[5].toString().substring(5, 7)), int.parse(details[5].toString().substring(8, 10)));
+      _endTime = TimeOfDay(hour: int.parse(details[5].toString().substring(11, 13)), minute: int.parse(details[5].toString().substring(14, 16)));
+      if (_endTime == const TimeOfDay(hour: 0, minute: 0)) {
+        _endTime = null;
+      }
     }
+    _tags = await getTaskTags(taskID);
     notifyListeners();
   }
 
   void setName(String newName) {
-    name = newName;
+    _name = newName;
     notifyListeners();
   }
 
   void setDescription(String newDescription) {
-    description = newDescription;
+    _description = newDescription;
     notifyListeners();
   }
 
   void setImportance(int newImportance) {
-    importance = newImportance;
+    _importance = newImportance;
     notifyListeners();
   }
 
   void setTimeConstraintsMode(bool newIsDeadline) {
-    isDeadline = newIsDeadline;
+    _isDeadline = newIsDeadline;
     notifyListeners();
   }
 
   void setDeadlineDate(DateTime newDate) {
-    deadlineDate = newDate;
+    _deadlineDate = newDate;
     notifyListeners();
   }
 
   void setDeadlineTime(TimeOfDay newTime) {
-    deadlineTime = newTime;
+    _deadlineTime = newTime;
     notifyListeners();
   }
 
   void setStartDate(DateTime newDate) {
-    startDate = newDate;
+    _startDate = newDate;
     notifyListeners();
   }
 
   void setStartTime(TimeOfDay newTime) {
-    startTime = newTime;
+    _startTime = newTime;
     notifyListeners();
   }
 
   void setEndDate(DateTime newDate) {
-    endDate = newDate;
+    _endDate = newDate;
     notifyListeners();
   }
 
   void setEndTime(TimeOfDay newTime) {
-    endTime = newTime;
+    _endTime = newTime;
+    notifyListeners();
+  }
+
+  void addTag(int tagID) {
+    _tags.add(tagID);
+    notifyListeners();
+  }
+
+  void removeTag(int tagID) {
+    _tags.remove(tagID);
     notifyListeners();
   }
 }
