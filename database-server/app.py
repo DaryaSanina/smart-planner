@@ -139,7 +139,7 @@ def delete_user(user_id: int):
 def get_task(task_id=0, task_name="", user_id=0):
      if task_name == "" and task_id == 0 and user_id == 0:
           return JSONResponse({"reason": "Neither the name of the task nor its ID were provided."}, status_code=400)
-     if task_name == "" and user_id == 0:
+     elif task_name == "" and user_id == 0:
           cursor.execute(f"""SELECT * FROM Tasks WHERE TaskID = {task_id}""")
      elif task_id == 0 and user_id == 0:
           cursor.execute(f"""SELECT * FROM Tasks WHERE Name = '{task_name}'""")
@@ -243,7 +243,8 @@ def update_task(task: ExistingTask):
 
 @app.delete('/delete_task')
 def delete_task(task_id: int):
-     cursor.execute(f"""DELETE FROM Tasks WHERE TaskID = {task_id}""")
+     cursor.execute(f"""DELETE FROM TasksToTags WHERE TaskID = {task_id}""")  # Delete all the tag connections for this task
+     cursor.execute(f"""DELETE FROM Tasks WHERE TaskID = {task_id}""")  # Delete the task
      db.commit()
      return JSONResponse({})
 

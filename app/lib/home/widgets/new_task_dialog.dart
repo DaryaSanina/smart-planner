@@ -526,9 +526,9 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                     }
                   }
 
+                  await taskList.update(widget.userID);  // Update the task list
+
                   if (context.mounted) {
-                    // Update the task list
-                    taskList.update(widget.userID);
                     setState(() {
                       _isLoading = false;
                     });
