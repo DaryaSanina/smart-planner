@@ -3,10 +3,11 @@ import 'package:app/models/show_importance_model.dart';
 import 'package:app/models/tag_list_model.dart';
 import 'package:app/models/task_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:app/models/task_list_model.dart';
 
-class Task extends StatelessWidget {
+class Task extends StatefulWidget {
   final String name;
   final String timings;
   final int userID;
@@ -30,6 +31,12 @@ class Task extends StatelessWidget {
   });
 
   @override
+  createState() => _TaskState();
+}
+class _TaskState extends State<Task> {
+  bool checkboxValue = false;
+
+  @override
   Widget build(BuildContext context) {
     final taskModel = context.watch<TaskModel>();
     final showImportanceModel = context.watch<ShowImportanceModel>();
@@ -39,13 +46,13 @@ class Task extends StatelessWidget {
       padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.width * 0.02),
       child: TextButton(
         onPressed: () async {
-          await tagListModel.update(userID);
-          await taskModel.getDetails(taskID);
+          await tagListModel.update(widget.userID);
+          await taskModel.getDetails(widget.taskID);
           await showDialog<String>(
             context: context,
-            builder: (context) => TaskEditingDialog(userID: userID, taskWidget: this),
+            builder: (context) => TaskEditingDialog(userID: widget.userID, taskWidget: widget),
           );
-          await taskListModel.update(userID);
+          await taskListModel.update(widget.userID);
         },
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.03, vertical: MediaQuery.of(context).size.width * 0.02),
@@ -60,7 +67,7 @@ class Task extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          name,
+                          widget.name,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w200,
@@ -72,7 +79,7 @@ class Task extends StatelessWidget {
                     // Importance
                     ((showImportanceModel.showImportance)
                     ? Text(
-                        "Importance: $importance",
+                        "Importance: ${widget.importance}",
                         style: const TextStyle(
                           fontSize: 13,
                         ),
@@ -81,7 +88,7 @@ class Task extends StatelessWidget {
                 
                     // Timings
                     Text(
-                      timings,
+                      widget.timings,
                       style: const TextStyle(
                         fontSize: 13,
                       ),
@@ -92,13 +99,13 @@ class Task extends StatelessWidget {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: List.generate(
-                          tags.length,
+                          widget.tags.length,
                           (i) => Card(
                             color: Theme.of(context).colorScheme.secondary,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             child: Padding(
                               padding: const EdgeInsets.all(3.0),
-                              child: Text(tags[i]),
+                              child: Text(widget.tags[i]),
                             )
                           )
                         ),
@@ -109,13 +116,24 @@ class Task extends StatelessWidget {
               ),
 
               // Remove task button
-              SizedBox(
-                child: IconButton(
-                  onPressed: () {
+              Transform.scale(
+                scale: 1.3,
+                child: Checkbox(
+                  activeColor: Colors.lightGreen,
+                  shape: const CircleBorder(),
+                  value: checkboxValue,
+                  onChanged: (value) async {
+                    setState(() {
+                      checkboxValue = value!;
+                    });
+                    await Future.delayed(const Duration(milliseconds: 500));
                     var taskList = context.read<TaskListModel>();
-                    taskList.remove(this);
+                    taskList.remove(widget);
+                    setState(() {
+                      checkboxValue = !value!;
+                    });
                   },
-                  icon: const Icon(Icons.radio_button_unchecked, size: 30,),
+                  //icon: const Icon(Icons.radio_button_unchecked, size: 30,),
                 ),
               )
             ],
