@@ -6,6 +6,10 @@ database-server/.env
 database-server/logfile.log
 database-server/test.py
 lstm-and-k-means-inference-server/.env
+lstm-and-k-means-inference-server/importance_embedding.pkl
+lstm-and-k-means-inference-server/importance_model.pkl
+lstm-and-k-means-inference-server/importance_output.pkl
+lstm-and-k-means-inference-server/word2index.pkl
 importance-prediction-model/importance_embedding.pkl
 importance-prediction-model/importance_model.pkl
 importance-prediction-model/importance_output.pkl
