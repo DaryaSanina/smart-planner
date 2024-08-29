@@ -6,7 +6,10 @@ database-server/.env
 database-server/logfile.log
 database-server/test.py
 lstm-and-k-means-inference-server/.env
-importance-prediction-model/
+importance-prediction-model/importance_embedding.pkl
+importance-prediction-model/importance_model.pkl
+importance-prediction-model/importance_output.pkl
+importance-prediction-model/word2index.pkl
 
 # Miscellaneous
 *.class

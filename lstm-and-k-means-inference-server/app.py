@@ -65,12 +65,14 @@ class TaskImportancePredictor:
         """
         assert self.tokens is not None, "You need to load the tokens of the input first (use the load_tokens method)."
 
-        hidden = self.model.init_hidden(batch_size=1)
+        hidden0 = self.model.layers[0].init_hidden(batch_size=1)
+        hidden1 = self.model.layers[1].init_hidden(batch_size=1)
         for t in range(len(self.tokens)):
             input = Tensor([self.tokens[t]], autograd=True)
             lstm_input = self.embedding.forward(input=input)
-            hidden = self.model.forward(input=lstm_input, hidden=hidden)
-        output = self.output_layer.forward(hidden[0])
+            hidden0 = self.model.layers[0].forward(input=lstm_input, hidden=hidden0)
+            hidden1 = self.model.layers[1].forward(input=hidden0[0], hidden=hidden1)
+        output = self.output_layer.forward(hidden1[0])
 
         return float(output.data)
 
