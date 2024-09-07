@@ -9,9 +9,14 @@ import 'package:app/models/task_list_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class TaskList extends StatelessWidget {
+class TaskList extends StatefulWidget {
   const TaskList({super.key, required this.userID});
   final int userID;
+  @override State<StatefulWidget> createState() => _TaskListState();
+}
+
+class _TaskListState extends State<TaskList> {
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +60,7 @@ class TaskList extends StatelessWidget {
             // Filter button
             Row(
               children: [
-                FilterButton(userID: userID),
+                FilterButton(userID: widget.userID),
                 SizedBox(width: MediaQuery.of(context).size.width * 0.03),
               ],
             ),
@@ -70,18 +75,41 @@ class TaskList extends StatelessWidget {
               // New task button
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.01),
-                child: IconButton(
-                  onPressed: () async {
-                    tagList.update(userID);  // Update the tag list to show it in the task creation dialog
-                    task.clear();
-                    // Open the task creation dialog
-                    await showDialog<String>(
-                      context: context,
-                      builder: (context) => NewTaskDialog(userID: userID),
-                    );
-                    taskList.update(userID);  // Update the task list
-                  },
-                  icon: const Icon(Icons.add),
+                child: Row(
+                  children: <Widget>[
+                    // New task button
+                    IconButton(
+                      onPressed: () async {
+                        setState(() {
+                          _isLoading = true;  // Show a circular progress indicator
+                        });
+                        await tagList.update(widget.userID);  // Update the tag list to show it in the task creation dialog
+                        task.clear();
+                        setState(() {
+                          _isLoading = false;  // Hide the circular progress indicator
+                        });
+
+                        // Open the task creation dialog
+                        await showDialog<String>(
+                          context: context,
+                          builder: (context) => NewTaskDialog(userID: widget.userID),
+                        );
+
+                        setState(() {
+                          _isLoading = true;  // Show a circular progress indicator
+                        });
+                        await taskList.update(widget.userID);  // Update the task list
+                        setState(() {
+                          _isLoading = false;  // Hide the circular progress indicator
+                        });
+                      },
+                      icon: const Icon(Icons.add),
+                    ),
+                  ]
+                  // Circular progress indicator
+                  + (_isLoading
+                  ? [CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary)]
+                  : []),
                 ),
               )
             ],

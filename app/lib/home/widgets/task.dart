@@ -36,6 +36,7 @@ class Task extends StatefulWidget {
 }
 class _TaskState extends State<Task> {
   bool checkboxValue = false;
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -50,28 +51,42 @@ class _TaskState extends State<Task> {
       child: TextButton(
         // When the user has tapped on the task
         onPressed: () async {
+          setState(() {
+            _isLoading = true;  // Show a circular progress indicator
+          });
           await tagListModel.update(widget.userID);  // Update the tag list model
           await taskModel.getDetails(widget.taskID);  // Update the task model
+          setState(() {
+            _isLoading = false;  // Hide the circular progress indicator
+          });
+
           // Show the task editing dialog
           await showDialog<String>(
             context: context,
             builder: (context) => TaskEditingDialog(userID: widget.userID, taskWidget: widget),
           );
+
+          setState(() {
+            _isLoading = true;  // Show a circular progress indicator
+          });
           await taskListModel.update(widget.userID);  // Update the task list model
+          setState(() {
+            _isLoading = false;  // Hide the circular progress indicator
+          });
         },
 
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.03, vertical: MediaQuery.of(context).size.width * 0.02),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
+            children: <Widget>[
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Task name
                     Row(
-                      children: [
+                      children: <Widget>[
                         Text(
                           widget.name,
                           style: const TextStyle(
@@ -119,10 +134,15 @@ class _TaskState extends State<Task> {
                     ),
                   ],
                 ),
-              ),
+              )]
+
+              // A circular progress indicator
+              + (_isLoading
+              ? [CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary), SizedBox(width: MediaQuery.of(context).size.width * 0.05),]
+              : [])
 
               // A checkbox to remove the task
-              Transform.scale(
+              + <Widget> [Transform.scale(
                 scale: 1.3,
                 child: Checkbox(
                   activeColor: Theme.of(context).colorScheme.secondary,

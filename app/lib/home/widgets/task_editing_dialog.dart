@@ -21,6 +21,7 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
   TextEditingController descriptionController = TextEditingController();
   TextEditingController importanceController = TextEditingController();
   bool _isLoading = false;
+  bool _isLoadingTag = false;
   bool _importanceIsLoading = false;
   TextEditingController newTagController = TextEditingController();
   String newTagName = "";
@@ -52,7 +53,6 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                 counterText: "${32 - task.name.length} character(s) left"
               ),
               cursorColor: Theme.of(context).colorScheme.tertiary,
-              onChanged: (text) => setState(() => task.setName(text)),  // Update the task model
               validator: (value) {
                 if (value == null || value.isEmpty) {  // Check whether the field is empty
                   return "Please enter the task name";
@@ -77,7 +77,6 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                 counterText: "${task.description.length} character(s)"
               ),
               cursorColor: Theme.of(context).colorScheme.tertiary,
-              onChanged: (text) => setState(() => task.setDescription(text)),  // Update the task model
               validator: (value) {
                 return null;
               },
@@ -413,8 +412,14 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                 IconButton(
                   onPressed: () async {
                     if (newTagName.length >= 3 && newTagName.length <= 32) {  // Check whether the name of the tag is between 3 and 32 characters long
+                      setState(() {
+                        _isLoadingTag = true;  // Show a circular progress indicator
+                      });
                       await addTag(newTagName, widget.userID);  // Add the tag to the database on the server
                       tagList.update(widget.userID);  // Update the the tag list model
+                      setState(() {
+                        _isLoadingTag = false;  // Hide the circular progress indicator
+                      });
                     }
                     else {
                       // Show the user a message saying that the tag name is incorrect
@@ -439,7 +444,9 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                     onChanged: (text) => setState(() => newTagName = text),
                   ),
                 ),
-              ],
+              ]+ (_isLoadingTag
+              ? [CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary)]  // Show a circular progress indicator while the new tag is being created
+              : []),
             ),
           ],
         ),
@@ -452,10 +459,12 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
           child: Text("Cancel", style: TextStyle(color: Theme.of(context).colorScheme.tertiary)),
         ),
 
-        // Create button
+        // Update button
         TextButton(
           onPressed: () async {
             if (_formKey.currentState!.validate()) {
+              task.setName(taskNameController.text);
+              task.setDescription(descriptionController.text);
               // If the selected timings are correct (there is either a deadline or a start and an end)
               if (task.deadlineDate != null && (task.startDate == null && task.startTime == null) && (task.endDate == null && task.endTime == null)
                 || (task.deadlineDate == null && task.deadlineTime == null) && task.startDate != null && task.endDate != null) {
@@ -463,16 +472,16 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                     _isLoading = true;  // Show a circular progress indicator
                   });
 
-                  updateTask(widget.taskWidget.taskID, task.name, task.description, task.importance,
+                  await updateTask(widget.taskWidget.taskID, task.name, task.description, task.importance,
                             task.isDeadline, task.deadlineDate, task.deadlineTime,
                             task.startDate, task.startTime, task.endDate, task.endTime);
 
                   // Update the tags of the task
                   for (int tagID in await getTaskTags(widget.taskWidget.taskID)) {
-                    deleteTaskToTagRelationship(widget.taskWidget.taskID, tagID);
+                    await deleteTaskToTagRelationship(widget.taskWidget.taskID, tagID);
                   }
                   for (int tagID in task.tags) {
-                    addTaskToTagRelationship(widget.taskWidget.taskID, tagID);
+                    await addTaskToTagRelationship(widget.taskWidget.taskID, tagID);
                   }
 
                   if (context.mounted) {
