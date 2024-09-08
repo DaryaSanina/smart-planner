@@ -34,7 +34,7 @@ dependencies:
   http: ^1.2.0
   provider:
   crypto:
-  flython:
+  shared_preferences:
 
 
   # The following adds the Cupertino Icons font to your application.

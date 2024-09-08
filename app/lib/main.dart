@@ -1,3 +1,4 @@
+import 'package:app/home/home_page.dart';
 import 'package:app/login/login_page.dart';
 import 'package:app/models/importance_visibility_model.dart';
 import 'package:app/models/tag_list_model.dart';
@@ -7,8 +8,14 @@ import 'package:app/models/task_model.dart';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+void main() async {
+  // Load the user data from cache
+  final prefs = await SharedPreferences.getInstance();
+  final int? userID = prefs.getInt('userID');
+  final String? username = prefs.getString('username');
+
   runApp(
     MultiProvider(
       providers: [
@@ -17,13 +24,17 @@ void main() {
         ChangeNotifierProvider(create: (context) => ShowImportanceModel()),
         ChangeNotifierProvider(create: (context) => TagListModel()),
       ],
-      child: const MyApp(),
+      child: MyApp(userID: userID, username: username),
     )
   );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, this.userID, this.username});
+
+  final int? userID;
+  final String? username;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -54,8 +65,8 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
 
-      // Load the initial page
-      home: const LoginPage(),
+      // Load the home page if the user data (user ID and username) is in the cache, or the login page otherwise
+      home: ((userID != null && username != null) ? HomePage(userID: userID!, username: username!) : const LoginPage()),
     );
   }
 }

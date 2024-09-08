@@ -24,6 +24,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController repeatPasswordController = TextEditingController();
+  final Future<void> clearedCache = clearCache();
 
   @override
   Widget build(BuildContext context) {

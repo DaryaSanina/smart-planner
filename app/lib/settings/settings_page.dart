@@ -1,4 +1,5 @@
 import 'package:app/settings/widgets/account_settings_button.dart';
+import 'package:app/settings/widgets/logout_button.dart';
 import 'package:app/settings/widgets/settings_app_bar.dart';
 import 'package:app/settings/widgets/show_importance_button.dart';
 
@@ -28,6 +29,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 const AccountSettingsButton(),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.025),
                 const ShowImportanceButton(),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.025),
+                const LogoutButton(),
               ]
             ),
           ),

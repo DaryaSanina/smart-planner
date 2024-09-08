@@ -1,6 +1,7 @@
 import 'package:app/models/task_list_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum SortingType { importance, deadline, ai }
 
@@ -71,13 +72,18 @@ class _SortDialogState extends State<SortDialog> {
             setState(() {
               _isLoading = true;  // Show a circular progress indicator
             });
+
+            final prefs = await SharedPreferences.getInstance();
+
             // Sort by importance
             if (_sortingType == SortingType.importance) {
               tasks.sortByImportance();
+              prefs.setString('order', 'importance');  // Update cache
             }
             // Sort by deadline
             if (_sortingType == SortingType.deadline) {
               tasks.sortByDeadline();
+              prefs.setString('order', 'deadline');  // Update cache
             }
             // Sort the tasks by importance and deadline
             // by using the K-Means clustering algorithm to divide the tasks into 4 Eisenhower Matrix categories
@@ -85,7 +91,9 @@ class _SortDialogState extends State<SortDialog> {
             // important and urgent -> important but not urgent -> urgent but not important -> not important and not urgent
             if (_sortingType == SortingType.ai) {
               await tasks.sortWithAI();
+              prefs.setString('order', 'ai');  // Update cache
             }
+            tasks.notifyListenersFromOutside();
             setState(() {
               _isLoading = false;  // Hide the circular progress indicator
             });

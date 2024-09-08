@@ -7,12 +7,17 @@ import 'package:app/models/util.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TaskListModel extends ChangeNotifier {
   List<Task> _tasks = [];
   UnmodifiableListView<Task> get tasks => UnmodifiableListView(_tasks);
 
-  Future<void> update(int userID) async {  // This procedure fetches the user's tasks from the database
+  void notifyListenersFromOutside() {
+    notifyListeners();
+  }
+
+  Future<bool> update(int userID) async {  // This procedure fetches the user's tasks from the database
 
     // Send the request
     http.Response response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_task?user_id=$userID'));
@@ -42,7 +47,21 @@ class TaskListModel extends ChangeNotifier {
         _tasks.add(Task(taskID: taskID, name: name, timings: timings, userID: userID, importance: importance, start: start, end: end, tags: tags));
       }
     }
-    notifyListeners();
+
+    // Sort the task list using cached data (if it exists)
+    final prefs = await SharedPreferences.getInstance();
+    String? order = prefs.getString('order');
+    if (order == "deadline") {
+      sortByDeadline();
+    }
+    else if (order == "importance") {
+      sortByImportance();
+    }
+    else if (order == "ai") {
+      await sortWithAI();
+    }
+
+    return true;
   }
 
   void remove(Task task) async {  // This procedure removes the specified task from the database and from the task list
@@ -84,7 +103,6 @@ class TaskListModel extends ChangeNotifier {
         return -(task1.importance.compareTo(task2.importance));  // Compare the tasks' importances
       }
     });
-    notifyListeners();
   }
 
   void sortByDeadline() {
@@ -118,7 +136,6 @@ class TaskListModel extends ChangeNotifier {
         return value;
       }
     });
-    notifyListeners();
   }
 
   Future<void> sortWithAI() async {
@@ -158,7 +175,5 @@ class TaskListModel extends ChangeNotifier {
       newTasks.add(_tasks[order[i]]);
     }
     _tasks = newTasks;
-    
-    notifyListeners();
   }
 }

@@ -70,6 +70,7 @@ class _TaskState extends State<Task> {
             _isLoading = true;  // Show a circular progress indicator
           });
           await taskListModel.update(widget.userID);  // Update the task list model
+          taskListModel.notifyListenersFromOutside();
           setState(() {
             _isLoading = false;  // Hide the circular progress indicator
           });

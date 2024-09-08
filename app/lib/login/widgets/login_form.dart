@@ -1,10 +1,8 @@
 import 'package:app/home/home_page.dart';
 import 'package:app/login/util.dart';
-import 'package:app/models/task_list_model.dart';
 
 import 'package:flutter/material.dart';
 
-import 'package:provider/provider.dart';
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
 
@@ -17,10 +15,10 @@ class _LoginFormState extends State<LoginForm> {
   TextEditingController usernameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   bool _isLoading = false;
+  final Future<void> clearedCache = clearCache();
 
   @override
   Widget build(BuildContext context) {
-    final taskList = context.watch<TaskListModel>();
     int userID;
     return Form(
       key: _formKey,
@@ -80,9 +78,6 @@ class _LoginFormState extends State<LoginForm> {
 
                   // If the details are correct
                   if (userID != -1) {
-
-                    // Update the task list
-                    await taskList.update(userID);
 
                     setState(() {
                       _isLoading = false;  // Hide the circular progress indicator
