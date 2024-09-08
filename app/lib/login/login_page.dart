@@ -23,20 +23,13 @@ class _LoginState extends State<LoginPage> {
             children: [
               // Logo
               SizedBox(
-                height: MediaQuery.of(context).size.height / 3,
-                child: const Center(
-                  child: Text(
-                    "Smart Planner",
-                    style: TextStyle(
-                      fontSize: 40,
-                    ),
-                  ),
-                ),
+                height: MediaQuery.of(context).size.height * 0.4,
+                child: const Image(image: AssetImage('assets/banner.png')),
               ),
 
               // Login form
               SizedBox(
-                height: MediaQuery.of(context).size.height / 3,
+                height: MediaQuery.of(context).size.height * 0.4,
                 width: MediaQuery.of(context).size.width,
                 child: const Center(
                   child: LoginForm(),
@@ -45,7 +38,7 @@ class _LoginState extends State<LoginPage> {
 
               // If the user does not have an account yet
               SizedBox(
-                height: MediaQuery.of(context).size.height / 3,
+                height: MediaQuery.of(context).size.height * 0.2,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [

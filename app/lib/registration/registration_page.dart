@@ -24,12 +24,7 @@ class _RegistrationState extends State<RegistrationPage> {
               // Logo
               const SizedBox(
                 child: Center(
-                  child: Text(
-                    "Smart Planner",
-                    style: TextStyle(
-                      fontSize: 40,
-                    ),
-                  ),
+                  child: Image(image: AssetImage('assets/banner.png')),
                 ),
               ),
 
