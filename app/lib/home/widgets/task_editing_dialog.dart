@@ -50,15 +50,15 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
               decoration: InputDecoration(
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
                 labelText: "Task name",
-                counterText: "${32 - task.name.length} character(s) left"
+                counterText: "${50 - task.name.length} character(s) left"
               ),
               cursorColor: Theme.of(context).colorScheme.tertiary,
               validator: (value) {
                 if (value == null || value.isEmpty) {  // Check whether the field is empty
                   return "Please enter the task name";
                 }
-                if (value.length < 3 || value.length > 32) {  // Check whether the task name is between 3 and 32 characters long
-                  return "The length of the task name is not between 3 and 32 characters";
+                if (value.length < 3 || value.length > 50) {  // Check whether the task name is between 3 and 32 characters long
+                  return "The length of the task name is not between 3 and 50 characters";
                 }
                 return null;
               },

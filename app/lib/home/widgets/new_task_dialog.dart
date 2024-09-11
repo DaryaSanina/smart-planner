@@ -23,6 +23,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
   bool _importanceIsLoading = false;
   TextEditingController newTagController = TextEditingController();
   String _newTagName = "";
+  String _taskName = "";
 
   @override
   Widget build(BuildContext context) {
@@ -46,15 +47,16 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
               decoration: InputDecoration(
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
                 labelText: "Task name",
-                counterText: "${32 - task.name.length} character(s) left"
+                counterText: "${50 - _taskName.length} character(s) left"
               ),
+              onChanged: (value) => setState(() => _taskName = value),
               cursorColor: Theme.of(context).colorScheme.tertiary,
               validator: (value) {
                 if (value == null || value.isEmpty) {  // Check whether the field is empty
                   return "Please enter the task name";
                 }
-                if (value.length < 3 || value.length > 32) {  // Check whether the task name is between 3 and 32 characters long
-                  return "The length of the task name is not between 3 and 32 characters";
+                if (value.length < 3 || value.length > 50) {  // Check whether the task name is between 3 and 32 characters long
+                  return "The length of the task name is not between 3 and 50 characters";
                 }
                 return null;
               },

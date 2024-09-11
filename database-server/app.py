@@ -174,8 +174,8 @@ def get_task_by_tag(tag_id: int):
 @app.post('/add_task')
 def add_task(task: Task):
      # Check whether the task name is valid
-     if not (3 <= len(task.name) <= 32):
-          return JSONResponse({"reason": "The task name is not between 3 and 32 characters long"}, status_code=400)
+     if not (3 <= len(task.name) <= 50):
+          return JSONResponse({"reason": "The task name is not between 3 and 50 characters long"}, status_code=400)
      
      # Check whether the importance is valid
      if not (0 <= task.importance <= 10):
@@ -212,8 +212,8 @@ def update_task(task: ExistingTask):
      updates = []
      
      if task.name is not None:
-          if not (3 <= len(task.name) <= 32):
-               return JSONResponse({"reason": "The task name is not between 3 and 32 characters long"}, status_code=400)
+          if not (3 <= len(task.name) <= 50):
+               return JSONResponse({"reason": "The task name is not between 3 and 50 characters long"}, status_code=400)
           updates.append(f"Name = '{task.name}'")
      
      if task.description is not None:
@@ -425,7 +425,7 @@ if __name__ == "__main__":
     # Tasks table
     cursor.execute("""CREATE TABLE IF NOT EXISTS Tasks (
                         TaskID INT AUTO_INCREMENT NOT NULL,
-                        Name VARCHAR(32) NOT NULL,
+                        Name VARCHAR(50) NOT NULL,
                         Description TEXT,
                         Deadline DATETIME,
                         Start DATETIME,
