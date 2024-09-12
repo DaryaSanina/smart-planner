@@ -24,6 +24,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
   TextEditingController newTagController = TextEditingController();
   String _newTagName = "";
   String _taskName = "";
+  String _taskDescription = "";
 
   @override
   Widget build(BuildContext context) {
@@ -72,8 +73,9 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
               decoration: InputDecoration(
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
                 labelText: "Description",
-                counterText: "${task.description.length} character(s)"
+                counterText: "${_taskDescription.length} character(s)"
               ),
+              onChanged: (value) => setState(() => _taskDescription = value),
               cursorColor: Theme.of(context).colorScheme.tertiary,
               validator: (value) {
                 return null;

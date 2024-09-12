@@ -25,6 +25,8 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
   bool _importanceIsLoading = false;
   TextEditingController newTagController = TextEditingController();
   String newTagName = "";
+  String _taskName = "";
+  String _taskDescription = "";
 
   @override
   Widget build(BuildContext context) {
@@ -50,8 +52,9 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
               decoration: InputDecoration(
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
                 labelText: "Task name",
-                counterText: "${50 - task.name.length} character(s) left"
+                counterText: "${50 - _taskName.length} character(s) left"
               ),
+              onChanged: (value) => setState(() => _taskName = value),
               cursorColor: Theme.of(context).colorScheme.tertiary,
               validator: (value) {
                 if (value == null || value.isEmpty) {  // Check whether the field is empty
@@ -74,8 +77,9 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
               decoration: InputDecoration(
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
                 labelText: "Description",
-                counterText: "${task.description.length} character(s)"
+                counterText: "${_taskDescription.length} character(s)"
               ),
+              onChanged: (value) => setState(() => _taskDescription = value),
               cursorColor: Theme.of(context).colorScheme.tertiary,
               validator: (value) {
                 return null;

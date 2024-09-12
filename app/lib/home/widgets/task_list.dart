@@ -43,76 +43,99 @@ class _TaskListState extends State<TaskList> {
       }
     }
 
-    return ListView(
+    return Column(
       children: [
         // Action bar
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Sort button
-            Row(
-              children: [
-                SizedBox(width: MediaQuery.of(context).size.width * 0.03),
-                const SortButton(),
-              ],
-            ),
-
-            // Filter button
-            Row(
-              children: [
-                FilterButton(userID: widget.userID),
-                SizedBox(width: MediaQuery.of(context).size.width * 0.03),
-              ],
-            ),
-          ],
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.height ) * 0.02,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Sort button
+              Row(
+                children: [
+                  SizedBox(width: MediaQuery.of(context).size.width * 0.03),
+                  const SortButton(),
+                ],
+              ),
+              
+              // Filter button
+              Row(
+                children: [
+                  FilterButton(userID: widget.userID),
+                  SizedBox(width: MediaQuery.of(context).size.width * 0.03),
+                ],
+              ),
+            ],
+          ),
         ),
-
-        // Tasks
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: tasksToShow.cast<Widget>()
-          + [
-              // New task button
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.01),
-                child: Row(
-                  children: <Widget>[
-                    // New task button
-                    IconButton(
-                      onPressed: () async {
-                        setState(() {
-                          _isLoading = true;  // Show a circular progress indicator
-                        });
-                        await tagList.update(widget.userID);  // Update the tag list to show it in the task creation dialog
-                        task.clear();
-                        setState(() {
-                          _isLoading = false;  // Hide the circular progress indicator
-                        });
-
-                        // Open the task creation dialog
-                        await showDialog<String>(
-                          context: context,
-                          builder: (context) => NewTaskDialog(userID: widget.userID),
-                        );
-
-                        setState(() {
-                          _isLoading = true;  // Show a circular progress indicator
-                        });
-                        await taskList.update(widget.userID);  // Update the task list
-                        setState(() {
-                          _isLoading = false;  // Hide the circular progress indicator
-                        });
-                      },
-                      icon: const Icon(Icons.add),
+        Expanded(
+          child: ListView(
+            children: [
+              // Tasks
+              tasksToShow.isEmpty
+              ? Padding(
+                padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.height * 0.05),
+                child: Center(
+                  child: Text(
+                    "🎉 All done! 🎉",
+                    style: TextStyle(
+                      fontSize: 30,
+                      color: Theme.of(context).colorScheme.tertiary,
                     ),
-                  ]
-                  // Circular progress indicator
-                  + (_isLoading
-                  ? [CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary)]
-                  : []),
+                  ),
                 ),
               )
+              :  Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: tasksToShow.cast<Widget>(),
+                ),
             ],
+          ),
+        ),
+        // New task button
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.03, vertical: MediaQuery.of(context).size.height * 0.02),
+          child: Row(
+            children: <Widget>[
+              // New task button
+              ElevatedButton.icon(
+                onPressed: () async {
+                  setState(() {
+                    _isLoading = true;  // Show a circular progress indicator
+                  });
+                  await tagList.update(widget.userID);  // Update the tag list to show it in the task creation dialog
+                  task.clear();
+                  setState(() {
+                    _isLoading = false;  // Hide the circular progress indicator
+                  });
+
+                  // Open the task creation dialog
+                  await showDialog<String>(
+                    context: context,
+                    builder: (context) => NewTaskDialog(userID: widget.userID),
+                  );
+
+                  setState(() {
+                    _isLoading = true;  // Show a circular progress indicator
+                  });
+                  await taskList.update(widget.userID);  // Update the task list
+                  setState(() {
+                    _isLoading = false;  // Hide the circular progress indicator
+                  });
+                },
+                icon: Icon(Icons.add, color: Theme.of(context).colorScheme.tertiary,),
+                label: Text("ADD", style: TextStyle(color: Theme.of(context).colorScheme.tertiary),),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.secondary,
+                ),
+              ),
+            ]
+            // Circular progress indicator
+            + (_isLoading
+            ? [CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary)]
+            : []),
+          ),
         ),
       ],
     );
