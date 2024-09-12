@@ -27,13 +27,17 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
   String newTagName = "";
   String _taskName = "";
   String _taskDescription = "";
+  bool firstTimeLoading = true;
 
   @override
   Widget build(BuildContext context) {
     // Load the models so that the page can update dynamically
     final task = context.watch<TaskModel>();
-    taskNameController.text = task.name;
-    descriptionController.text = task.description;
+    if (firstTimeLoading) {
+      taskNameController.text = task.name;
+      descriptionController.text = task.description;
+      firstTimeLoading = false;
+    }
     final tagList = context.watch<TagListModel>();
 
     return AlertDialog(
