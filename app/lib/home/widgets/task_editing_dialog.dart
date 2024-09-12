@@ -123,7 +123,7 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                 setState(() {
                   _importanceIsLoading = true;  // Show a linear progress indicator
                 });
-                int newImportance = await getTaskImportancePrediction(task.name, task.description);  // Get a new importance prediction
+                int newImportance = await getTaskImportancePrediction(taskNameController.text, descriptionController.text);  // Get a new importance prediction
                 setState(() => task.setImportance(newImportance));  // Update the task model
                 setState(() {
                   _importanceIsLoading = false;  // Hide the linear progress indicator

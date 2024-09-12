@@ -115,7 +115,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                 setState(() {
                   _importanceIsLoading = true;  // Show a linear progress indicator
                 });
-                int newImportance = await getTaskImportancePrediction(task.name, task.description);  // Get a task importance prediction
+                int newImportance = await getTaskImportancePrediction(taskNameController.text, descriptionController.text);  // Get a task importance prediction
                 setState(() => task.setImportance(newImportance));  // Update the task model
                 setState(() {
                   _importanceIsLoading = false;  // Hide the linear progress indicator
