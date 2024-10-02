@@ -244,6 +244,7 @@ def update_task(task: ExistingTask):
 @app.delete('/delete_task')
 def delete_task(task_id: int):
      cursor.execute(f"""DELETE FROM TasksToTags WHERE TaskID = {task_id}""")  # Delete all the tag connections for this task
+     cursor.execute(f"""DELETE FROM Reminders WHERE TaskID = {task_id}""")  # Delete all the reminders for this task
      cursor.execute(f"""DELETE FROM Tasks WHERE TaskID = {task_id}""")  # Delete the task
      db.commit()
      return JSONResponse({})
@@ -345,15 +346,15 @@ def add_task_to_tag_relationship(task_to_tag: TaskToTag):
 
 
 @app.delete('/delete_task_to_tag_relationship')
-def delete_task_to_tag_relationship(task_to_tag_id: int):
-     cursor.execute(f"""DELETE FROM TasksToTags WHERE TaskToTagID = {task_to_tag_id}""")
+def delete_task_to_tag_relationship(task_id: int, tag_id: int):
+     cursor.execute(f"""DELETE FROM TasksToTags WHERE TaskID = {task_id} AND TagID = {tag_id}""")
      db.commit()
      return JSONResponse({})
 
 
 @app.get('/get_reminder')
-def get_reminder(reminder_id: int):
-     cursor.execute(f"""SELECT * FROM Reminders WHERE ReminderID = {reminder_id}""")
+def get_reminder(task_id: int):
+     cursor.execute(f"""SELECT * FROM Reminders WHERE TaskID = {task_id}""")
      result = cursor.fetchall()
      return JSONResponse({"data": result})
 
@@ -376,8 +377,8 @@ def add_reminder(reminder: Reminder):
 
 
 @app.delete('/delete_reminder')
-def delete_reminder(reminder_id: int):
-     cursor.execute(f"""DELETE FROM Reminders WHERE ReminderID = {reminder_id}""")
+def delete_reminder(task_id: int, reminder_type: int):
+     cursor.execute(f"""DELETE FROM Reminders WHERE TaskID = {task_id} AND ReminderType = {reminder_type}""")
      db.commit()
      return JSONResponse({})
 

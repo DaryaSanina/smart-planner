@@ -116,13 +116,36 @@ Future<int> addTaskToTagRelationship(int taskID, int tagID) async {
 Future<void> deleteTaskToTagRelationship(int taskID, int tagID) async {
   // This procedure deletes the specified task to tag relationship from the database
 
-  // Get the ID of the task to tag relationship
-  http.Response response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_task_to_tag_relationship?task_id=$taskID&tag_id=$tagID'));
-  int taskToTagID = jsonDecode(response.body)['data'][0][0];
+  // Send the deletion request
+  await http.delete(
+    Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/delete_task_to_tag_relationship?task_id=$taskID&tag_id=$tagID'),
+    headers: {'Content-Type': 'application/json'}
+  );
+}
+
+Future<int> addReminder(int taskID, int reminderType) async {
+  // This function adds a new reminder to the database and returns its ID
+
+  String request = jsonEncode({"task_id": taskID, "reminder_type": reminderType});  // Form the request
+
+  // Send the request
+  http.Response response = await http.post(
+    Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/add_reminder'),
+    headers: {'Content-Type': 'application/json'},
+    body: request
+  );
+
+  int reminderID = jsonDecode(response.body)['id'];
+
+  return reminderID;
+}
+
+Future<void> deleteReminder(int taskID, int reminderType) async {
+  // This procedure deletes the specified reminder from the database
 
   // Send the deletion request
-  response = await http.delete(
-    Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/delete_task_to_tag_relationship?task_to_tag_id=$taskToTagID'),
+  await http.delete(
+    Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/delete_reminder?task_id=$taskID&reminder_type=$reminderType'),
     headers: {'Content-Type': 'application/json'}
   );
 }

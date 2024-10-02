@@ -49,7 +49,7 @@ class _TaskState extends State<Task> {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.width * 0.02),
       child: TextButton(
-        // When the user has tapped on the task
+        // When the user has tapped on the task, open the task editing menu
         onPressed: () async {
           setState(() {
             _isLoading = true;  // Show a circular progress indicator

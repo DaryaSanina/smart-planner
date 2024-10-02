@@ -1,6 +1,9 @@
 import 'package:app/home/util.dart';
+import 'package:app/home/widgets/deadline_vs_start_and_end_picker.dart';
+import 'package:app/home/widgets/reminder_list.dart';
 import 'package:app/models/tag_list_model.dart';
 import 'package:app/models/task_model.dart';
+import 'package:app/models/util.dart';
 
 import 'package:flutter/material.dart';
 
@@ -30,6 +33,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
   Widget build(BuildContext context) {
     // Load the models so that the page can update dynamically
     final task = context.watch<TaskModel>();
+    task.clear();
     final tagList = context.watch<TagListModel>();
 
     return AlertDialog(
@@ -146,34 +150,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
 
             // Deadline or start and end picker
             const Text("Time constraints", style: TextStyle(fontSize: 18)),
-            Column(
-              children: [
-                ListTile(
-                  title: const Text("Deadline"),
-                  leading: Radio<bool>(
-                    value: true,
-                    groupValue: task.isDeadline,
-                    activeColor: Theme.of(context).colorScheme.tertiary,
-                    onChanged: (bool? value) => setState(() {
-                      task.setTimeConstraintsMode(value!);
-                      task.clearTimings();
-                    }),
-                  ),
-                ),
-                ListTile(
-                  title: const Text("Start and end"),
-                  leading: Radio<bool>(
-                    value: false,
-                    groupValue: task.isDeadline,
-                    activeColor: Theme.of(context).colorScheme.tertiary,
-                    onChanged: (bool? value) => setState(() {
-                      task.setTimeConstraintsMode(value!);
-                      task.clearTimings();
-                    }),
-                  ),
-                ),
-              ],
-            ),
+            const DeadlineVsStartAndEndPicker(),
 
             SizedBox(height: MediaQuery.of(context).size.height * 0.05),
 
@@ -375,6 +352,12 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
 
             SizedBox(height: MediaQuery.of(context).size.height * 0.05),
 
+            // Reminders for the new task
+            const Text("Reminders", style: TextStyle(fontSize: 18)),
+            const ReminderList(),
+
+            SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+
             // Tags for the new task
             const Text("Tags", style: TextStyle(fontSize: 18)),
             Column(
@@ -452,7 +435,10 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
       actions: <Widget>[
         // Cancel button
         TextButton(
-          onPressed: () => Navigator.pop(context),  // Hide the dialog
+          onPressed: () {
+            task.clear();
+            Navigator.pop(context);  // Hide the dialog
+          },
           child: Text("Cancel", style: TextStyle(color: Theme.of(context).colorScheme.tertiary)),
         ),
 
@@ -478,6 +464,11 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                   // Add task to tag relationships to the database
                   for (final int tagID in task.tags) {
                     await addTaskToTagRelationship(taskID, tagID);
+                  }
+
+                  // Add task reminders to the database
+                  for (final ReminderType reminder in task.reminders) {
+                    await addReminder(taskID, reminder.index + 1);
                   }
 
                   if (context.mounted) {

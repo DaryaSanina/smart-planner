@@ -27,6 +27,8 @@ class TaskModel extends ChangeNotifier {
   get endTime => _endTime;
   List<int> _tags = [];
   UnmodifiableListView get tags => UnmodifiableListView(_tags);
+  List<ReminderType> _reminders = [];
+  UnmodifiableListView get reminders => UnmodifiableListView(_reminders);
 
   void clear() {
     _name = "";
@@ -39,6 +41,9 @@ class TaskModel extends ChangeNotifier {
     _startTime = null;
     _endDate = null;
     _endTime = null;
+    _tags.clear();
+    _reminders.clear();
+
     notifyListeners();
   }
 
@@ -79,6 +84,7 @@ class TaskModel extends ChangeNotifier {
       }
     }
     _tags = await getTaskTags(taskID);
+    _reminders = await getTaskReminders(taskID);
     notifyListeners();
   }
 
@@ -139,6 +145,16 @@ class TaskModel extends ChangeNotifier {
 
   void removeTag(int tagID) {
     _tags.remove(tagID);
+    notifyListeners();
+  }
+
+  void addReminder(ReminderType reminder) {
+    _reminders.add(reminder);
+    notifyListeners();
+  }
+
+  void removeReminder(ReminderType reminder) {
+    _reminders.remove(reminder);
     notifyListeners();
   }
 }

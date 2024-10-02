@@ -1,4 +1,6 @@
 import 'package:app/home/util.dart';
+import 'package:app/home/widgets/deadline_vs_start_and_end_picker.dart';
+import 'package:app/home/widgets/reminder_list.dart';
 import 'package:app/home/widgets/task.dart';
 import 'package:app/models/tag_list_model.dart';
 import 'package:app/models/task_model.dart';
@@ -154,34 +156,7 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
 
             // Deadline or start and end picker
             const Text("Time constraints", style: TextStyle(fontSize: 18)),
-            Column(
-              children: [
-                ListTile(
-                  title: const Text("Deadline"),
-                  leading: Radio<bool>(
-                    value: task.isDeadline,
-                    groupValue: task.isDeadline,
-                    activeColor: Theme.of(context).colorScheme.tertiary,
-                    onChanged: (bool? value) => setState(() {
-                      task.setTimeConstraintsMode(value!);
-                      task.clearTimings();
-                    }),
-                  ),
-                ),
-                ListTile(
-                  title: const Text("Start and end"),
-                  leading: Radio<bool>(
-                    value: !task.isDeadline,
-                    groupValue: task.isDeadline,
-                    activeColor: Theme.of(context).colorScheme.tertiary,
-                    onChanged: (bool? value) => setState(() {
-                      task.setTimeConstraintsMode(value!);
-                      task.clearTimings();
-                    }),
-                  ),
-                ),
-              ],
-            ),
+            const DeadlineVsStartAndEndPicker(),
 
             SizedBox(height: MediaQuery.of(context).size.height * 0.05),
 
@@ -386,6 +361,12 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
 
             SizedBox(height: MediaQuery.of(context).size.height * 0.05),
 
+            // Reminders for the task
+            const Text("Reminders", style: TextStyle(fontSize: 18)),
+            const ReminderList(),
+
+            SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+
             // Tags for the selected task
             const Text("Tags", style: TextStyle(fontSize: 18)),
             Column(
@@ -490,6 +471,14 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                   }
                   for (int tagID in task.tags) {
                     await addTaskToTagRelationship(widget.taskWidget.taskID, tagID);
+                  }
+
+                  // Update the reminders of the task
+                  for (int reminderType = 1; reminderType <= 4; ++reminderType) {
+                    await deleteReminder(widget.taskWidget.taskID, reminderType);
+                  }
+                  for (ReminderType reminderType in task.reminders){
+                    await addReminder(widget.taskWidget.taskID, reminderType.index + 1);
                   }
 
                   if (context.mounted) {

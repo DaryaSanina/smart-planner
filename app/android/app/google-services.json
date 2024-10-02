@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "901985064689",
+    "project_id": "smart-planner-9a39a",
+    "storage_bucket": "smart-planner-9a39a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:901985064689:android:32d97c11efb5fe3ef23b50",
+        "android_client_info": {
+          "package_name": "com.example.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1SgxDGSunRzGePk4olWBKUT2D7nEvhqs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
