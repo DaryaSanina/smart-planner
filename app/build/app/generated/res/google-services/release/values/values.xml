@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gcm_defaultSenderId" translatable="false">901985064689</string>
+    <string name="google_api_key" translatable="false">AIzaSyA1SgxDGSunRzGePk4olWBKUT2D7nEvhqs</string>
+    <string name="google_app_id" translatable="false">1:901985064689:android:32d97c11efb5fe3ef23b50</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyA1SgxDGSunRzGePk4olWBKUT2D7nEvhqs</string>
+    <string name="google_storage_bucket" translatable="false">smart-planner-9a39a.appspot.com</string>
+    <string name="project_id" translatable="false">smart-planner-9a39a</string>
+</resources>

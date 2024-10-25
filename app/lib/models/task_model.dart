@@ -43,8 +43,6 @@ class TaskModel extends ChangeNotifier {
     _endTime = null;
     _tags.clear();
     _reminders.clear();
-
-    notifyListeners();
   }
 
   void clearTimings() {

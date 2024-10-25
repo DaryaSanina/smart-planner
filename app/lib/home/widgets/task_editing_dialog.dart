@@ -5,6 +5,7 @@ import 'package:app/home/widgets/task.dart';
 import 'package:app/models/tag_list_model.dart';
 import 'package:app/models/task_model.dart';
 import 'package:app/models/util.dart';
+import 'package:app/notification_api.dart';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -475,10 +476,50 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
 
                   // Update the reminders of the task
                   for (int reminderType = 1; reminderType <= 4; ++reminderType) {
-                    await deleteReminder(widget.taskWidget.taskID, reminderType);
+                    int reminderID = await deleteReminder(widget.taskWidget.taskID, reminderType);  // Try to delete this type of reminder for this task
+                    if (reminderID != -1) {  // If the reminder existed
+                      await NotificationAPI.cancelNotification(reminderID);  // Cancel the notification
+                    }
                   }
+                  
                   for (ReminderType reminderType in task.reminders){
-                    await addReminder(widget.taskWidget.taskID, reminderType.index + 1);
+                    int reminderID = await addReminder(widget.taskWidget.taskID, reminderType.index + 1);
+
+                    // Schedule a reminder notification
+                    String title = task.name;
+                    DateTime scheduledDate = DateTime.now();
+                    if (task.isDeadline) {
+                      scheduledDate = DateTime(task.deadlineDate.year, task.deadlineDate.month, task.deadlineDate.day, task.deadlineTime.hour, task.deadlineTime.minute);
+                    }
+                    else {
+                      scheduledDate = DateTime(task.startDate.year, task.startDate.month, task.startDate.day, task.startTime.hour, task.startTime.minute);
+                    }
+
+                    if (reminderType == ReminderType.tenMinutes) {
+                      title = "in 10 minutes: $title";
+                      scheduledDate = scheduledDate.subtract(const Duration(minutes: 10));
+                    }
+                    else if (reminderType == ReminderType.oneHour) {
+                      title = "in 1 hour: $title";
+                      scheduledDate = scheduledDate.subtract(const Duration(hours: 1));
+                    }
+                    else if (reminderType == ReminderType.oneDay) {
+                      title = "in 1 day: $title";
+                      scheduledDate = scheduledDate.subtract(const Duration(days: 1));
+                    }
+                    else if (reminderType == ReminderType.oneWeek) {
+                      title = "in 1 week: $title";
+                      scheduledDate = scheduledDate.subtract(const Duration(days: 7));
+                    }
+                    
+                    if (task.isDeadline) {
+                      title = "Due $title";
+                    }
+                    else {
+                      title = "Starts $title";
+                    }
+
+                    NotificationAPI.scheduleNotification(id: reminderID, title: title, body: task.description, scheduledDate: scheduledDate);
                   }
 
                   if (context.mounted) {

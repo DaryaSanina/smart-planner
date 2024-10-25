@@ -140,20 +140,30 @@ Future<int> addReminder(int taskID, int reminderType) async {
   return reminderID;
 }
 
-Future<void> deleteReminder(int taskID, int reminderType) async {
-  // This procedure deletes the specified reminder from the database
+Future<int> deleteReminder(int taskID, int reminderType) async {
+  // This procedure tries to delete the specified reminder from the database.
+  // It returns the ID of the reminder if it has been deleted or -1 if the reminder has not been found.
 
   // Send the deletion request
-  await http.delete(
+  http.Response response = await http.delete(
     Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/delete_reminder?task_id=$taskID&reminder_type=$reminderType'),
     headers: {'Content-Type': 'application/json'}
   );
+
+  if (response.statusCode == 400) {
+    // The reminder has not been found
+    return -1;
+  }
+
+  int reminderID = jsonDecode(response.body)['id'];
+  
+  return reminderID;
 }
 
 Future<int> getTaskImportancePrediction(String taskName, String taskDescription) async {
   // This function requests the importance LSTM model to predict the importance of the specified task using its name and description
 
-  String request = jsonEncode({"description": taskName + '. ' + taskDescription});  // Form the request
+  String request = jsonEncode({"description": "$taskName. $taskDescription"});  // Form the request
 
   // Send the request
   http.Response response = await http.post(

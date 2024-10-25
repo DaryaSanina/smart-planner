@@ -51,14 +51,8 @@ class _TaskState extends State<Task> {
       child: TextButton(
         // When the user has tapped on the task, open the task editing menu
         onPressed: () async {
-          setState(() {
-            _isLoading = true;  // Show a circular progress indicator
-          });
           await tagListModel.update(widget.userID);  // Update the tag list model
           await taskModel.getDetails(widget.taskID);  // Update the task model
-          setState(() {
-            _isLoading = false;  // Hide the circular progress indicator
-          });
 
           // Show the task editing dialog
           await showDialog<String>(

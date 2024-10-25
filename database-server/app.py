@@ -378,9 +378,14 @@ def add_reminder(reminder: Reminder):
 
 @app.delete('/delete_reminder')
 def delete_reminder(task_id: int, reminder_type: int):
+     cursor.execute(f"""SELECT * FROM Reminders WHERE TaskID = {task_id} AND ReminderType = {reminder_type}""")
+     result = cursor.fetchall()
+     if len(result) == 0:
+          return JSONResponse({"reason": "The specified reminder does not exist"}, status_code=400)
+     reminder_id = result[0][0]
      cursor.execute(f"""DELETE FROM Reminders WHERE TaskID = {task_id} AND ReminderType = {reminder_type}""")
      db.commit()
-     return JSONResponse({})
+     return JSONResponse({"id": reminder_id})
 
 
 @app.get('/get_message')
