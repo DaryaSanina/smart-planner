@@ -22,7 +22,7 @@ class HomePage extends StatelessWidget {
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.primary,
 
-          appBar: HomeAppBar(username: username),
+          appBar: HomeAppBar(userID: userID),
 
           body: FutureBuilder<void>(
             future: loadedTasks,

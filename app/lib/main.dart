@@ -4,6 +4,7 @@ import 'package:app/models/importance_visibility_model.dart';
 import 'package:app/models/tag_list_model.dart';
 import 'package:app/models/task_list_model.dart';
 import 'package:app/models/task_model.dart';
+import 'package:app/models/user_model.dart';
 
 import 'package:flutter/material.dart';
 
@@ -28,20 +29,33 @@ void main() async {
         ChangeNotifierProvider(create: (context) => TaskModel()),
         ChangeNotifierProvider(create: (context) => ShowImportanceModel()),
         ChangeNotifierProvider(create: (context) => TagListModel()),
+        ChangeNotifierProvider(create: (context) => UserModel()),
       ],
       child: MyApp(userID: userID, username: username),
     )
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key, this.userID, this.username});
 
   final int? userID;
   final String? username;
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool firstBuild = true;
+
+  @override
   Widget build(BuildContext context) {
+    final user = context.watch<UserModel>();
+    if (firstBuild && widget.username != null) {
+      firstBuild = false;
+      user.setUsername(widget.username!);
+    }
     return MaterialApp(
       title: 'Smart Planner',
       debugShowCheckedModeBanner: false,
@@ -71,7 +85,7 @@ class MyApp extends StatelessWidget {
       ),
 
       // Load the home page if the user data (user ID and username) is in the cache, or the login page otherwise
-      home: ((userID != null && username != null) ? HomePage(userID: userID!, username: username!) : const LoginPage()),
+      home: ((widget.userID != null && widget.username != null) ? HomePage(userID: widget.userID!, username: widget.username!) : const LoginPage()),
     );
   }
 }

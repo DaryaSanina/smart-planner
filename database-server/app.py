@@ -128,6 +128,21 @@ def add_user(user: User):
      return JSONResponse({"id": cursor.lastrowid}, status_code=201)
 
 
+@app.post('/update_username')
+def update_user(user_id, username):
+     # Check whether the username is valid
+     if not (3 <= len(username) <= 32):
+          return JSONResponse({"reason": "The username is not between 3 and 32 characters long"}, status_code=400)
+     cursor.execute(f"""SELECT * FROM Users WHERE Username = '{username}'""")
+     if len(cursor.fetchall()) > 0:
+          return JSONResponse({"reason": "A user with this username already exists"}, status_code=400)
+     
+     # Update the data
+     cursor.execute(f"""UPDATE Users SET Username = '{username}' WHERE UserID = {user_id}""")
+     db.commit()  # Uncomment before deployment
+     return JSONResponse({"id": cursor.lastrowid}, status_code=201)
+
+
 @app.delete('/delete_user')
 def delete_user(user_id: int):
      cursor.execute(f"""DELETE FROM Users WHERE UserID = {user_id}""")
