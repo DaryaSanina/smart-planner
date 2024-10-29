@@ -128,8 +128,8 @@ def add_user(user: User):
      return JSONResponse({"id": cursor.lastrowid}, status_code=201)
 
 
-@app.post('/update_username')
-def update_user(user_id, username):
+@app.put('/update_username')
+def update_username(user_id, username):
      # Check whether the username is valid
      if not (3 <= len(username) <= 32):
           return JSONResponse({"reason": "The username is not between 3 and 32 characters long"}, status_code=400)
@@ -140,7 +140,19 @@ def update_user(user_id, username):
      # Update the data
      cursor.execute(f"""UPDATE Users SET Username = '{username}' WHERE UserID = {user_id}""")
      db.commit()  # Uncomment before deployment
-     return JSONResponse({"id": cursor.lastrowid}, status_code=201)
+     return JSONResponse({"id": user_id}, status_code=200)
+
+
+@app.put('/update_password')
+def update_password(user_id, password_hash):
+     # Check whether the password hash is valid
+     if len(password_hash) != 64:
+          return JSONResponse({"reason": "The password hash is not 64 characters long"}, status_code=400)
+     
+     # Update the data
+     cursor.execute(f"""UPDATE Users SET PasswordHash = '{password_hash}' WHERE UserID = {user_id}""")
+     db.commit()  # Uncomment before deployment
+     return JSONResponse({"id": user_id}, status_code=200)
 
 
 @app.delete('/delete_user')

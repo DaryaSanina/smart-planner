@@ -107,47 +107,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
               cursorColor: Theme.of(context).colorScheme.tertiary,
               obscureText: true,
               obscuringCharacter: '*',
-              validator: (value) {
-                if (value == null || value.isEmpty) {  // Check whether the field is empty
-                  return "Please enter your password";
-                }
-                if (value.length < 8 || value.length > 16) {  // Check whether the password is between 8 and 16 characters long
-                  return "The password should be between 8 and 16 characters long";
-                }
-
-                // Check whether the password contains lowercase and uppercase letters, digits and special symbols (e.g., !, -, #, etc.)
-                bool hasLowerCase = false;
-                bool hasUpperCase = false;
-                bool hasDigits = false;
-                bool hasSymbols = false;
-                for (int i = 0; i < value.length; i++) {
-                  if ("abcdefghijklmnopqrstuvwxyz".contains(value[i])) {
-                    hasLowerCase = true;
-                  }
-                  if ("ABCDEFGHIJKLMNOPQRSTUVWXYZ".contains(value[i])) {
-                    hasUpperCase = true;
-                  }
-                  if ("1234567890".contains(value[i])) {
-                    hasDigits = true;
-                  }
-                  if ("!£\"\$%^&*()-_+=[]{}#~;:'@,.<>/?\\|".contains(value[i])) {
-                    hasSymbols = true;
-                  }
-                }
-                if (!hasLowerCase) {
-                  return "The password should contain lowercase letters";
-                }
-                if (!hasUpperCase) {
-                  return "The password should contain uppercase letters";
-                }
-                if (!hasDigits) {
-                  return "The password should contain digits";
-                }
-                if (!hasSymbols) {
-                  return "The password should contain special symbols";
-                }
-                return null;
-              },
+              validator: (value) => validatePassword(value)
             ),
 
             SizedBox(height: MediaQuery.of(context).size.height * 0.01),
