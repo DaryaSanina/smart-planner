@@ -70,27 +70,32 @@ class _TaskListState extends State<TaskList> {
           ),
         ),
         Expanded(
-          child: ListView(
-            children: [
-              // Tasks
-              tasksToShow.isEmpty
-              ? Padding(
-                padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.height * 0.05),
-                child: Center(
-                  child: Text(
-                    "🎉 All done! 🎉",
-                    style: TextStyle(
-                      fontSize: 30,
-                      color: Theme.of(context).colorScheme.tertiary,
+          child: RefreshIndicator(
+            onRefresh: () async => await taskList.update(widget.userID),
+            color: Theme.of(context).colorScheme.secondary,
+            backgroundColor: Theme.of(context).colorScheme.tertiary,
+            child: ListView(
+              children: [
+                // Tasks
+                tasksToShow.isEmpty
+                ? Padding(
+                  padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.height * 0.05),
+                  child: Center(
+                    child: Text(
+                      "🎉 All done! 🎉",
+                      style: TextStyle(
+                        fontSize: 30,
+                        color: Theme.of(context).colorScheme.tertiary,
+                      ),
                     ),
                   ),
-                ),
-              )
-              :  Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: tasksToShow.cast<Widget>(),
-                ),
-            ],
+                )
+                :  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: tasksToShow.cast<Widget>(),
+                  ),
+              ],
+            ),
           ),
         ),
         // New task button

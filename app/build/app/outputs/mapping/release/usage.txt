@@ -902,7 +902,6 @@ androidx.core.app.ActivityCompat:
     public static void setExitSharedElementCallback(android.app.Activity,androidx.core.app.SharedElementCallback)
     public static void setLocusContext(android.app.Activity,androidx.core.content.LocusIdCompat,android.os.Bundle)
     public static void setPermissionCompatDelegate(androidx.core.app.ActivityCompat$PermissionCompatDelegate)
-    public static boolean shouldShowRequestPermissionRationale(android.app.Activity,java.lang.String)
     public static void startActivityForResult(android.app.Activity,android.content.Intent,int,android.os.Bundle)
     public static void startIntentSenderForResult(android.app.Activity,android.content.IntentSender,int,android.content.Intent,int,int,int,android.os.Bundle)
     public static void startPostponedEnterTransition(android.app.Activity)
@@ -916,6 +915,8 @@ androidx.core.app.ActivityRecreator$LifecycleCheckCallbacks
 androidx.core.app.ActivityRecreator
 androidx.core.app.AlarmManagerCompat:
     private void <init>()
+    public static void setAlarmClock(android.app.AlarmManager,long,android.app.PendingIntent,android.app.PendingIntent)
+    public static void setAndAllowWhileIdle(android.app.AlarmManager,int,long,android.app.PendingIntent)
 androidx.core.app.AppComponentFactory
 androidx.core.app.AppLaunchChecker
 androidx.core.app.AppOpsManagerCompat
@@ -1049,6 +1050,7 @@ androidx.core.app.NotificationCompat$Builder:
     public androidx.core.app.NotificationCompat$Builder setBadgeIconType(int)
     public androidx.core.app.NotificationCompat$Builder setBubbleMetadata(androidx.core.app.NotificationCompat$BubbleMetadata)
     public androidx.core.app.NotificationCompat$Builder setChannelId(java.lang.String)
+    public androidx.core.app.NotificationCompat$Builder setChronometerCountDown(boolean)
     public androidx.core.app.NotificationCompat$Builder setContent(android.widget.RemoteViews)
     public androidx.core.app.NotificationCompat$Builder setContentInfo(java.lang.CharSequence)
     public androidx.core.app.NotificationCompat$Builder setCustomBigContentView(android.widget.RemoteViews)
@@ -1064,6 +1066,7 @@ androidx.core.app.NotificationCompat$Builder:
     public androidx.core.app.NotificationCompat$Builder setRemoteInputHistory(java.lang.CharSequence[])
     public androidx.core.app.NotificationCompat$Builder setSettingsText(java.lang.CharSequence)
     public androidx.core.app.NotificationCompat$Builder setShortcutInfo(androidx.core.content.pm.ShortcutInfoCompat)
+    public androidx.core.app.NotificationCompat$Builder setSilent(boolean)
     public androidx.core.app.NotificationCompat$Builder setSmallIcon(int,int)
     public androidx.core.app.NotificationCompat$Builder setSmallIcon(androidx.core.graphics.drawable.IconCompat)
     public androidx.core.app.NotificationCompat$Builder setSortKey(java.lang.String)
@@ -3343,6 +3346,27 @@ androidx.viewpager.widget.ViewPager$SavedState
 androidx.viewpager.widget.ViewPager$SimpleOnPageChangeListener
 androidx.viewpager.widget.ViewPager$ViewPositionComparator
 androidx.viewpager.widget.ViewPager
+com.baseflow.permissionhandler.BuildConfig
+com.baseflow.permissionhandler.PermissionConstants$PermissionGroup
+com.baseflow.permissionhandler.PermissionConstants$PermissionStatus
+com.baseflow.permissionhandler.PermissionConstants$ServiceStatus
+com.baseflow.permissionhandler.PermissionConstants
+com.baseflow.permissionhandler.PermissionHandlerPlugin:
+    public static void registerWith(io.flutter.plugin.common.PluginRegistry$Registrar)
+com.baseflow.permissionhandler.PermissionUtils:
+    static final java.lang.String SHARED_PREFERENCES_PERMISSION_WAS_DENIED_BEFORE_KEY
+    public void <init>()
+com.baseflow.permissionhandler.R$attr
+com.baseflow.permissionhandler.R$color
+com.baseflow.permissionhandler.R$dimen
+com.baseflow.permissionhandler.R$drawable
+com.baseflow.permissionhandler.R$id
+com.baseflow.permissionhandler.R$integer
+com.baseflow.permissionhandler.R$layout
+com.baseflow.permissionhandler.R$string
+com.baseflow.permissionhandler.R$style
+com.baseflow.permissionhandler.R$styleable
+com.baseflow.permissionhandler.R
 com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver:
     public static final java.lang.String ACTION_TAPPED
     private static final java.lang.String TAG
@@ -3420,6 +3444,7 @@ com.google.gson.GsonBuilder:
     public varargs com.google.gson.GsonBuilder excludeFieldsWithModifiers(int[])
     public com.google.gson.GsonBuilder excludeFieldsWithoutExposeAnnotation()
     public com.google.gson.GsonBuilder generateNonExecutableJson()
+    public com.google.gson.GsonBuilder registerTypeAdapter(java.lang.reflect.Type,java.lang.Object)
     public com.google.gson.GsonBuilder registerTypeHierarchyAdapter(java.lang.Class,java.lang.Object)
     public com.google.gson.GsonBuilder serializeNulls()
     public com.google.gson.GsonBuilder serializeSpecialFloatingPointValues()
@@ -3448,6 +3473,7 @@ com.google.gson.JsonArray:
     public com.google.gson.JsonElement get(int)
     public java.math.BigDecimal getAsBigDecimal()
     public java.math.BigInteger getAsBigInteger()
+    public boolean getAsBoolean()
     public byte getAsByte()
     public char getAsCharacter()
     public double getAsDouble()
@@ -3467,6 +3493,7 @@ com.google.gson.JsonElement:
     public abstract com.google.gson.JsonElement deepCopy()
     public java.math.BigDecimal getAsBigDecimal()
     public java.math.BigInteger getAsBigInteger()
+    public boolean getAsBoolean()
     public byte getAsByte()
     public char getAsCharacter()
     public double getAsDouble()
@@ -3584,8 +3611,10 @@ com.google.gson.internal.bind.TreeTypeAdapter$GsonContextImpl:
     public java.lang.Object deserialize(com.google.gson.JsonElement,java.lang.reflect.Type)
     public com.google.gson.JsonElement serialize(java.lang.Object)
     public com.google.gson.JsonElement serialize(java.lang.Object,java.lang.reflect.Type)
+com.google.gson.internal.bind.TreeTypeAdapter$SingleTypeFactory
 com.google.gson.internal.bind.TreeTypeAdapter:
     public static com.google.gson.TypeAdapterFactory newFactory(com.google.gson.reflect.TypeToken,java.lang.Object)
+    public static com.google.gson.TypeAdapterFactory newFactoryWithMatchRawType(com.google.gson.reflect.TypeToken,java.lang.Object)
     public static com.google.gson.TypeAdapterFactory newTypeHierarchyFactory(java.lang.Class,java.lang.Object)
 com.google.gson.internal.bind.TypeAdapters$25:
     private static final java.lang.String DAY_OF_MONTH
@@ -3594,8 +3623,10 @@ com.google.gson.internal.bind.TypeAdapters$25:
     private static final java.lang.String MONTH
     private static final java.lang.String SECOND
     private static final java.lang.String YEAR
+com.google.gson.internal.bind.TypeAdapters$29
 com.google.gson.internal.bind.TypeAdapters:
     private void <init>()
+    public static com.google.gson.TypeAdapterFactory newFactory(com.google.gson.reflect.TypeToken,com.google.gson.TypeAdapter)
 com.google.gson.internal.bind.util.ISO8601Utils:
     private static final java.lang.String UTC_ID
     public void <init>()
@@ -3652,6 +3683,18 @@ com.google.gson.stream.MalformedJsonException:
     private static final long serialVersionUID
     public void <init>(java.lang.String,java.lang.Throwable)
     public void <init>(java.lang.Throwable)
+dev.fluttercommunity.plus.device_info.BuildConfig
+dev.fluttercommunity.plus.device_info.R$attr
+dev.fluttercommunity.plus.device_info.R$color
+dev.fluttercommunity.plus.device_info.R$dimen
+dev.fluttercommunity.plus.device_info.R$drawable
+dev.fluttercommunity.plus.device_info.R$id
+dev.fluttercommunity.plus.device_info.R$integer
+dev.fluttercommunity.plus.device_info.R$layout
+dev.fluttercommunity.plus.device_info.R$string
+dev.fluttercommunity.plus.device_info.R$style
+dev.fluttercommunity.plus.device_info.R$styleable
+dev.fluttercommunity.plus.device_info.R
 io.flutter.BuildConfig
 io.flutter.FlutterInjector$Builder:
     public io.flutter.FlutterInjector$Builder setDeferredComponentManager(io.flutter.embedding.engine.deferredcomponents.DeferredComponentManager)
@@ -3808,7 +3851,6 @@ io.flutter.embedding.engine.FlutterEngineConnectionRegistry$FlutterEngineActivit
     public void removeOnSaveStateListener(io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding$OnSaveInstanceStateListener)
     public void removeOnUserLeaveHintListener(io.flutter.plugin.common.PluginRegistry$UserLeaveHintListener)
     public void removeOnWindowFocusChangedListener(io.flutter.plugin.common.PluginRegistry$WindowFocusChangedListener)
-    public void removeRequestPermissionsResultListener(io.flutter.plugin.common.PluginRegistry$RequestPermissionsResultListener)
 io.flutter.embedding.engine.FlutterEngineConnectionRegistry$FlutterEngineBroadcastReceiverPluginBinding:
     private final android.content.BroadcastReceiver broadcastReceiver
     void <init>(android.content.BroadcastReceiver)
@@ -4015,7 +4057,6 @@ io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding:
     public abstract void removeOnSaveStateListener(io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding$OnSaveInstanceStateListener)
     public abstract void removeOnUserLeaveHintListener(io.flutter.plugin.common.PluginRegistry$UserLeaveHintListener)
     public abstract void removeOnWindowFocusChangedListener(io.flutter.plugin.common.PluginRegistry$WindowFocusChangedListener)
-    public abstract void removeRequestPermissionsResultListener(io.flutter.plugin.common.PluginRegistry$RequestPermissionsResultListener)
 io.flutter.embedding.engine.plugins.broadcastreceiver.BroadcastReceiverControlSurface
 io.flutter.embedding.engine.plugins.broadcastreceiver.BroadcastReceiverPluginBinding:
     public abstract android.content.BroadcastReceiver getBroadcastReceiver()
@@ -4132,7 +4173,21 @@ io.flutter.plugin.common.MethodChannel:
     public void resizeChannelBuffer(int)
     public void setWarnsOnChannelOverflow(boolean)
 io.flutter.plugin.common.PluginRegistry$PluginRegistrantCallback
-io.flutter.plugin.common.PluginRegistry$Registrar
+io.flutter.plugin.common.PluginRegistry$Registrar:
+    public abstract android.content.Context activeContext()
+    public abstract android.app.Activity activity()
+    public abstract io.flutter.plugin.common.PluginRegistry$Registrar addNewIntentListener(io.flutter.plugin.common.PluginRegistry$NewIntentListener)
+    public abstract io.flutter.plugin.common.PluginRegistry$Registrar addUserLeaveHintListener(io.flutter.plugin.common.PluginRegistry$UserLeaveHintListener)
+    public abstract io.flutter.plugin.common.PluginRegistry$Registrar addViewDestroyListener(io.flutter.plugin.common.PluginRegistry$ViewDestroyListener)
+    public abstract io.flutter.plugin.common.PluginRegistry$Registrar addWindowFocusChangedListener(io.flutter.plugin.common.PluginRegistry$WindowFocusChangedListener)
+    public abstract android.content.Context context()
+    public abstract java.lang.String lookupKeyForAsset(java.lang.String)
+    public abstract java.lang.String lookupKeyForAsset(java.lang.String,java.lang.String)
+    public abstract io.flutter.plugin.common.BinaryMessenger messenger()
+    public abstract io.flutter.plugin.platform.PlatformViewRegistry platformViewRegistry()
+    public abstract io.flutter.plugin.common.PluginRegistry$Registrar publish(java.lang.Object)
+    public abstract io.flutter.view.TextureRegistry textures()
+    public abstract io.flutter.view.FlutterView view()
 io.flutter.plugin.common.PluginRegistry$ViewDestroyListener
 io.flutter.plugin.common.PluginRegistry$WindowFocusChangedListener
 io.flutter.plugin.common.PluginRegistry
@@ -7831,11 +7886,15 @@ kotlin.ranges.ClosedFloatingPointRange$DefaultImpls
 kotlin.ranges.ClosedFloatingPointRange
 kotlin.ranges.ClosedRange$DefaultImpls
 kotlin.ranges.ClosedRange
+kotlin.ranges.ComparableOpenEndRange
 kotlin.ranges.ComparableRange
 kotlin.ranges.IntProgressionIterator:
     public final int getStep()
 kotlin.ranges.IntRange:
     public synthetic bridge boolean contains(java.lang.Comparable)
+    public synthetic bridge java.lang.Comparable getEndExclusive()
+    public java.lang.Integer getEndExclusive()
+    public static synthetic void getEndExclusive$annotations()
     public synthetic bridge java.lang.Comparable getEndInclusive()
     public synthetic bridge java.lang.Comparable getStart()
 kotlin.ranges.LongProgression$Companion
@@ -7843,15 +7902,23 @@ kotlin.ranges.LongProgression
 kotlin.ranges.LongProgressionIterator
 kotlin.ranges.LongRange$Companion
 kotlin.ranges.LongRange
+kotlin.ranges.OpenEndDoubleRange
+kotlin.ranges.OpenEndFloatRange
+kotlin.ranges.OpenEndRange$DefaultImpls
+kotlin.ranges.OpenEndRange
 kotlin.ranges.RangesKt:
     private void <init>()
 kotlin.ranges.RangesKt__RangesKt:
     public void <init>()
     public static final void checkStepIsPositive(boolean,java.lang.Number)
-    private static final boolean contains(java.lang.Iterable,java.lang.Object)
+    private static final boolean contains(kotlin.ranges.ClosedRange,java.lang.Object)
+    private static final boolean contains(kotlin.ranges.OpenEndRange,java.lang.Object)
     public static final kotlin.ranges.ClosedFloatingPointRange rangeTo(double,double)
     public static final kotlin.ranges.ClosedFloatingPointRange rangeTo(float,float)
     public static final kotlin.ranges.ClosedRange rangeTo(java.lang.Comparable,java.lang.Comparable)
+    public static final kotlin.ranges.OpenEndRange rangeUntil(double,double)
+    public static final kotlin.ranges.OpenEndRange rangeUntil(float,float)
+    public static final kotlin.ranges.OpenEndRange rangeUntil(java.lang.Comparable,java.lang.Comparable)
 kotlin.ranges.RangesKt___RangesKt:
     public void <init>()
     public static final synthetic boolean byteRangeContains(kotlin.ranges.ClosedRange,double)
@@ -7859,6 +7926,9 @@ kotlin.ranges.RangesKt___RangesKt:
     public static final boolean byteRangeContains(kotlin.ranges.ClosedRange,int)
     public static final boolean byteRangeContains(kotlin.ranges.ClosedRange,long)
     public static final boolean byteRangeContains(kotlin.ranges.ClosedRange,short)
+    public static final boolean byteRangeContains(kotlin.ranges.OpenEndRange,int)
+    public static final boolean byteRangeContains(kotlin.ranges.OpenEndRange,long)
+    public static final boolean byteRangeContains(kotlin.ranges.OpenEndRange,short)
     public static final byte coerceAtLeast(byte,byte)
     public static final double coerceAtLeast(double,double)
     public static final float coerceAtLeast(float,float)
@@ -7880,13 +7950,20 @@ kotlin.ranges.RangesKt___RangesKt:
     public static final java.lang.Comparable coerceIn(java.lang.Comparable,kotlin.ranges.ClosedRange)
     public static final short coerceIn(short,short,short)
     private static final boolean contains(kotlin.ranges.CharRange,java.lang.Character)
+    private static final boolean contains(kotlin.ranges.IntRange,byte)
+    private static final boolean contains(kotlin.ranges.IntRange,long)
     private static final boolean contains(kotlin.ranges.IntRange,java.lang.Integer)
+    private static final boolean contains(kotlin.ranges.IntRange,short)
+    private static final boolean contains(kotlin.ranges.LongRange,byte)
+    private static final boolean contains(kotlin.ranges.LongRange,int)
     private static final boolean contains(kotlin.ranges.LongRange,java.lang.Long)
+    private static final boolean contains(kotlin.ranges.LongRange,short)
     public static final synthetic boolean doubleRangeContains(kotlin.ranges.ClosedRange,byte)
     public static final boolean doubleRangeContains(kotlin.ranges.ClosedRange,float)
     public static final synthetic boolean doubleRangeContains(kotlin.ranges.ClosedRange,int)
     public static final synthetic boolean doubleRangeContains(kotlin.ranges.ClosedRange,long)
     public static final synthetic boolean doubleRangeContains(kotlin.ranges.ClosedRange,short)
+    public static final boolean doubleRangeContains(kotlin.ranges.OpenEndRange,float)
     public static final kotlin.ranges.CharProgression downTo(char,char)
     public static final kotlin.ranges.IntProgression downTo(byte,byte)
     public static final kotlin.ranges.IntProgression downTo(byte,int)
@@ -7919,6 +7996,9 @@ kotlin.ranges.RangesKt___RangesKt:
     public static final synthetic boolean intRangeContains(kotlin.ranges.ClosedRange,float)
     public static final boolean intRangeContains(kotlin.ranges.ClosedRange,long)
     public static final boolean intRangeContains(kotlin.ranges.ClosedRange,short)
+    public static final boolean intRangeContains(kotlin.ranges.OpenEndRange,byte)
+    public static final boolean intRangeContains(kotlin.ranges.OpenEndRange,long)
+    public static final boolean intRangeContains(kotlin.ranges.OpenEndRange,short)
     public static final char last(kotlin.ranges.CharProgression)
     public static final int last(kotlin.ranges.IntProgression)
     public static final long last(kotlin.ranges.LongProgression)
@@ -7930,6 +8010,9 @@ kotlin.ranges.RangesKt___RangesKt:
     public static final synthetic boolean longRangeContains(kotlin.ranges.ClosedRange,float)
     public static final boolean longRangeContains(kotlin.ranges.ClosedRange,int)
     public static final boolean longRangeContains(kotlin.ranges.ClosedRange,short)
+    public static final boolean longRangeContains(kotlin.ranges.OpenEndRange,byte)
+    public static final boolean longRangeContains(kotlin.ranges.OpenEndRange,int)
+    public static final boolean longRangeContains(kotlin.ranges.OpenEndRange,short)
     private static final char random(kotlin.ranges.CharRange)
     public static final char random(kotlin.ranges.CharRange,kotlin.random.Random)
     private static final int random(kotlin.ranges.IntRange)
@@ -7942,6 +8025,23 @@ kotlin.ranges.RangesKt___RangesKt:
     public static final java.lang.Integer randomOrNull(kotlin.ranges.IntRange,kotlin.random.Random)
     private static final java.lang.Long randomOrNull(kotlin.ranges.LongRange)
     public static final java.lang.Long randomOrNull(kotlin.ranges.LongRange,kotlin.random.Random)
+    private static final kotlin.ranges.CharRange rangeUntil(char,char)
+    private static final kotlin.ranges.IntRange rangeUntil(byte,byte)
+    private static final kotlin.ranges.IntRange rangeUntil(byte,int)
+    private static final kotlin.ranges.IntRange rangeUntil(byte,short)
+    private static final kotlin.ranges.IntRange rangeUntil(int,byte)
+    private static final kotlin.ranges.IntRange rangeUntil(int,int)
+    private static final kotlin.ranges.IntRange rangeUntil(int,short)
+    private static final kotlin.ranges.IntRange rangeUntil(short,byte)
+    private static final kotlin.ranges.IntRange rangeUntil(short,int)
+    private static final kotlin.ranges.IntRange rangeUntil(short,short)
+    private static final kotlin.ranges.LongRange rangeUntil(byte,long)
+    private static final kotlin.ranges.LongRange rangeUntil(int,long)
+    private static final kotlin.ranges.LongRange rangeUntil(long,byte)
+    private static final kotlin.ranges.LongRange rangeUntil(long,int)
+    private static final kotlin.ranges.LongRange rangeUntil(long,long)
+    private static final kotlin.ranges.LongRange rangeUntil(long,short)
+    private static final kotlin.ranges.LongRange rangeUntil(short,long)
     public static final kotlin.ranges.CharProgression reversed(kotlin.ranges.CharProgression)
     public static final kotlin.ranges.IntProgression reversed(kotlin.ranges.IntProgression)
     public static final kotlin.ranges.LongProgression reversed(kotlin.ranges.LongProgression)
@@ -7950,6 +8050,9 @@ kotlin.ranges.RangesKt___RangesKt:
     public static final synthetic boolean shortRangeContains(kotlin.ranges.ClosedRange,float)
     public static final boolean shortRangeContains(kotlin.ranges.ClosedRange,int)
     public static final boolean shortRangeContains(kotlin.ranges.ClosedRange,long)
+    public static final boolean shortRangeContains(kotlin.ranges.OpenEndRange,byte)
+    public static final boolean shortRangeContains(kotlin.ranges.OpenEndRange,int)
+    public static final boolean shortRangeContains(kotlin.ranges.OpenEndRange,long)
     public static final kotlin.ranges.CharProgression step(kotlin.ranges.CharProgression,int)
     public static final kotlin.ranges.IntProgression step(kotlin.ranges.IntProgression,int)
     public static final kotlin.ranges.LongProgression step(kotlin.ranges.LongProgression,long)
@@ -10678,6 +10781,8 @@ androidx.savedstate.SavedStateRegistry$AutoRecreated
 androidx.savedstate.SavedStateRegistry:
     boolean mAllowingSavingState
     public android.os.Bundle consumeRestoredStateForKey(java.lang.String)
+com.baseflow.permissionhandler.ServiceManager:
+    private static boolean isLocationServiceEnablePreKitKat(android.content.Context)
 com.google.gson.internal.LinkedTreeMap:
     static final synthetic boolean $assertionsDisabled
 io.flutter.Log:

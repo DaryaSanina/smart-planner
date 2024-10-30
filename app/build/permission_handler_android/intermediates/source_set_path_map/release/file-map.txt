@@ -1,0 +1,12 @@
+com.baseflow.permissionhandler.permission_handler_android-jetified-annotation-experimental-1.1.0-0 C:\Users\dasha\.gradle\caches\transforms-3\257e0bb88528f5fc66bfd853728809aa\transformed\jetified-annotation-experimental-1.1.0\res
+com.baseflow.permissionhandler.permission_handler_android-jetified-window-1.0.0-beta04-1 C:\Users\dasha\.gradle\caches\transforms-3\6582e67aea0be70979c64a0bfb01e347\transformed\jetified-window-1.0.0-beta04\res
+com.baseflow.permissionhandler.permission_handler_android-core-1.6.0-2 C:\Users\dasha\.gradle\caches\transforms-3\974b4f2252348b5ef43741b27d416a49\transformed\core-1.6.0\res
+com.baseflow.permissionhandler.permission_handler_android-jetified-window-java-1.0.0-beta04-3 C:\Users\dasha\.gradle\caches\transforms-3\9b0dd0bee9a81680af20f56797c52ab1\transformed\jetified-window-java-1.0.0-beta04\res
+com.baseflow.permissionhandler.permission_handler_android-main-4 C:\Users\dasha\AppData\Local\Pub\Cache\hosted\pub.dev\permission_handler_android-10.3.6\android\src\main\res
+com.baseflow.permissionhandler.permission_handler_android-release-5 C:\Users\dasha\AppData\Local\Pub\Cache\hosted\pub.dev\permission_handler_android-10.3.6\android\src\release\res
+com.baseflow.permissionhandler.permission_handler_android-pngs-6 C:\Users\dasha\Documents\A Levels\Computer Science\NEA\smart-planner\app\build\permission_handler_android\generated\res\pngs\release
+com.baseflow.permissionhandler.permission_handler_android-resValues-7 C:\Users\dasha\Documents\A Levels\Computer Science\NEA\smart-planner\app\build\permission_handler_android\generated\res\resValues\release
+com.baseflow.permissionhandler.permission_handler_android-rs-8 C:\Users\dasha\Documents\A Levels\Computer Science\NEA\smart-planner\app\build\permission_handler_android\generated\res\rs\release
+com.baseflow.permissionhandler.permission_handler_android-mergeReleaseResources-9 C:\Users\dasha\Documents\A Levels\Computer Science\NEA\smart-planner\app\build\permission_handler_android\intermediates\incremental\release\mergeReleaseResources\merged.dir
+com.baseflow.permissionhandler.permission_handler_android-mergeReleaseResources-10 C:\Users\dasha\Documents\A Levels\Computer Science\NEA\smart-planner\app\build\permission_handler_android\intermediates\incremental\release\mergeReleaseResources\stripped.dir
+com.baseflow.permissionhandler.permission_handler_android-merged_res-11 C:\Users\dasha\Documents\A Levels\Computer Science\NEA\smart-planner\app\build\permission_handler_android\intermediates\merged_res\release

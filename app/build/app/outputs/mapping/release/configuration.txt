@@ -130,6 +130,10 @@
 # The proguard configuration file for the following section is C:\Users\dasha\Documents\A Levels\Computer Science\NEA\smart-planner\app\build\app\intermediates\aapt_proguard_file\release\aapt_rules.txt
 -keep class android.app.Application { <init>(); }
 -keep class androidx.core.app.CoreComponentFactory { <init>(); }
+-keep class com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver { <init>(); }
+-keep class com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver { <init>(); }
+-keep class com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver { <init>(); }
+-keep class com.dexterous.flutterlocalnotifications.receivers.BootBroadcastReceiver { <init>(); }
 -keep class com.example.app.MainActivity { <init>(); }
 
 # End of content from C:\Users\dasha\Documents\A Levels\Computer Science\NEA\smart-planner\app\build\app\intermediates\aapt_proguard_file\release\aapt_rules.txt

@@ -489,10 +489,20 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                     String title = task.name;
                     DateTime scheduledDate = DateTime.now();
                     if (task.isDeadline) {
-                      scheduledDate = DateTime(task.deadlineDate.year, task.deadlineDate.month, task.deadlineDate.day, task.deadlineTime.hour, task.deadlineTime.minute);
+                      scheduledDate = DateTime(
+                        task.deadlineDate.year,
+                        task.deadlineDate.month,
+                        task.deadlineDate.day,
+                        task.deadlineTime != null ? task.deadlineTime.hour : 0,
+                        task.deadlineTime != null ? task.deadlineTime.minute : 0);
                     }
                     else {
-                      scheduledDate = DateTime(task.startDate.year, task.startDate.month, task.startDate.day, task.startTime.hour, task.startTime.minute);
+                      scheduledDate = DateTime(
+                        task.startDate.year,
+                        task.startDate.month,
+                        task.startDate.day,
+                        task.startTime != null ? task.startTime.hour : 0,
+                        task.startTime != null ? task.startTime.minute : 0);
                     }
 
                     if (reminderType == ReminderType.tenMinutes) {
