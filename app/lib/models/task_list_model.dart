@@ -2,7 +2,7 @@ import 'dart:collection';
 import 'dart:convert';
 
 import 'package:app/home/util.dart';
-import 'package:app/home/widgets/task.dart';
+import 'package:app/home/widgets/task_list/task.dart';
 import 'package:app/models/util.dart';
 
 import 'package:http/http.dart' as http;
