@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:app/home/home_page.dart';
 import 'package:app/login/util.dart';
+import 'package:app/models/message_list_model.dart';
 import 'package:app/models/user_model.dart';
 import 'package:app/registration/util.dart';
 
@@ -31,6 +32,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<UserModel>();
+    final messageList = context.watch<MessageListModel>();
     int userID;
     return Form(
       key: _formKey,
@@ -145,7 +147,13 @@ class _RegistrationFormState extends State<RegistrationForm> {
                   });
                   await register(usernameController.text, emailController.text, passwordController.text);  // Register the user
                   userID = await login(usernameController.text, passwordController.text);  // Log the user in
-                  user.setUsername(usernameController.text);  // Update the user model
+
+                   // Update the user model
+                  user.setUsername(usernameController.text);
+
+                  // Update the message list model
+                  messageList.setUserID(userID);
+                  
                   setState(() {
                     _isLoading = false; // Hide the circular progress indicator
                   });

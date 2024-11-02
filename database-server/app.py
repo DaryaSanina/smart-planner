@@ -415,10 +415,16 @@ def delete_reminder(task_id: int, reminder_type: int):
      return JSONResponse({"id": reminder_id})
 
 
-@app.get('/get_message')
-def get_message(message_id: int):
-     cursor.execute(f"""SELECT * FROM Messages WHERE MessageID = {message_id}""")
+@app.get('/get_messages')
+def get_message(user_id: int):
+     cursor.execute(f"""SELECT * FROM Messages WHERE UserID = {user_id}""")
      result = cursor.fetchall()
+     result = list(result)
+     for i in range(len(result)):
+          result[i] = list(result[i])
+          for j in range(len(result[i])):
+               if type(result[i][j]) == datetime.datetime:
+                    result[i][j] = result[i][j].strftime("%Y-%m-%dT%H:%M:%S")
      return JSONResponse({"data": result})
 
 
@@ -435,7 +441,10 @@ def add_message(message: Message):
      
      # Insert the data
      timestamp = message.timestamp.strftime("%Y-%m-%d %H:%M:%S")
-     cursor.execute(f"""INSERT INTO Messages VALUES (NULL, '{message.content}', {message.role}, {timestamp}, {message.user_id})""")
+     cursor.execute(f"""INSERT INTO Messages VALUES (NULL, '{message.content}', {message.role}, '{timestamp}', {message.user_id})""")
+     
+     db.commit()
+     return JSONResponse({})
 
 
 @app.delete('/delete_message')
@@ -497,7 +506,7 @@ if __name__ == "__main__":
     cursor.execute("""CREATE TABLE IF NOT EXISTS Messages (
                         MessageID INT AUTO_INCREMENT NOT NULL,
                         Content TEXT NOT NULL,
-                        Role VARCHAR(32) NOT NULL,
+                        Role INT NOT NULL,
                         Timestamp DATETIME NOT NULL,
                         UserID INT NOT NULL,
                         PRIMARY KEY (MessageID),

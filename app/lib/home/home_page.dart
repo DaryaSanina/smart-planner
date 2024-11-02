@@ -4,7 +4,6 @@ import 'package:app/home/widgets/task_list/task_list.dart';
 import 'package:app/models/task_list_model.dart';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -51,16 +50,16 @@ class _HomePageState extends State<HomePage> {
             ),
 
             // AI chatbot view
-            Chat(),
+            const Chat(),
 
             // Calendar view
-            SizedBox(),
+            const SizedBox(),
 
           ][_selectedPageIndex],
           
           // Bottom navigation bar
           bottomNavigationBar: NavigationBar(
-            animationDuration: Duration(milliseconds: 1000),
+            animationDuration: const Duration(milliseconds: 1000),
             backgroundColor: Theme.of(context).colorScheme.primary,
             surfaceTintColor: const Color.fromARGB(255, 27, 27, 27),
             destinations: [

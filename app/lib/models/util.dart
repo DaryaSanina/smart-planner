@@ -1,4 +1,7 @@
 import 'dart:convert';
+
+import 'package:app/models/message_list_model.dart';
+
 import 'package:http/http.dart' as http;
 
 const List months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -32,7 +35,7 @@ String responseDateToDateString(String responseDateTime) {
 }
 
 Future<List<int>> getTaskTags(int taskID) async {
-  var response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_task_to_tag_relationship?task_id=$taskID'));
+  http.Response response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_task_to_tag_relationship?task_id=$taskID'));
   List<int> tagIDs = [];
   for (final dynamic tag in jsonDecode(response.body)['data']) {
     tagIDs.add(tag[2]);
@@ -41,7 +44,7 @@ Future<List<int>> getTaskTags(int taskID) async {
 }
 
 Future<List<ReminderType>> getTaskReminders(int taskID) async {
-  var response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_reminder?task_id=$taskID'));
+  http.Response response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_reminder?task_id=$taskID'));
   List<ReminderType> reminders = [];
   for (final dynamic reminder in jsonDecode(response.body)['data']) {
     if (reminder[2] == 1) {
@@ -58,4 +61,19 @@ Future<List<ReminderType>> getTaskReminders(int taskID) async {
     }
   }
   return reminders;
+}
+
+Future<List<Message>> getMessages(int userID) async {
+  http.Response response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_messages?user_id=$userID'));
+  List<Message> messages = [];
+  for (final dynamic message in jsonDecode(response.body)['data']) {
+    messages.add(
+      Message(
+        messageID: int.parse(message[0].toString()),
+        content: message[1],
+        role: MessageRole.values[int.parse(message[2].toString()) - 1],
+      )
+    );
+  }
+  return messages;
 }

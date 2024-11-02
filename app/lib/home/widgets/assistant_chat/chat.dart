@@ -1,4 +1,5 @@
 import 'package:app/home/widgets/assistant_chat/message_bar.dart';
+import 'package:app/home/widgets/assistant_chat/messages.dart';
 import 'package:flutter/material.dart';
 
 class Chat extends StatefulWidget {
@@ -15,7 +16,10 @@ class _ChatState extends State<Chat> {
     return Column(
       children: [
         Expanded(
-          child: SizedBox(height: MediaQuery.of(context).size.height * 0.8),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.8,
+            child: const MessageList()
+          ),
         ),
         const Padding(
           padding: EdgeInsets.symmetric(vertical: 20),

@@ -1,5 +1,6 @@
 import 'package:app/home/home_page.dart';
 import 'package:app/login/util.dart';
+import 'package:app/models/message_list_model.dart';
 import 'package:app/models/user_model.dart';
 
 import 'package:flutter/material.dart';
@@ -22,6 +23,7 @@ class _LoginFormState extends State<LoginForm> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<UserModel>();
+    final messageList = context.watch<MessageListModel>();
     int userID;
     return Form(
       key: _formKey,
@@ -84,6 +86,9 @@ class _LoginFormState extends State<LoginForm> {
 
                     // Update the user model
                     user.setUsername(usernameController.text);
+
+                    // Update the message list model
+                    messageList.setUserID(userID);
 
                     setState(() {
                       _isLoading = false;  // Hide the circular progress indicator

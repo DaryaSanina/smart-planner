@@ -1,7 +1,7 @@
 import 'dart:collection';
 import 'dart:convert';
 
-import 'package:app/home/util.dart';
+import 'package:app/home/widgets/task_list/util.dart';
 import 'package:app/home/widgets/task_list/task.dart';
 import 'package:app/models/util.dart';
 

@@ -1,6 +1,7 @@
 import 'package:app/home/home_page.dart';
 import 'package:app/login/login_page.dart';
 import 'package:app/models/importance_visibility_model.dart';
+import 'package:app/models/message_list_model.dart';
 import 'package:app/models/tag_list_model.dart';
 import 'package:app/models/task_list_model.dart';
 import 'package:app/models/task_model.dart';
@@ -30,6 +31,7 @@ void main() async {
         ChangeNotifierProvider(create: (context) => ShowImportanceModel()),
         ChangeNotifierProvider(create: (context) => TagListModel()),
         ChangeNotifierProvider(create: (context) => UserModel()),
+        ChangeNotifierProvider(create: (context) => MessageListModel()),
       ],
       child: MyApp(userID: userID, username: username),
     )
@@ -52,9 +54,14 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<UserModel>();
-    if (firstBuild && widget.username != null) {
+    final messageList = context.watch<MessageListModel>();
+    if (firstBuild && widget.userID != null && widget.username != null) {
       firstBuild = false;
       user.setUsername(widget.username!);
+      messageList.setUserID(widget.userID!);
+    }
+    else if (firstBuild) {
+      firstBuild = false;
     }
     return MaterialApp(
       title: 'Smart Planner',

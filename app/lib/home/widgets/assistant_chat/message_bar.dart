@@ -1,4 +1,7 @@
+import 'package:app/home/widgets/assistant_chat/util.dart';
+import 'package:app/models/message_list_model.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class MessageBar extends StatefulWidget {
   const MessageBar({super.key});
@@ -11,6 +14,7 @@ class _MessageBarState extends State<MessageBar> {
 
   @override
   Widget build(BuildContext context) {
+    MessageListModel messageList = context.watch<MessageListModel>();
 
     ButtonStyle buttonStyle = ButtonStyle(
       shape: MaterialStateProperty.all(const CircleBorder()),
@@ -55,7 +59,23 @@ class _MessageBarState extends State<MessageBar> {
 
         // Send message button
         ElevatedButton(
-          onPressed: () {},
+          onPressed: () async {
+            // Get the message content
+            String content = messageController.text;
+
+            // Get the current timestamp
+            DateTime timestamp = DateTime.now();
+
+            // Send the message and display it to the user
+            await sendMessage(content, timestamp, messageList.userID);
+            await messageList.updateMessages();
+
+            // Invoke the LLM, then upload its response to the database and display it to the user
+
+            setState(() {
+              messageController.text = "";
+            });
+          },
           style: buttonStyle,
           child: const Icon(Icons.send),
         ),

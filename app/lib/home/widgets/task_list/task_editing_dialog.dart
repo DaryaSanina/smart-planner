@@ -1,4 +1,4 @@
-import 'package:app/home/util.dart';
+import 'package:app/home/widgets/task_list/util.dart';
 import 'package:app/home/widgets/task_list/deadline_vs_start_and_end_picker.dart';
 import 'package:app/home/widgets/task_list/reminder_list.dart';
 import 'package:app/home/widgets/task_list/task.dart';
