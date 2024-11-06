@@ -1,11 +1,13 @@
 import 'dart:convert';
 
+import 'package:app/models/message_list_model.dart';
+
 import 'package:http/http.dart' as http;
 
-Future<void> sendMessage(String content, DateTime timestamp, int userID) async {
+Future<void> sendMessage(String content, MessageRole role, DateTime timestamp, int userID) async {
   String request = jsonEncode({
     "content": content,
-    "role": 1,
+    "role": role.index + 1,
     "timestamp": timestamp.toIso8601String(),
     "user_id": userID
   });
@@ -15,4 +17,14 @@ Future<void> sendMessage(String content, DateTime timestamp, int userID) async {
     headers: {'Content-Type': 'application/json'},
     body: request
   );
+}
+
+Future<void> invokeLLM(int userID) async {
+  http.Response response = await http.get(
+    Uri.parse('https://unsvtgzrumeigr72yblvkp7jwq0onuei.lambda-url.eu-north-1.on.aws/get_response?user_id=$userID')
+  );
+
+  String messageContent = jsonDecode(response.body)['response'];
+
+  await sendMessage(messageContent, MessageRole.assistant, DateTime.now(), userID);
 }

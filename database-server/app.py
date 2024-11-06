@@ -441,7 +441,7 @@ def add_message(message: Message):
      
      # Insert the data
      timestamp = message.timestamp.strftime("%Y-%m-%d %H:%M:%S")
-     cursor.execute(f"""INSERT INTO Messages VALUES (NULL, '{message.content}', {message.role}, '{timestamp}', {message.user_id})""")
+     cursor.execute(f"""INSERT INTO Messages VALUES (NULL, '{message.content.replace("'", "''")}', {message.role}, '{timestamp}', {message.user_id})""")
      
      db.commit()
      return JSONResponse({})

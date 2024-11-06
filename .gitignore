@@ -14,6 +14,8 @@ importance-prediction-model/importance_embedding.pkl
 importance-prediction-model/importance_model.pkl
 importance-prediction-model/importance_output.pkl
 importance-prediction-model/word2index.pkl
+llm-inference-server/.env
+llm-inference-server/test.py
 
 # Miscellaneous
 *.class

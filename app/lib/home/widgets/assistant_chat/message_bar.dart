@@ -67,10 +67,12 @@ class _MessageBarState extends State<MessageBar> {
             DateTime timestamp = DateTime.now();
 
             // Send the message and display it to the user
-            await sendMessage(content, timestamp, messageList.userID);
-            await messageList.updateMessages();
+            await sendMessage(content, MessageRole.user, timestamp, messageList.userID);
 
             // Invoke the LLM, then upload its response to the database and display it to the user
+            invokeLLM(messageList.userID).whenComplete(() async => await messageList.updateMessages());
+
+            await messageList.updateMessages();
 
             setState(() {
               messageController.text = "";

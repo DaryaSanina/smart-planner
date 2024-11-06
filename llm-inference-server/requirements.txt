@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+mangum
+mysql-connector-python
+python-dotenv
+pydantic
+llama-index-llms-llama_api
