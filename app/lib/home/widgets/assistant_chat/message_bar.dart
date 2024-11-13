@@ -70,7 +70,11 @@ class _MessageBarState extends State<MessageBar> {
             await sendMessage(content, MessageRole.user, timestamp, messageList.userID);
 
             // Invoke the LLM, then upload its response to the database and display it to the user
-            invokeLLM(messageList.userID).whenComplete(() async => await messageList.updateMessages());
+            messageList.assistantIsGeneratingResponse = true;
+            invokeLLM(messageList.userID).whenComplete(() async {
+              await messageList.updateMessages();
+              messageList.assistantIsGeneratingResponse = false;
+            });
 
             await messageList.updateMessages();
 

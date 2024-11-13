@@ -16,6 +16,7 @@ class MessageListModel extends ChangeNotifier {
   int userID = 0;
   List<Message> _messages = [];
   UnmodifiableListView get messages => UnmodifiableListView(_messages);
+  bool assistantIsGeneratingResponse = false;
 
   Future<void> updateMessages() async {
     _messages.clear();

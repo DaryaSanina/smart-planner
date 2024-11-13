@@ -74,6 +74,13 @@ class Message(BaseModel):
      timestamp: datetime.datetime  # In a POST request, it should be a string of the following format: "YYYY-MM-DD[T]HH:MM:SS"
      user_id: int
 
+
+class ChatbotQuery(BaseModel):
+     reasoning : str
+     sql_query : str
+     user_id: int
+
+
 @app.get('/')
 def default():
      return JSONResponse("Nothing here.")
@@ -453,6 +460,49 @@ def delete_reminder(message_id: int):
      db.commit()
      return JSONResponse({})
 
+
+@app.post('/get_data_for_chatbot')
+def get_data_for_chatbot(query: ChatbotQuery):
+     if query.sql_query == "":
+          return JSONResponse({"reason": "The query is empty"}, status_code=400)
+     
+     if query.sql_query.split()[0] != "SELECT":
+          return JSONResponse({"reason": "The server can only process SELECT queries"}, status_code=400)
+     
+     if "FROM" not in query.sql_query.split() or len(query.sql_query.split()) <= query.sql_query.split().index("FROM") + 1:
+          return JSONResponse({"reason": "Invalid SQL query"}, status_code=400)
+     
+     table_name = query.sql_query.split()[query.sql_query.split().index("FROM") + 1]
+     if table_name not in ["Tasks", "Tags", "TasksToTags", "Reminders"]:
+          return JSONResponse({"reason": f"The server cannot process queries to the {table_name} table. "
+                               + "It can only process queries to the following tables: Tasks, Tags, TasksToTags and Reminders."}, status_code=400)
+     
+     try:
+          cursor.execute(query.sql_query)
+          data = cursor.fetchall()
+
+          field_names = [field[0] for field in cursor.description]
+
+          data = list(data)
+          result = []
+          for i in range(len(data)):
+               data[i] = list(data[i])  # result[i] is a particular record
+
+               # Replace datetime with a JSON-serialisable string
+               for j in range(len(data[i])):
+                    if type(data[i][j]) == datetime.datetime:
+                         data[i][j] = data[i][j].strftime("%Y-%m-%dT%H:%M:%S")
+
+               data[i] = dict(zip(field_names, data[i]))  # Attach field names to the record
+
+               if "UserID" not in data[i].keys() or int(data[i]["UserID"]) == query.user_id:
+                    result.append(data[i])
+          
+          return JSONResponse({"data": result})
+
+     except Exception as e:
+          print("reason 5")
+          return JSONResponse({"reason5": "Invalid SQL query. Error: " + str(e)}, status_code=400)
 
 if __name__ == "__main__":
     # Create the tables if they don't exist

@@ -10,6 +10,8 @@ RUN pip install -r requirements.txt
 COPY log.ini ${LAMBDA_TASK_ROOT}
 COPY .env ${LAMBDA_TASK_ROOT}
 COPY app.py ${LAMBDA_TASK_ROOT}
+COPY nltk_data ${LAMBDA_TASK_ROOT}
+ENV NLTK_DATA=${LAMBDA_TASK_ROOT}
 
 # Set the CMD to my handler
 CMD [ "app.handler" ]

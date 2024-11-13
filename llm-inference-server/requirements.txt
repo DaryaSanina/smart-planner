@@ -3,5 +3,6 @@ uvicorn
 mangum
 mysql-connector-python
 python-dotenv
-pydantic
+pydantic<2.0
 llama-index-llms-llama_api
+llamaapi>=0.1.36
