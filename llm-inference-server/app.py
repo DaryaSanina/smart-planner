@@ -10,8 +10,8 @@ from llama_index.core.constants import DEFAULT_NUM_OUTPUTS
 from pydantic import BaseModel, Field
 import requests
 import json
-
-import traceback
+from enum import Enum
+import datetime
 
 ASSISTANT_SYSTEM_PROMPT = """
 You are an expert in task management. You assist the user in managing their tasks. You are friendly and welcoming and eager
@@ -22,13 +22,14 @@ the form of a JSON string which consists of a list of tasks. This list only cons
 and as such may not contain all of the user's tasks, or may even be empty, if no tasks are relevant to the user's problem.
 Each task will have a name, a description, some time constraints (either a deadline or a start date-time and an end
 date-time), and an importance level from 1 to 10. A task may also have some of the following reminders: 10 minutes before,
-1 hour before, 1 day before and 1 week before. A task can also have a list of tags it is associated with.
+1 hour before, 1 day before and 1 week before. A task can also have a list of tags it is associated with. When the user
+asks you to mark a task as complete, it means they want you to remove the task from the list.
 You can use this data to fulfill the user's queries.
 
 You should keep your responses short.
 """
 
-SQL_GENERATOR_SYSTEM_PROMPT = """
+sql_generator_system_prompt = f"""
 Please take into account all of the previous instructions.
 
 You are an expert in writing SQL queries to retrieve data that might be helpful to solve the user's problems. The problems
@@ -67,12 +68,68 @@ The Reminders table contains the following fields:
 3 means 1 day before, and 4 means 1 week before. If the task has a start and an end instead of a deadline, the reminder
 will go off the specified amount of time before the start of the task.
 
+Here is the userID you should use: USER_ID
+If needed, you can also use the following information:
+Today is CURRENT_DATE
+The current time is CURRENT_TIME_HOUR:CURRENT_TIME_MINUTE
+
 You will be given the conversation between the user and another assistant and you will need to decide whether the last query
 of the user needs data from the database to be fulfilled or if it can be fulfilled more efficiently with the data from the
 database and write an SQL query to get that data. You can also decide that no data from the database is needed.
 
-You will need to return an SQL_Output object with a text explanation of the SQL query and the query itself.
+You will need to output a JSON object with a text explanation of the SQL query and the query itself.
+The JSON object should have the following format:
+{{
+    "reasoning": The reasoning about what data needs to be retrieved and what SQL command might retrieve the data or at
+                 least narrow down the scope of the data. You can also decide that you don't need any data at all.
+                 This should be in double quotation marks.
+    "sql_query": The SQL query to retrieve the necessary data. If no data needs to be retrieved, leave it blank.
+                 This should be in double quotation marks.
+}}
+
+Do not output anything else under any circumstances.
 """
+
+action_generator_system_prompt = f"""
+You are an expert in task management and planning. Based on the conversation history with the user, you will need to determine whether
+you need to create a task, edit a task, mark a task as done, or do nothing, and output the details of the action.
+
+If no action needs to be done, output "Nothing". This should be done in most cases unless specifically stated by the user.
+
+If a task needs to be created, the output should have the following format (each thing on one separate line):
+"Create"
+"Name: " task name
+"Description: " task description
+"Importance: " task importance (an integer from 0 to 10, 0 is the lowest importance, 10 is the highest importance)
+"Deadline: " / "Start: " either the task's deadline or its start datetime
+(Optional) "End: " the task's end datetime (if it has a start and an end instead of a deadline)
+
+If a task needs to be edited, the output should have the following format (each thing on one separate line):
+"Edit"
+"Id: " task id (you will have the information about the task id in the message history)
+<field name>: new value (this line can be repeated multiple times, if multiple fields need to be updated)
+
+If a task needs to be marked as done, the output should have the following format (each thing on one separate line):
+"Complete"
+"Id: " task id
+
+All dates should be in one of the following formats: "YYYY-MM-DD" or "YYYY-MM-DD[T]HH:MM"
+
+If needed, you can also use the following information:
+Today is CURRENT_DATE
+The current time is CURRENT_TIME_HOUR:CURRENT_TIME_MINUTE
+
+Do not output anything else under any circumstances.
+"""
+
+
+class ActionType(str, Enum):
+    CREATE = "CREATE"
+    EDIT = "EDIT"
+    COMPLETE = "COMPLETE"
+    ERROR = "ERROR"
+    NOTHING = "NOTHING"
+
 
 # Initialise the server
 app = FastAPI()
@@ -85,11 +142,19 @@ assistant = LlamaAPI(api_key=os.getenv("LLAMA_API_KEY"), model="llama3.1-405b", 
 
 
 class SQL_Output(BaseModel):
-    """Output that contains an SQL query and the reasoning behind it."""
-    reasoning : str = Field(..., description="The reasoning about what data needs to be retrieved and what SQL command might "
-                            + "retrieve the data or at least narrow down the scope of the data. You can also decide that you "
-                            + "don't need any data at all.")
-    sql_query : str = Field(..., description="The SQL query to retrieve the necessary data. If no data needs to be retrieved, leave it blank.")
+    """Output that contains an SQL query and the reasoning behind it.
+
+    Parameters
+    ----------
+        reasoning : str
+            The reasoning about what data needs to be retrieved and what SQL command might retrieve the data or at least
+            narrow down the scope of the data. You can also decide that you don't need any data at all.
+        
+        sql_query : str
+            The SQL query to retrieve the necessary data. If no data needs to be retrieved, leave it blank.
+    """
+    reasoning : str
+    sql_query : str
 
 
 def load_message_history(user_id: int, message_limit: int | None = None) -> list[ChatMessage]:
@@ -134,6 +199,7 @@ def load_message_history(user_id: int, message_limit: int | None = None) -> list
 
 
 def get_data(messages: list[ChatMessage], user_id: int, max_retries: int) -> ChatMessage:
+    global sql_generator_system_prompt
     """
     In this function, an LLM analyses the last query of the user any previous conversation between the user and the assistant,
     decides which data it will need to perform the user's query and retrieves the data from the database server.
@@ -157,22 +223,28 @@ def get_data(messages: list[ChatMessage], user_id: int, max_retries: int) -> Cha
     """
     try:
         # Generate an SQL query
-        sql_generator = assistant.as_structured_llm(output_cls=SQL_Output)
+        sql_generator = LlamaAPI(api_key=os.getenv("LLAMA_API_KEY"), model="llama3.1-405b", max_tokens=4096)
+        sql_generator_system_prompt = sql_generator_system_prompt.replace("USER_ID", user_id)
+        sql_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_DATE", datetime.date.today().strftime(format='%d %B %Y'))
+        sql_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_TIME_HOUR", datetime.datetime.now().hour)
+        sql_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_TIME_MINUTE", datetime.datetime.now().minute)
         output = sql_generator.chat(
-            messages=[ChatMessage(content=SQL_GENERATOR_SYSTEM_PROMPT, role=MessageRole.SYSTEM)]
+            messages=[ChatMessage(content=sql_generator_system_prompt, role=MessageRole.SYSTEM)]
                 + messages,
             max_tokens=4096
         )
-        sql_query_object:SQL_Output = output.raw
+        print(type(output), output)
+        sql_query_object = json.loads(output.message.content)
 
         # Pass the SQL query to the database server
         database_response = requests.post(
             f'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_data_for_chatbot',
-            json={"reasoning": sql_query_object.reasoning, "sql_query": sql_query_object.sql_query, "user_id": user_id},
+            json={"reasoning": sql_query_object["reasoning"], "sql_query": sql_query_object["sql_query"], "user_id": user_id},
             headers={'Content-Type': 'application/json'}
         )
 
         # If the database server has recognised the query as incorrect
+        print(database_response.status_code)
         if database_response.status_code == 400:
             raise Exception(json.dumps(database_response.json()))
         
@@ -181,6 +253,7 @@ def get_data(messages: list[ChatMessage], user_id: int, max_retries: int) -> Cha
 
         if database_response != "":
             data = database_response.json()["data"]
+        print(data)
             
         assistant_response = ChatMessage(content=json.dumps(data), role=MessageRole.TOOL)
 
@@ -191,7 +264,79 @@ def get_data(messages: list[ChatMessage], user_id: int, max_retries: int) -> Cha
         if max_retries == 0:
             return error_message
         else:
-            return get_data(messages + [error_message], user_id, max_retries=max_retries - 1)
+            return get_data(messages, user_id, max_retries=max_retries - 1)
+
+
+def parse_action(action_text: str) -> tuple[ActionType, dict]:
+    lines = action_text.split('\n')
+    task_details = dict(list(map(lambda x: tuple(x.lower().split(': ')), lines[1::])))
+
+    if lines[0] == "Create":
+        return (ActionType.CREATE, dict([(k.lower(), v) for k, v in task_details.items()]))
+    elif lines[0] == "Edit":
+        return (ActionType.EDIT, dict([(k.lower(), v) for k, v in task_details.items()]))
+    elif lines[0] == "Complete":
+        return (ActionType.COMPLETE, dict([(k.lower(), v) for k, v in task_details.items()]))
+    
+    return (ActionType.NOTHING, {})
+
+
+def get_action(messages: list[ChatMessage], max_retries: int) -> tuple[ActionType, dict]:
+    action_generator = LlamaAPI(api_key=os.getenv("LLAMA_API_KEY"), model="llama3.1-405b", max_tokens=4096)
+    sql_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_DATE", datetime.date.today().strftime(format='%d %B %Y'))
+    sql_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_TIME_HOUR", datetime.datetime.now().hour)
+    sql_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_TIME_MINUTE", datetime.datetime.now().minute)
+    messages_ = [ChatMessage(content=action_generator_system_prompt, role=MessageRole.SYSTEM)] + list(filter(lambda message: message.role != MessageRole.SYSTEM, messages))
+
+    try:
+        action_text = str(action_generator.chat(messages=messages_, max_tokens=4096).message.content)
+        return parse_action(action_text)
+    except Exception as e:
+        print(e, action_text)
+        if max_retries == 0:
+            return (ActionType.ERROR, {})
+        return get_action(messages=messages, max_retries=max_retries - 1)
+
+
+def perform_action(action: tuple[ActionType, dict], user_id: int):
+    print(action)
+    json_dict = action[1]
+
+    if "id" in json_dict.keys():
+        json_dict["task_id"] = int(json_dict["id"])
+        del json_dict["id"]
+    
+    if action[0] == ActionType.CREATE:
+        json_dict["user_id"] = user_id
+        print("Json:", json_dict)
+        database_response = requests.post(
+            f'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/add_task',
+            json=json_dict,
+            headers={'Content-Type': 'application/json'}
+        )
+        print(database_response.status_code)
+        print(database_response.json())
+
+    elif action[0] == ActionType.EDIT:
+        json_dict["user_id"] = user_id
+        print("Json:", json_dict)
+        database_response = requests.put(
+            f'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/update_task',
+            json=json_dict,
+            headers={'Content-Type': 'application/json'}
+        )
+        print(database_response.status_code)
+        print(database_response.json())
+
+    elif action[0] == ActionType.COMPLETE:
+        print("Json:", json_dict)
+        database_response = requests.delete(
+            f'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/delete_task?task_id={json_dict["task_id"]}',
+            headers={'Content-Type': 'application/json'}
+        )
+        print(database_response.status_code)
+        print(database_response.json())
+
 
 @app.get('/get_response')
 def get_response(user_id: int):
@@ -212,16 +357,27 @@ def get_response(user_id: int):
     """
     # Load the user's message history
     messages = load_message_history(user_id, message_limit=10)
+    print("Loaded message history:", len(messages))
 
     # Load any data the assistant finds necessary to fulfill the last query of the user
-    messages.append(get_data(messages, user_id, max_retries=5,))
+    data = get_data(messages, user_id, max_retries=5)
+    if data.content != 'Error: {"reason": "The query is empty"}':
+        messages.append(data)
+    print("Loaded data:", messages[-1].content)
     
-    # Call the LLM
+    # Call the LLM to generate a response to the user's query
     response = str(assistant.chat(
         messages=[ChatMessage(content=ASSISTANT_SYSTEM_PROMPT, role=MessageRole.SYSTEM)]
             + messages,
         max_tokens=4096
     ).message.content)
+    messages.append(ChatMessage(content=response, role=MessageRole.ASSISTANT))
+    print("Generated a response:", response)
+
+    # Call the LLM to decide what task planner action needs to be performed (if any)
+    action = get_action(messages=messages, max_retries=3)
+    perform_action(action, user_id)
+    print("Performed an action:", action)
 
     return JSONResponse({"response": response})
 
