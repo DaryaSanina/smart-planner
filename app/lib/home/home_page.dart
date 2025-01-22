@@ -81,7 +81,12 @@ class _HomePageState extends State<HomePage> {
             ],
             indicatorColor: Theme.of(context).colorScheme.secondary,
             selectedIndex: _selectedPageIndex,
-            onDestinationSelected: (index) => setState(() {_selectedPageIndex = index;}),  // When an item is tapped, set the page index to the selected value and update the page
+            onDestinationSelected: (index) async {
+              setState(() {_selectedPageIndex = index;});
+              taskList.tasks.clear();
+              taskList.notifyListenersFromOutside();
+              await taskList.update(widget.userID);
+            },  // When an item is tapped, set the page index to the selected value and update the page
           ),
         );
       }
