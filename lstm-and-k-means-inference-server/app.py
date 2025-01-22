@@ -21,8 +21,8 @@ class TaskImportancePredictor:
         An embedding layer of the neural network.
     model: layers.Sequential
         The main layers of the neural network.
-    output_layer: layers.Linear
-        The output layer of the neural network.
+    output_layer: layers.Sequential
+        The feed-forward layers at the end of the neural network.
     tokens: list[int]
         A list of indices from the vocabulary that represents the prompt given to the model.
     """
@@ -92,20 +92,20 @@ class KMeansClassifier:
     clusters: Tensor
         The index of each data point's cluster.
     """
-    def __init__(self, data_list: list[tuple[int, int]]=None, k: int=None) -> None:
+    def __init__(self, data_list: list[list[int, int]]=None, k: int=None) -> None:
         self.data = None
         self.k = None
         self.centroids = None
         self.clusters = None
         self.load_data(data_list, k)
     
-    def load_data(self, data_list: list[tuple[int, int]]=None, k: int=None) -> None:
+    def load_data(self, data_list: list[list[int, int]]=None, k: int=None) -> None:
         """
         Loads the data and the number of clusters.
 
         Parameters
         ----------
-        data_list: list[tuple[int, int]]
+        data_list: list[list[int, int]]
             A list representing the data in a 2D space.
         k: int
             The number of clusters.
@@ -201,7 +201,8 @@ class KMeansClassifier:
         return self.clusters, self.centroids
 
 
-class TaskDescription(BaseModel):
+class Task(BaseModel):
+    name: str
     description: str
 
 class KMeansData(BaseModel):
@@ -221,7 +222,7 @@ def default():
 @app.post('/k_means')
 def k_means(data: KMeansData):
     try:
-        data = [list(task) for task in data.data]
+        data = [list(task[0] * 10000, task[1]) for task in data.data]
         classifier = KMeansClassifier(data_list=data, k=4)
         classifier.generate_centroids()
         clusters, centroids = classifier.cluster()
@@ -248,8 +249,8 @@ def k_means(data: KMeansData):
 
 
 @app.post('/predict_importance')
-def predict_importance(data: TaskDescription):
-    importance_predictor.load_tokens(data.description)
+def predict_importance(data: Task):
+    importance_predictor.load_tokens(data.name + ' ' + data.description)
     prediction = round(importance_predictor.predict())
     return JSONResponse({"importance": prediction})
 

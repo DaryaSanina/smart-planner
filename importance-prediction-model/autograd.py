@@ -1,4 +1,4 @@
-import numpy as np
+import cupy as np
 
 
 class Tensor:
@@ -33,14 +33,14 @@ class Tensor:
 
 class Tensor:
     def __init__(self, data, autograd=False, creators: list[Tensor] = None, creation_op: str = None, id: int = None) -> None:
-        self.data = np.array(data)
+        self.data = np.asarray(data)
         self.creators = creators
         self.creation_op = creation_op
         self.grad = None
         self.autograd = autograd
         
         if id is None:
-            id = np.random.randint(0, 100000)
+            id = int(np.random.randint(0, 100000))
         self.id = id
 
         self.children = {}
@@ -155,11 +155,11 @@ class Tensor:
                 if self.creation_op == "relu":
                     # ReLU'(x) = 1 if x > 0, 0 if x <= 0
                     ones = Tensor(np.ones_like(self.grad.data))
-                    self.creators[0].backward(self.grad * (self > 0), self)
+                    self.creators[0].backward(self.grad * Tensor(self.data > 0), self)
                 
                 if self.creation_op == "index_select":
                     new_grad = np.zeros_like(self.creators[0].data)
-                    indices_ = self.index_select_indices.data.flatten()
+                    indices_ = np.asarray(self.index_select_indices.data).flatten()
                     grad_ = grad.data.reshape(len(indices_), -1)
                     for i in range(len(indices_)):
                         new_grad[indices_[i]] += grad_[i]
@@ -240,6 +240,7 @@ class Tensor:
         Tensor
             The tensor produced when multiplying the elements of this tensor by the corresponding elements of the 'other' tensor.
         """
+        
         if self.autograd and other.autograd:
             return Tensor(self.data * other.data, autograd=True, creators=[self, other], creation_op="mul")
         return Tensor(self.data * other.data)
@@ -277,10 +278,10 @@ class Tensor:
             The tensor of this tensor's elements with the corresponding indices.
         """
         if self.autograd:
-            new = Tensor(self.data[indices.data], autograd=True, creators=[self], creation_op="index_select")
+            new = Tensor(np.asarray(self.data[indices.data]), autograd=True, creators=[self], creation_op="index_select")
             new.index_select_indices = indices
             return new
-        return Tensor(self.data[indices.data])
+        return Tensor(np.ndarray(self.data[indices.data]))
     
     def sum(self, dim: int) -> Tensor:
         """

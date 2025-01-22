@@ -141,22 +141,6 @@ DEFAULT_NUM_OUTPUTS = 4096
 assistant = LlamaAPI(api_key=os.getenv("LLAMA_API_KEY"), model="llama3.1-405b", max_tokens=4096)
 
 
-class SQL_Output(BaseModel):
-    """Output that contains an SQL query and the reasoning behind it.
-
-    Parameters
-    ----------
-        reasoning : str
-            The reasoning about what data needs to be retrieved and what SQL command might retrieve the data or at least
-            narrow down the scope of the data. You can also decide that you don't need any data at all.
-        
-        sql_query : str
-            The SQL query to retrieve the necessary data. If no data needs to be retrieved, leave it blank.
-    """
-    reasoning : str
-    sql_query : str
-
-
 def load_message_history(user_id: int, message_limit: int | None = None) -> list[ChatMessage]:
     """
     Requests the message history of the user with the given ID and returns it as a list of chat messages, including the
@@ -198,7 +182,7 @@ def load_message_history(user_id: int, message_limit: int | None = None) -> list
         return messages[len(messages) - message_limit:]
 
 
-def get_data(messages: list[ChatMessage], user_id: int, max_retries: int) -> ChatMessage:
+def get_data(messages: list[ChatMessage], user_id: int, max_attempts: int) -> ChatMessage:
     global sql_generator_system_prompt
     """
     In this function, an LLM analyses the last query of the user any previous conversation between the user and the assistant,
@@ -208,7 +192,7 @@ def get_data(messages: list[ChatMessage], user_id: int, max_retries: int) -> Cha
     ----------
     messages : list[ChatMessage]
         A conversation between the user and the assistant.
-    max_retries : int
+    max_attempts : int
         The maximum number of times the LLM can repeat the data retrieval process, if there are any errors or the retrieved
         data is irrelevant to the query. If there are any such errors after the last attempt, the function will return
         a message without any data.
@@ -224,10 +208,10 @@ def get_data(messages: list[ChatMessage], user_id: int, max_retries: int) -> Cha
     try:
         # Generate an SQL query
         sql_generator = LlamaAPI(api_key=os.getenv("LLAMA_API_KEY"), model="llama3.1-405b", max_tokens=4096)
-        sql_generator_system_prompt = sql_generator_system_prompt.replace("USER_ID", user_id)
+        sql_generator_system_prompt = sql_generator_system_prompt.replace("USER_ID", str(user_id))
         sql_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_DATE", datetime.date.today().strftime(format='%d %B %Y'))
-        sql_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_TIME_HOUR", datetime.datetime.now().hour)
-        sql_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_TIME_MINUTE", datetime.datetime.now().minute)
+        sql_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_TIME_HOUR", str(datetime.datetime.now().hour))
+        sql_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_TIME_MINUTE", str(datetime.datetime.now().minute))
         output = sql_generator.chat(
             messages=[ChatMessage(content=sql_generator_system_prompt, role=MessageRole.SYSTEM)]
                 + messages,
@@ -261,10 +245,10 @@ def get_data(messages: list[ChatMessage], user_id: int, max_retries: int) -> Cha
 
     except Exception as e:
         error_message = ChatMessage(content="Error: " + str(e), role=MessageRole.TOOL)
-        if max_retries == 0:
+        if max_attempts == 0:
             return error_message
         else:
-            return get_data(messages, user_id, max_retries=max_retries - 1)
+            return get_data(messages, user_id, max_attempts=max_attempts - 1)
 
 
 def parse_action(action_text: str) -> tuple[ActionType, dict]:
@@ -281,11 +265,13 @@ def parse_action(action_text: str) -> tuple[ActionType, dict]:
     return (ActionType.NOTHING, {})
 
 
-def get_action(messages: list[ChatMessage], max_retries: int) -> tuple[ActionType, dict]:
+def get_action(messages: list[ChatMessage], max_attempts: int) -> tuple[ActionType, dict]:
+    global action_generator_system_prompt
+
     action_generator = LlamaAPI(api_key=os.getenv("LLAMA_API_KEY"), model="llama3.1-405b", max_tokens=4096)
-    sql_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_DATE", datetime.date.today().strftime(format='%d %B %Y'))
-    sql_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_TIME_HOUR", datetime.datetime.now().hour)
-    sql_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_TIME_MINUTE", datetime.datetime.now().minute)
+    action_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_DATE", datetime.date.today().strftime(format='%d %B %Y'))
+    action_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_TIME_HOUR", str(datetime.datetime.now().hour))
+    action_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_TIME_MINUTE", str(datetime.datetime.now().minute))
     messages_ = [ChatMessage(content=action_generator_system_prompt, role=MessageRole.SYSTEM)] + list(filter(lambda message: message.role != MessageRole.SYSTEM, messages))
 
     try:
@@ -293,9 +279,9 @@ def get_action(messages: list[ChatMessage], max_retries: int) -> tuple[ActionTyp
         return parse_action(action_text)
     except Exception as e:
         print(e, action_text)
-        if max_retries == 0:
+        if max_attempts == 0:
             return (ActionType.ERROR, {})
-        return get_action(messages=messages, max_retries=max_retries - 1)
+        return get_action(messages=messages, max_attempts=max_attempts - 1)
 
 
 def perform_action(action: tuple[ActionType, dict], user_id: int):
@@ -360,7 +346,7 @@ def get_response(user_id: int):
     print("Loaded message history:", len(messages))
 
     # Load any data the assistant finds necessary to fulfill the last query of the user
-    data = get_data(messages, user_id, max_retries=5)
+    data = get_data(messages, user_id, max_attempts=5)
     if data.content != 'Error: {"reason": "The query is empty"}':
         messages.append(data)
     print("Loaded data:", messages[-1].content)
@@ -375,7 +361,7 @@ def get_response(user_id: int):
     print("Generated a response:", response)
 
     # Call the LLM to decide what task planner action needs to be performed (if any)
-    action = get_action(messages=messages, max_retries=3)
+    action = get_action(messages=messages, max_attempts=3)
     perform_action(action, user_id)
     print("Performed an action:", action)
 

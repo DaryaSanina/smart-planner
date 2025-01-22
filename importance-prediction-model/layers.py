@@ -1,4 +1,4 @@
-import numpy as np
+import cupy as np
 from autograd import Tensor
 
 
@@ -111,7 +111,7 @@ class Embedding(Layer):
         Tensor
             The layer's output (word vectors).
         """
-        return self.weight[input]
+        return self.weight[Tensor(np.asarray([np.argmax(input.data)]))]
 
 
 class Sequential(Layer):
@@ -421,21 +421,20 @@ class LSTMCell(Layer):
     parameters : list[Tensor]
         A combination of all the parameters of this cell.
     """
-    def __init__(self, n_inputs, n_hidden, n_outputs) -> None:
+    def __init__(self, n_inputs, n_outputs) -> None:
         super().__init__()
 
         self.n_inputs = n_inputs
-        self.n_hidden = n_hidden
         self.n_outputs = n_outputs
 
-        self.input_to_forgetting_gate = Linear(n_inputs, n_hidden)
-        self.input_to_input_gate = Linear(n_inputs, n_hidden)
+        self.input_to_forgetting_gate = Linear(n_inputs, n_outputs)
+        self.input_to_input_gate = Linear(n_inputs, n_outputs)
         self.input_to_output_gate = Linear(n_inputs, n_outputs)
-        self.input_to_update_gate = Linear(n_inputs, n_hidden)
-        self.hidden_to_forgetting_gate = Linear(n_hidden, n_hidden, bias=False)
-        self.hidden_to_input_gate = Linear(n_hidden, n_hidden, bias=False)
-        self.hidden_to_output_gate = Linear(n_hidden, n_outputs, bias=False)
-        self.hidden_to_update_gate = Linear(n_hidden, n_hidden, bias=False)
+        self.input_to_update_gate = Linear(n_inputs, n_outputs)
+        self.hidden_to_forgetting_gate = Linear(n_outputs, n_outputs, bias=False)
+        self.hidden_to_input_gate = Linear(n_outputs, n_outputs, bias=False)
+        self.hidden_to_output_gate = Linear(n_outputs, n_outputs, bias=False)
+        self.hidden_to_update_gate = Linear(n_outputs, n_outputs, bias=False)
 
         self.parameters += self.input_to_forgetting_gate.get_parameters()
         self.parameters += self.input_to_input_gate.get_parameters()
@@ -479,7 +478,7 @@ class LSTMCell(Layer):
 
         return new_hidden, new_cell
     
-    def init_hidden(self, batch_size: int = 1) -> tuple[Tensor, Tensor]:
+    def init_hidden(self) -> tuple[Tensor, Tensor]:
         """
         Initialises a hidden and a cell hidden states to be inputted to the first cell.
 
@@ -495,8 +494,8 @@ class LSTMCell(Layer):
         cell : Tensor
             A tensor of shape (batch_size, n_hidden) where the first element is 1 and the rest of the elements are 0.
         """
-        hidden = Tensor(np.zeros((batch_size, self.n_hidden)), autograd=True)
-        cell = Tensor(np.zeros((batch_size, self.n_hidden)), autograd=True)
-        hidden.data[:,0] += 1
-        cell.data[:,0] += 1
+        hidden = Tensor(np.zeros((1, self.n_outputs)), autograd=True)
+        cell = Tensor(np.zeros((1, self.n_outputs)), autograd=True)
+        hidden.data[0] += 1
+        cell.data[0] += 1
         return hidden, cell
