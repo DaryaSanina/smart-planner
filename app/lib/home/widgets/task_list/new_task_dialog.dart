@@ -457,18 +457,20 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                     _isLoading = true;  // Show a circular progress indicator
                   });
 
-                  // Add the task to the database
-                  int taskID = await addTask(task.name, task.description, task.importance, widget.userID,
-                                            task.isDeadline, task.deadlineDate, task.deadlineTime,
-                                            task.startDate, task.startTime, task.endDate, task.endTime);
-                  
-                  // Update the user's Google Calendar if it is linked
+                  // Add the task to the user's Google Calendar, if possible
+                  String? googleCalendarEventID;
                   if (CalendarClient.calendar != null) {
-                    CalendarClient().add(task.name, task.description,
+                    googleCalendarEventID = await CalendarClient().add(task.name, task.description,
                       task.isDeadline ? task.deadlineDate : task.startDate,
                       task.isDeadline ? task.deadlineTime : task.startTime,
                       task.endDate, task.endTime);
                   }
+                  print("Added to Google");
+
+                  // Add the task to the database
+                  int taskID = await addTask(task.name, task.description, task.importance, widget.userID,
+                                            task.isDeadline, task.deadlineDate, task.deadlineTime,
+                                            task.startDate, task.startTime, task.endDate, task.endTime, googleCalendarEventID);
 
                   // Add task to tag relationships to the database
                   for (final int tagID in task.tags) {

@@ -19,9 +19,9 @@ class TaskListModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> update(int userID) async {  // This procedure fetches the user's tasks from the database
+  Future<bool> update(int userID) async {  // This procedure fetches the user's tasks from the database and their Google Calendar
 
-    // Send the request
+    // Send a request to the database
     http.Response response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_task?user_id=$userID'));
     List responseList = jsonDecode(response.body)['data'];
     
@@ -31,44 +31,117 @@ class TaskListModel extends ChangeNotifier {
       int taskID = responseList[i][0];
       String name = responseList[i][1];
       String timings;
+      DateTime? deadline;
+      DateTime? start;
+      DateTime? end;
       int importance = responseList[i][6];
       List tagIDs = await getTaskTags(taskID);
       List<String> tags = [];
       for (int tagID in tagIDs) {
         tags.add(await getTagName(tagID));
       }
-      if (responseList[i][3] != null) {  // If there is a deadline
-        timings = "Due ${responseDateToDateString(responseList[i][3])}";
-        DateTime deadline = DateTime.parse(responseList[i][3]);
-        _tasks.add(Task(taskID: taskID, name: name, timings: timings, userID: userID, importance: importance, deadline: deadline, tags: tags));
+
+      // If the user has a Google Calendar and the task has a GoogleCalendarEventID, check whether the task is still there, and update the details in the database if needed
+      String? googleCalendarEventID = responseList[i][8];
+      if (CalendarClient.calendar != null && googleCalendarEventID != null && googleCalendarEventID != "") {
+        Event event = await CalendarClient().getEvent(googleCalendarEventID);
+
+        // Remove the task (event) from the database if it does not exist
+        if (event.summary == null || event.status == "cancelled") {
+          await http.delete(
+            Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/delete_task?task_id=$taskID'),
+            headers: {'Content-Type': 'application/json'}
+          );
+          continue;
+        }
+
+        // Retrieve task name and timings
+        name = event.summary!;
+        if (name.length > 32) {
+          name = name.substring(0, 32);
+        }
+        if (event.end == null) {  // If there is a deadline
+          if (event.start!.dateTime != null) {  // If the deadline has a time associated with it
+            deadline = event.start!.dateTime!;
+          }
+          else {  // If the deadline is a date
+            deadline = event.start!.date!;
+          }
+          timings = "Due ${responseDateToDateString(deadline.toIso8601String())}";
+        }
+
+        else {  // If there is a start and an end
+          if (event.start!.dateTime != null) {  // If the start has a time associated with it
+            start = event.start!.dateTime!;
+          }
+          else {  // If the start is a date
+            start = event.start!.date!;
+          }
+          if (event.end!.dateTime != null) {  // If the end has a time associated with it
+            end = event.end!.dateTime!;
+          }
+          else {  // If the end is a date
+            end = event.end!.date!;
+          }
+          timings = "${responseDateToDateString(start.toIso8601String())} - ${responseDateToDateString(end.toIso8601String())}";
+        }
+
+        // Update task name and timings in the database
+        await updateTask(
+          taskID,
+          name,
+          responseList[i][2],  // task description
+          responseList[i][6],  // task importance
+          
+          deadline != null,  // Whether there is a deadline
+          deadline?.subtract(Duration(hours: deadline.hour, minutes: deadline.minute)),  // The date of the deadline (if there is a deadline)
+          deadline != null ? TimeOfDay(hour: deadline.hour, minute: deadline.minute) : null,  // The time of the deadline (if there is a deadline)
+
+          start?.subtract(Duration(hours: start.hour, minutes: start.minute)),  // The date of the start (if there is a start and an end)
+          start != null ? TimeOfDay(hour: start.hour, minute: start.minute) : null,  // The time of the start (if there is a start and an end)
+
+          end?.subtract(Duration(hours: end.hour, minutes: end.minute)),  // The date of the end (if there is a start and an end)
+          end != null ? TimeOfDay(hour: end.hour, minute: end.minute) : null,  // The time of the end (if there is a start and an end)
+        );
       }
-      else {  // If there is a start and an end
-        timings = "${responseDateToDateString(responseList[i][4])} - ${responseDateToDateString(responseList[i][5])}";
-        DateTime start = DateTime.parse(responseList[i][4]);
-        DateTime end = DateTime.parse(responseList[i][5]);
-        _tasks.add(Task(taskID: taskID, name: name, timings: timings, userID: userID, importance: importance, start: start, end: end, tags: tags));
+      else {
+        // If the task is not from Google Calendar or the user has not linked their Google account, load task name and timings from the database
+        name = responseList[i][1];
+        if (responseList[i][3] != null) {  // If there is a deadline
+          timings = "Due ${responseDateToDateString(responseList[i][3])}";
+          deadline = DateTime.parse(responseList[i][3]);
+        }
+        else {  // If there is a start and an end
+          timings = "${responseDateToDateString(responseList[i][4])} - ${responseDateToDateString(responseList[i][5])}";
+          start = DateTime.parse(responseList[i][4]);
+          end = DateTime.parse(responseList[i][5]);
+        }
       }
+
+      _tasks.add(Task(taskID: taskID, name: name, timings: timings, userID: userID, importance: importance, deadline: deadline, start: start, end: end, tags: tags, googleCalendarEventID: googleCalendarEventID));
     }
 
     // Remove any duplicate tasks and get a list of task names
-    List<Task> _new_tasks = [];
-    List<String> _task_names = [];
+    List<Task> newTasks = [];
+    List<String> taskNames = [];
     for (Task task in _tasks) {
-      if (!_task_names.contains(task.name)) {
-        _new_tasks.add(task);
-        _task_names.add(task.name);
+      if (!taskNames.contains(task.name)) {
+        newTasks.add(task);
+        taskNames.add(task.name);
       }
     }
-    _tasks = _new_tasks;
+    _tasks = newTasks;
 
-    // Add tasks from the user's Google Calendar
+    // Add new tasks from the user's Google Calendar to the task list and to the database
     if (CalendarClient.calendar != null) {
-      Events events = await CalendarClient().get();
+      Events events = await CalendarClient().getEvents();
       for (Event event in events.items!) {
         // Check whether the Google Calendar event is not null and whether it has not already happened
         if (event.summary != null && event.start != null
         && (event.start!.dateTime != null && event.start!.dateTime!.isAfter(DateTime.now())
-            || event.start!.date != null && event.start!.date!.isAfter(DateTime.now()))) {
+            || event.start!.date != null && event.start!.date!.isAfter(DateTime.now())
+            || event.end!.dateTime != null && event.end!.dateTime!.isAfter(DateTime.now())
+            || event.end!.date != null && event.end!.date!.isAfter(DateTime.now()))) {
             
           // Retrieve the task's data
           String name = event.summary!;
@@ -82,6 +155,7 @@ class TaskListModel extends ChangeNotifier {
           DateTime? deadline;
           DateTime? start;
           DateTime? end;
+          String googleCalendarEventID = event.id!;
 
           // Retrieve the task's timings
           if (event.end == null) {  // If there is a deadline
@@ -111,11 +185,10 @@ class TaskListModel extends ChangeNotifier {
           }
 
           // Check whether the task is already in the user's task list. If it is, skip it
-          if (_task_names.contains(name)) {
+          if (taskNames.contains(name)) {
             continue;
           }
-          _task_names.add(name);
-          print(name);
+          taskNames.add(name);
 
           // Add the task to the database
           int taskID = await addTask(
@@ -132,11 +205,13 @@ class TaskListModel extends ChangeNotifier {
             start != null ? TimeOfDay(hour: start.hour, minute: start.minute) : null,  // The time of the start (if there is a start and an end)
 
             end?.subtract(Duration(hours: end.hour, minutes: end.minute)),  // The date of the end (if there is a start and an end)
-            end != null ? TimeOfDay(hour: end.hour, minute: end.minute) : null  // The time of the end (if there is a start and an end)
+            end != null ? TimeOfDay(hour: end.hour, minute: end.minute) : null,  // The time of the end (if there is a start and an end)
+
+            googleCalendarEventID,
           );
 
           // Add the task to the list
-          _tasks.add(Task(taskID: taskID, name: name, timings: timings, userID: userID, importance: importance, deadline: deadline, start: start, end: end, tags: tags));
+          _tasks.add(Task(taskID: taskID, name: name, timings: timings, userID: userID, importance: importance, deadline: deadline, start: start, end: end, tags: tags, googleCalendarEventID: googleCalendarEventID));
         }
       }
     }

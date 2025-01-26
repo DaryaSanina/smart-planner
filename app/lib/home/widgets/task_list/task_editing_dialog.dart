@@ -1,3 +1,4 @@
+import 'package:app/calendar_api.dart';
 import 'package:app/home/widgets/task_list/util.dart';
 import 'package:app/home/widgets/task_list/deadline_vs_start_and_end_picker.dart';
 import 'package:app/home/widgets/task_list/reminder_list.dart';
@@ -482,7 +483,7 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                     }
                   }
                   
-                  for (ReminderType reminderType in task.reminders){
+                  for (ReminderType reminderType in task.reminders) {
                     int reminderID = await addReminder(widget.taskWidget.taskID, reminderType.index + 1);
 
                     // Schedule a reminder notification
@@ -530,6 +531,11 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                     }
 
                     NotificationAPI.scheduleNotification(id: reminderID, title: title, body: task.description, scheduledDate: scheduledDate);
+                  }
+
+                  // Update the task in the user's Google Calendar, if possible
+                  if (CalendarClient.calendar != null && task.googleCalendarEventID != "") {
+                    CalendarClient().update(task.googleCalendarEventID, task.name, task.description, task.startDate, task.startTime, task.endDate, task.endTime);
                   }
 
                   if (context.mounted) {

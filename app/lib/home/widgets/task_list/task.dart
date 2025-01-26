@@ -1,3 +1,4 @@
+import 'package:app/calendar_api.dart';
 import 'package:app/home/widgets/task_list/task_editing_dialog.dart';
 import 'package:app/models/importance_visibility_model.dart';
 import 'package:app/models/tag_list_model.dart';
@@ -18,6 +19,7 @@ class Task extends StatefulWidget {
   final DateTime? start;
   final DateTime? end;
   final List<String> tags;
+  final String? googleCalendarEventID;
   const Task({
     super.key,
     required this.name,
@@ -29,6 +31,7 @@ class Task extends StatefulWidget {
     this.start,
     this.end,
     required this.tags,
+    this.googleCalendarEventID,
   });
 
   @override
@@ -154,6 +157,11 @@ class _TaskState extends State<Task> {
                     });
                     await Future.delayed(const Duration(milliseconds: 1000));  // Wait for 1 second while showing the checkbox animation
                     taskListModel.remove(widget);  // Remove the task
+
+                    // Remove the task from the user's Google Calendar if their Google account is linked
+                    if (CalendarClient.calendar != null && widget.googleCalendarEventID != null) {
+                      CalendarClient().removeEvent(widget.googleCalendarEventID!);
+                    }
 
                     // Uncheck the checkbox (this prevents the checkbox of the next task from being checked after this one is removed)
                     setState(() {

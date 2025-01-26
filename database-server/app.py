@@ -44,6 +44,7 @@ class Task(BaseModel):
     end: Optional[datetime.datetime] = None  # In a POST request, it should be a string of the following format: "YYYY-MM-DD[T]HH:MM:SS"
     importance: int
     user_id: int
+    google_calendar_event_id: Optional[str] = None
 
 
 class ExistingTask(BaseModel):
@@ -286,11 +287,11 @@ def add_task(task: Task):
     # Insert the data
     if task.deadline:
         deadline = task.deadline.strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute("INSERT INTO Tasks VALUES (NULL, %s, %s, %s, NULL, NULL, %s, %s)", (task.name, task.description, deadline, task.importance, task.user_id))
+        cursor.execute("INSERT INTO Tasks VALUES (NULL, %s, %s, %s, NULL, NULL, %s, %s, %s)", (task.name, task.description, deadline, task.importance, task.user_id, task.google_calendar_event_id))
     elif task.start and task.end:
         start = task.start.strftime("%Y-%m-%d %H:%M:%S")
         end = task.end.strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute("INSERT INTO Tasks VALUES (NULL, %s, %s, NULL, %s, %s, %s, %s)", (task.name, task.description, start, end, task.importance, task.user_id))
+        cursor.execute("INSERT INTO Tasks VALUES (NULL, %s, %s, NULL, %s, %s, %s, %s, %s)", (task.name, task.description, start, end, task.importance, task.user_id, task.google_calendar_event_id))
     db.commit()  # Uncomment before deployment
     return JSONResponse({"id": cursor.lastrowid}, status_code=201)
 
@@ -584,6 +585,7 @@ if __name__ == "__main__":
                         End DATETIME,
                         Importance INT NOT NULL,
                         UserID INT NOT NULL,
+                        GoogleCalendarEventID VARCHAR(256),
                         PRIMARY KEY (TaskID),
                         FOREIGN KEY (UserID) REFERENCES Users(UserID)
                    )""")

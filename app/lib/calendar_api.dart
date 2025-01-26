@@ -7,15 +7,23 @@ class CalendarClient {
 
   static CalendarApi? calendar;
 
-  Future<Events> get() async {
-    // This function returns all events from the user's primary calendar
+  Future<Events> getEvents() async {
+    // This function returns all events from the user's calendar
     String calendarID = "primary";
     Events events = (await calendar?.events.list(calendarID))!;
     return events;
   }
 
-  Future<void> add(String name, String description, DateTime startDate, TimeOfDay? startTime, DateTime? endDate, TimeOfDay? endTime) async {
-    // This procedure adds an event to the user's primary calendar
+  Future<Event> getEvent(String eventID) async {
+    // This function returns the details of the event with the specified ID, or null, if the event does not exist
+    String calendarID = "primary";
+    Event event = (await calendar?.events.get(calendarID, eventID))!;
+    return event;
+  }
+
+  Future<String> add(String name, String description, DateTime startDate, TimeOfDay? startTime, DateTime? endDate, TimeOfDay? endTime) async {
+    // This procedure adds an event to the user's primary calendar and returns its ID
+
     String calendarID = "primary";
     Event event = Event();
 
@@ -43,7 +51,53 @@ class CalendarClient {
       }
       event.end = eventEnd;
     }
+    else {
+      event.endTimeUnspecified = true;
+    }
 
-    await calendar?.events.insert(event, calendarID);
+    event = (await calendar?.events.insert(event, calendarID))!;
+    return event.id!;
+  }
+
+  Future<void> update(String eventID, String? name, String? description, DateTime? startDate, TimeOfDay? startTime, DateTime? endDate, TimeOfDay? endTime) async {
+    // This procedure updates an event in the user's Google Calendar with the given parameters
+
+    String calendarID = "primary";
+    Event event = Event();
+
+    event.summary = name;
+    event.description = description;
+
+    EventDateTime eventStart = EventDateTime();
+    eventStart.timeZone = DateTime.now().timeZoneName;
+    if (startDate != null) {
+      if (startTime != null) {
+        eventStart.dateTime = DateTime(startDate.year, startDate.month, startDate.day, startTime.hour, startTime.minute);
+      }
+      else {
+        eventStart.date = DateTime(startDate.year, startDate.month, startDate.day);
+      }
+      event.start = eventStart;
+    }
+
+    if (endDate != null) {
+      EventDateTime eventEnd = EventDateTime();
+      eventEnd.timeZone = DateTime.now().timeZoneName;
+      if (endTime != null) {
+        eventEnd.dateTime = DateTime(endDate.year, endDate.month, endDate.day, endTime.hour, endTime.minute);
+      }
+      else {
+        eventEnd.date = DateTime(endDate.year, endDate.month, endDate.day);
+      }
+      event.end = eventEnd;
+    }
+
+    await calendar?.events.update(event, calendarID, eventID);
+  }
+
+  Future<void> removeEvent(String eventID) async {
+    // This procedure removes an event from the user's Google Calendar
+    String calendarID = "primary";
+    await calendar?.events.delete(calendarID, eventID);
   }
 }

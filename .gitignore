@@ -2,6 +2,7 @@ prototype/.env
 prototype/test.py
 prototype/__pycache__
 prototype/.ipynb_checkpoints
+app/build/*
 database-server/.env
 database-server/logfile.log
 database-server/test.py
@@ -16,6 +17,7 @@ importance-prediction-model/importance_output.pkl
 importance-prediction-model/word2index.pkl
 llm-inference-server/.env
 llm-inference-server/test.py
+google-token-id-verification/.env
 
 # Miscellaneous
 *.class

@@ -25,6 +25,8 @@ class TaskModel extends ChangeNotifier {
   get endDate => _endDate;
   TimeOfDay? _endTime;
   get endTime => _endTime;
+  String _googleCalendarEventID = "";
+  get googleCalendarEventID => _googleCalendarEventID;
   List<int> _tags = [];
   UnmodifiableListView get tags => UnmodifiableListView(_tags);
   List<ReminderType> _reminders = [];
@@ -41,6 +43,7 @@ class TaskModel extends ChangeNotifier {
     _startTime = null;
     _endDate = null;
     _endTime = null;
+    _googleCalendarEventID = "";
     _tags.clear();
     _reminders.clear();
   }
@@ -83,6 +86,7 @@ class TaskModel extends ChangeNotifier {
     }
     _tags = await getTaskTags(taskID);
     _reminders = await getTaskReminders(taskID);
+    _googleCalendarEventID = details[8].toString();
     notifyListeners();
   }
 

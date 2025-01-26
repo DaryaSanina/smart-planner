@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 Future<int> addTask(String name, String description, int importance, int userID,
                     bool isDeadline, DateTime? deadlineDate, TimeOfDay? deadlineTime,
-                    DateTime? startDate, TimeOfDay? startTime, DateTime? endDate, TimeOfDay? endTime) async {
+                    DateTime? startDate, TimeOfDay? startTime, DateTime? endDate, TimeOfDay? endTime, [String? googleCalendarEventID]) async {
   // This function adds a task with the provided information to the database and returns its ID
   
   // Form a task creation request
@@ -22,6 +22,10 @@ Future<int> addTask(String name, String description, int importance, int userID,
   else {
     requestDict['start'] = dateTimeToString(startDate!, startTime); // Add start date and time
     requestDict['end'] = dateTimeToString(endDate!, endTime); // Add start date and time
+  }
+
+  if (googleCalendarEventID != null) {
+    requestDict['google_calendar_event_id'] = googleCalendarEventID;
   }
 
   // Send the request
