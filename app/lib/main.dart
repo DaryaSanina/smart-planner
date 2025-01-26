@@ -9,12 +9,14 @@ import 'package:app/models/user_model.dart';
 
 import 'package:flutter/material.dart';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
 
   tz.initializeTimeZones();
 
@@ -57,6 +59,7 @@ class _MyAppState extends State<MyApp> {
     final messageList = context.watch<MessageListModel>();
     if (firstBuild && widget.userID != null && widget.username != null) {
       firstBuild = false;
+      user.setID(widget.userID!);
       user.setUsername(widget.username!);
       messageList.setUserID(widget.userID!);
     }

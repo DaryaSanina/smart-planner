@@ -148,7 +148,8 @@ class _RegistrationFormState extends State<RegistrationForm> {
                   await register(usernameController.text, emailController.text, passwordController.text);  // Register the user
                   userID = await login(usernameController.text, passwordController.text);  // Log the user in
 
-                   // Update the user model
+                  // Update the user model
+                  user.setID(userID);
                   user.setUsername(usernameController.text);
 
                   // Update the message list model

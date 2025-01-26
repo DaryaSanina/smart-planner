@@ -71,82 +71,87 @@ class _LoginFormState extends State<LoginForm> {
             SizedBox(height: MediaQuery.of(context).size.height * 0.03),
         
             // Log in button
-            ElevatedButton(
-              onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  setState(() {
-                    _isLoading = true;  // Show a circular progress indicator
-                  });
-
-                  // Check whether the details are correct by trying to log the user in
-                  userID = await login(usernameController.text, passwordController.text);
-
-                  // If the details are correct
-                  if (userID != -1) {
-
-                    // Update the user model
-                    user.setUsername(usernameController.text);
-
-                    // Update the message list model
-                    messageList.setUserID(userID);
-
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.7,
+              height: MediaQuery.of(context).size.height * 0.075,
+              child: ElevatedButton(
+                onPressed: () async {
+                  if (_formKey.currentState!.validate()) {
                     setState(() {
-                      _isLoading = false;  // Hide the circular progress indicator
+                      _isLoading = true;  // Show a circular progress indicator
                     });
-
-                    // Show the home page
-                    if (context.mounted) {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) {
-                        return HomePage(username: usernameController.text, userID: userID);
-                      }));
+              
+                    // Check whether the details are correct by trying to log the user in
+                    userID = await login(usernameController.text, passwordController.text);
+              
+                    // If the details are correct
+                    if (userID != -1) {
+              
+                      // Update the user model
+                      user.setID(userID);
+                      user.setUsername(usernameController.text);
+              
+                      // Update the message list model
+                      messageList.setUserID(userID);
+              
+                      setState(() {
+                        _isLoading = false;  // Hide the circular progress indicator
+                      });
+              
+                      // Show the home page
+                      if (context.mounted) {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) {
+                          return HomePage(username: usernameController.text, userID: userID);
+                        }));
+                      }
+                    }
+              
+                    // If the details are incorrect
+                    else if (context.mounted) {
+                      setState(() {
+                        _isLoading = false;  // Hide the circular progress indicator
+                      });
+              
+                      // Show the user a message saying that the details are incorrect
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Such user does not exist or the password is incorrect')),
+                      );
                     }
                   }
-
-                  // If the details are incorrect
-                  else if (context.mounted) {
-                    setState(() {
-                      _isLoading = false;  // Hide the circular progress indicator
-                    });
-
-                    // Show the user a message saying that the details are incorrect
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Such user does not exist or the password is incorrect')),
-                    );
-                  }
-                }
-                return;
-              },
-
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.secondary,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-              ),
-
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-
-                child: _isLoading
-                // If _isLoading is true, show a circular progress indicator next to the "Log in" text
-                ? Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Log in",
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Theme.of(context).colorScheme.tertiary,
+                  return;
+                },
+              
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.secondary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                ),
+              
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+              
+                  child: _isLoading
+                  // If _isLoading is true, show a circular progress indicator next to the "Log in" text
+                  ? Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Log in",
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Theme.of(context).colorScheme.tertiary,
+                        ),
                       ),
+                      SizedBox(width: MediaQuery.of(context).size.width * 0.03),
+                      CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary),
+                    ],
+                  )
+                  // Otherwise, just show the "Log in" text
+                  : Text(
+                    "Log in",
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Theme.of(context).colorScheme.tertiary,
                     ),
-                    SizedBox(width: MediaQuery.of(context).size.width * 0.03),
-                    CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary),
-                  ],
-                )
-                // Otherwise, just show the "Log in" text
-                : Text(
-                  "Log in",
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Theme.of(context).colorScheme.tertiary,
                   ),
                 ),
               ),

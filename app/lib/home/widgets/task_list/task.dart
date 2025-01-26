@@ -88,6 +88,7 @@ class _TaskState extends State<Task> {
                             fontSize: 18,
                             fontWeight: FontWeight.w200,
                           ),
+                          softWrap: true,
                         ),
                       ],
                     ),

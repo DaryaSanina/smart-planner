@@ -1,8 +1,9 @@
 fastapi
 uvicorn
 mangum
-mysql-connector-python
 python-dotenv
-pydantic
+google-auth
 requests
-boto3
+aiohttp
+pyjwt
+pyopenssl
