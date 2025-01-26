@@ -1,3 +1,4 @@
+import 'package:app/calendar_api.dart';
 import 'package:app/home/widgets/task_list/util.dart';
 import 'package:app/home/widgets/task_list/deadline_vs_start_and_end_picker.dart';
 import 'package:app/home/widgets/task_list/reminder_list.dart';
@@ -460,6 +461,14 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                   int taskID = await addTask(task.name, task.description, task.importance, widget.userID,
                                             task.isDeadline, task.deadlineDate, task.deadlineTime,
                                             task.startDate, task.startTime, task.endDate, task.endTime);
+                  
+                  // Update the user's Google Calendar if it is linked
+                  if (CalendarClient.calendar != null) {
+                    CalendarClient().add(task.name, task.description,
+                      task.isDeadline ? task.deadlineDate : task.startDate,
+                      task.isDeadline ? task.deadlineTime : task.startTime,
+                      task.endDate, task.endTime);
+                  }
 
                   // Add task to tag relationships to the database
                   for (final int tagID in task.tags) {

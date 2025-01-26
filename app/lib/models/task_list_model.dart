@@ -63,10 +63,8 @@ class TaskListModel extends ChangeNotifier {
 
     // Add tasks from the user's Google Calendar
     if (CalendarClient.calendar != null) {
-      print("update");
       Events events = await CalendarClient().get();
       for (Event event in events.items!) {
-
         // Check whether the Google Calendar event is not null and whether it has not already happened
         if (event.summary != null && event.start != null
         && (event.start!.dateTime != null && event.start!.dateTime!.isAfter(DateTime.now())
@@ -137,6 +135,7 @@ class TaskListModel extends ChangeNotifier {
             end != null ? TimeOfDay(hour: end.hour, minute: end.minute) : null  // The time of the end (if there is a start and an end)
           );
 
+          // Add the task to the list
           _tasks.add(Task(taskID: taskID, name: name, timings: timings, userID: userID, importance: importance, deadline: deadline, start: start, end: end, tags: tags));
         }
       }
