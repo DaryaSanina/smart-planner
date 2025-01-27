@@ -32,7 +32,6 @@ cursor = db.cursor()
 
 class User(BaseModel):
     username: str
-    email: str
     password_hash: Optional[str] = None
 
 
@@ -121,7 +120,7 @@ def default():
 
 
 @app.get('/get_user')
-def get_user(user_id=0, username="", email="", google_id_token=""):
+def get_user(user_id=0, username="", google_id_token=""):
     # Sign in with Google
     if google_id_token != "":
         try:
@@ -137,22 +136,14 @@ def get_user(user_id=0, username="", email="", google_id_token=""):
 
     # Sign in with username and password
     print("Signing in")
-    if user_id == 0 and username == "" and email == "":
-        return JSONResponse({"reason": "Neither username not email were provided."}, status_code=400)
     if user_id == 0 and username == "":
-        cursor.execute("SELECT * FROM Users WHERE EmailAddress = %s", (email,))
-    elif user_id == 0 and email == "":
-        cursor.execute("SELECT * FROM Users WHERE Username = %s", (username,))
-    elif username == "" and email == "":
-        cursor.execute("SELECT * FROM Users WHERE UserID = %s", (user_id,))
+        return JSONResponse({"reason": "Neither the username nor the user ID were provided."}, status_code=400)
     elif user_id == 0:
-        cursor.execute("SELECT * FROM Users WHERE Username = %s AND EmailAddress = %s", (username, email))
+        cursor.execute("SELECT * FROM Users WHERE Username = %s", (username,))
     elif username == "":
-        cursor.execute("SELECT * FROM Users WHERE UserID = %s AND EmailAddress = %s", (user_id, email))
-    elif email == "":
-        cursor.execute("SELECT * FROM Users WHERE UserID = %s AND Username = %s", (user_id, username))
+        cursor.execute("SELECT * FROM Users WHERE UserID = %s", (user_id,))
     else:
-        cursor.execute("SELECT * FROM Users WHERE UserID = %s Username = %s AND EmailAddress = %s", (user_id, username, email))
+        cursor.execute("SELECT * FROM Users WHERE UserID = %s Username = %s", (user_id, username))
     result = cursor.fetchall()
     return JSONResponse({"data": result})
 
@@ -166,20 +157,12 @@ def add_user(user: User):
     if len(cursor.fetchall()) > 0:
         return JSONResponse({"reason": "A user with this username already exists"}, status_code=400)
 
-    # Check whether the email is valid
-    EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-    if not re.search(EMAIL_REGEX, user.email):
-        return JSONResponse({"reason": "The email is not in the format example@address.com"}, status_code=400)
-    cursor.execute("SELECT * FROM Users WHERE EmailAddress = %s", (user.email,))
-    if len(cursor.fetchall()) > 0:
-        return JSONResponse({"reason": "A user with this email address already exists"}, status_code=400)
-
     # Check whether the password hash is valid
     if len(user.password_hash) != 64:
         return JSONResponse({"reason": "The password hash is not 64 characters long"}, status_code=400)
 
     # Insert the data
-    cursor.execute("INSERT INTO Users VALUES (NULL, %s, %s, %s, NULL)", (user.username, user.email, user.password_hash))
+    cursor.execute("INSERT INTO Users VALUES (NULL, %s, %s, NULL)", (user.username, user.password_hash))
     db.commit()  # Uncomment before deployment
     return JSONResponse({"id": cursor.lastrowid}, status_code=201)
 

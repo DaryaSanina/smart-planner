@@ -21,10 +21,8 @@ class RegistrationForm extends StatefulWidget {
 class _RegistrationFormState extends State<RegistrationForm> {
   final _formKey = GlobalKey<FormState>();
   bool _usernameExists = false;
-  bool _emailExists = false;
   bool _isLoading = false;
   TextEditingController usernameController = TextEditingController();
-  TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController repeatPasswordController = TextEditingController();
   final Future<void> clearedCache = clearCache();
@@ -65,35 +63,6 @@ class _RegistrationFormState extends State<RegistrationForm> {
                 // Check whether the username has already been taken
                 final response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_user?username=$text'));
                 setState(() => _usernameExists = jsonDecode(response.body)['data'].length != 0);
-              },
-            ),
-
-            SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-
-             // Email field
-            TextFormField(
-              controller: emailController,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
-                labelText: "Email",
-              ),
-              cursorColor: Theme.of(context).colorScheme.tertiary,
-              validator: (value) {
-                if (value == null || value.isEmpty) {  // Check whether the field is empty
-                  return "Please enter your email";
-                }
-                if (!RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}").hasMatch(value)) {  // Check whether the email matches the format address@example.com
-                  return "The email is not in a correct format";
-                }
-                if (_emailExists) {  // Check whether the email is already being used by another account
-                  return "This email is already being used by another account";
-                }
-                return null;
-              },
-              onChanged: (text) async {
-                // Check whether the email is already being used by another account
-                final response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_user?email=$text'));
-                setState(() => _emailExists = jsonDecode(response.body)['data'].length != 0);
               },
             ),
 
@@ -145,8 +114,10 @@ class _RegistrationFormState extends State<RegistrationForm> {
                   setState(() {
                     _isLoading = true;  // Show a circular progress indicator
                   });
-                  await register(usernameController.text, emailController.text, passwordController.text);  // Register the user
-                  userID = await login(usernameController.text, passwordController.text);  // Log the user in
+
+                  await register(usernameController.text, passwordController.text);
+
+                  userID = await login(usernameController.text, passwordController.text);
 
                   // Update the user model
                   user.setID(userID);
