@@ -55,6 +55,7 @@ class ExistingTask(BaseModel):
     start: Optional[datetime.datetime] = None  # In a POST request, it should be a string of the following format: "YYYY-MM-DD[T]HH:MM:SS"
     end: Optional[datetime.datetime] = None  # In a POST request, it should be a string of the following format: "YYYY-MM-DD[T]HH:MM:SS"
     importance: Optional[int] = None
+    google_calendar_event_id: Optional[str] = None
 
 
 class Tag(BaseModel):
@@ -308,28 +309,31 @@ def update_task(task: ExistingTask):
     if task.name is not None:
         if not (3 <= len(task.name) <= 50):
             return JSONResponse({"reason": "The task name is not between 3 and 50 characters long"}, status_code=400)
-        updates.append("Name = '{task.name}'")
+        updates.append(f"Name = '{task.name}'")
 
     if task.description is not None:
-        updates.append("Description = '{task.description}'")
+        updates.append(f"Description = '{task.description}'")
 
     if task.importance is not None:
         if not (0 <= task.importance <= 10):
             return JSONResponse({"reason": "The importance is not between 0 and 10"}, status_code=400)
-        updates.append("Importance = {task.importance}")
+        updates.append(f"Importance = {task.importance}")
 
     if task.deadline:
         if task.start or task.end:
             return JSONResponse({"reason": "The task should either have a deadline or a start and an end date and time"}, status_code=400)
-        updates.append("Deadline = '{task.deadline}'")
+        updates.append(f"Deadline = '{task.deadline}, Start = NULL, End = NULL'")
 
     if task.start or task.end:
         if task.deadline or not task.start or not task.end:
             return JSONResponse({"reason": "The task should either have a deadline or a start and an end date and time"}, status_code=400)
-        updates.append("Start = '{task.start}', End = '{task.end}'")
+        updates.append(f"Deadline = NULL, Start = '{task.start}', End = '{task.end}'")
+    
+    if task.google_calendar_event_id is not None:
+        updates.append(f"GoogleCalendarEventID = '{task.google_calendar_event_id}'")
 
     if len(updates) > 0:
-        statement = "UPDATE Tasks SET " + ", ".join(updates) + " WHERE TaskID = {task.task_id}"
+        statement = f"UPDATE Tasks SET " + ", ".join(updates) + f" WHERE TaskID = {task.task_id}"
         cursor.execute(statement)
         db.commit()  # Uncomment before deployment
     return JSONResponse({}, status_code=201)

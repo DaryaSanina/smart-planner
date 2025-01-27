@@ -24,6 +24,7 @@ class TaskListModel extends ChangeNotifier {
     // Send a request to the database
     http.Response response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_task?user_id=$userID'));
     List responseList = jsonDecode(response.body)['data'];
+    print(responseList);
     
     // Update the task list with tasks from the database
     _tasks.clear();
@@ -150,7 +151,7 @@ class TaskListModel extends ChangeNotifier {
           }
           String description = event.description != null ? event.description! : "";
           int importance = 5;
-          List<String> tags = ["from Google Calendar"];
+          List<String> tags = [];
           String timings = "";
           DateTime? deadline;
           DateTime? start;

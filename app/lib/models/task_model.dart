@@ -159,4 +159,9 @@ class TaskModel extends ChangeNotifier {
     _reminders.remove(reminder);
     notifyListeners();
   }
+
+  void setGoogleCalendarEventID(String googleCalendarEventID) {
+    _googleCalendarEventID = googleCalendarEventID;
+    notifyListeners();
+  }
 }

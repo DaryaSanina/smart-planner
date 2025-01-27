@@ -463,9 +463,23 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                     _isLoading = true;  // Show a circular progress indicator
                   });
 
+                  // Update the task in the user's Google Calendar, if possible
+                  if (CalendarClient.calendar != null && task.googleCalendarEventID != "") {
+                    if (!task.isDeadline) {  // If this is an event (there is a start and an end)
+                      await CalendarClient().update(task.googleCalendarEventID, task.name, task.description, task.startDate, task.startTime, task.endDate, task.endTime);
+                    }
+                    else {  // If this is now a task (there is a deadline)
+                      await CalendarClient().delete(task.googleCalendarEventID);
+                    }
+                  }
+                  else if (CalendarClient.calendar != null && !task.isDeadline) {  // If this was a task but now is an event
+                    task.setGoogleCalendarEventID(await CalendarClient().add(task.name, task.description, task.startDate, task.startTime, task.endDate, task.endTime));
+                  }
+
+                  // Update the task in the database
                   await updateTask(widget.taskWidget.taskID, task.name, task.description, task.importance,
                             task.isDeadline, task.deadlineDate, task.deadlineTime,
-                            task.startDate, task.startTime, task.endDate, task.endTime);
+                            task.startDate, task.startTime, task.endDate, task.endTime, task.googleCalendarEventID);
 
                   // Update the tags of the task
                   for (int tagID in await getTaskTags(widget.taskWidget.taskID)) {
@@ -531,11 +545,6 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                     }
 
                     NotificationAPI.scheduleNotification(id: reminderID, title: title, body: task.description, scheduledDate: scheduledDate);
-                  }
-
-                  // Update the task in the user's Google Calendar, if possible
-                  if (CalendarClient.calendar != null && task.googleCalendarEventID != "") {
-                    CalendarClient().update(task.googleCalendarEventID, task.name, task.description, task.startDate, task.startTime, task.endDate, task.endTime);
                   }
 
                   if (context.mounted) {

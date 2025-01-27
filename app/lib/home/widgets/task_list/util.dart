@@ -43,7 +43,7 @@ Future<int> addTask(String name, String description, int importance, int userID,
 
 Future<void> updateTask(int taskID, String name, String description, int importance,
                         bool isDeadline, DateTime? deadlineDate, TimeOfDay? deadlineTime,
-                        DateTime? startDate, TimeOfDay? startTime, DateTime? endDate, TimeOfDay? endTime) async {
+                        DateTime? startDate, TimeOfDay? startTime, DateTime? endDate, TimeOfDay? endTime, [String? googleCalendarEventID]) async {
   // This procedure updates the task with the provided ID with the provided information
 
   // Form a task update request
@@ -54,6 +54,7 @@ Future<void> updateTask(int taskID, String name, String description, int importa
     "name": name,
     "description": description,
     "importance": importance,
+    "google_calendar_event_id": googleCalendarEventID
   };
 
   if (isDeadline) {
@@ -63,6 +64,7 @@ Future<void> updateTask(int taskID, String name, String description, int importa
     requestDict["start"] = dateTimeToString(startDate!, startTime);  // Add start date and time
     requestDict["end"] = dateTimeToString(endDate!, endTime);  // Add end date and time
   }
+  print(requestDict);
 
   String request = jsonEncode(requestDict);
 

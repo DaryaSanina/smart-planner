@@ -3,7 +3,7 @@ import 'package:googleapis/calendar/v3.dart';
 
 class CalendarClient {
   // For storing the CalendarApi object, this can be used
-  // for performing all the operations
+  // for performing Google Calendar operations
 
   static CalendarApi? calendar;
 
@@ -21,7 +21,7 @@ class CalendarClient {
     return event;
   }
 
-  Future<String> add(String name, String description, DateTime startDate, TimeOfDay? startTime, DateTime? endDate, TimeOfDay? endTime) async {
+  Future<String> add(String name, String description, DateTime startDate, TimeOfDay? startTime, DateTime endDate, TimeOfDay? endTime) async {
     // This procedure adds an event to the user's primary calendar and returns its ID
 
     String calendarID = "primary";
@@ -40,20 +40,15 @@ class CalendarClient {
     }
     event.start = eventStart;
 
-    if (endDate != null) {
-      EventDateTime eventEnd = EventDateTime();
-      eventEnd.timeZone = DateTime.now().timeZoneName;
-      if (endTime != null) {
-        eventEnd.dateTime = DateTime(endDate.year, endDate.month, endDate.day, endTime.hour, endTime.minute);
-      }
-      else {
-        eventEnd.date = DateTime(endDate.year, endDate.month, endDate.day);
-      }
-      event.end = eventEnd;
+    EventDateTime eventEnd = EventDateTime();
+    eventEnd.timeZone = DateTime.now().timeZoneName;
+    if (endTime != null) {
+      eventEnd.dateTime = DateTime(endDate.year, endDate.month, endDate.day, endTime.hour, endTime.minute);
     }
     else {
-      event.endTimeUnspecified = true;
+      eventEnd.date = DateTime(endDate.year, endDate.month, endDate.day);
     }
+    event.end = eventEnd;
 
     event = (await calendar?.events.insert(event, calendarID))!;
     return event.id!;
@@ -67,6 +62,7 @@ class CalendarClient {
 
     event.summary = name;
     event.description = description;
+    event.status = "confirmed";
 
     EventDateTime eventStart = EventDateTime();
     eventStart.timeZone = DateTime.now().timeZoneName;
@@ -92,10 +88,14 @@ class CalendarClient {
       event.end = eventEnd;
     }
 
-    await calendar?.events.update(event, calendarID, eventID);
+    try {
+      await calendar?.events.update(event, calendarID, eventID);
+    } on Exception {
+      await calendar?.events.insert(event, calendarID);
+    }
   }
 
-  Future<void> removeEvent(String eventID) async {
+  Future<void> delete(String eventID) async {
     // This procedure removes an event from the user's Google Calendar
     String calendarID = "primary";
     await calendar?.events.delete(calendarID, eventID);

@@ -459,14 +459,12 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
 
                   // Add the task to the user's Google Calendar, if possible
                   String? googleCalendarEventID;
-                  if (CalendarClient.calendar != null) {
+                  if (CalendarClient.calendar != null && !task.isDeadline) {
                     googleCalendarEventID = await CalendarClient().add(task.name, task.description,
                       task.isDeadline ? task.deadlineDate : task.startDate,
                       task.isDeadline ? task.deadlineTime : task.startTime,
                       task.endDate, task.endTime);
                   }
-                  print("Added to Google");
-
                   // Add the task to the database
                   int taskID = await addTask(task.name, task.description, task.importance, widget.userID,
                                             task.isDeadline, task.deadlineDate, task.deadlineTime,

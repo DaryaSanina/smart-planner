@@ -160,7 +160,7 @@ class _TaskState extends State<Task> {
 
                     // Remove the task from the user's Google Calendar if their Google account is linked
                     if (CalendarClient.calendar != null && widget.googleCalendarEventID != null) {
-                      CalendarClient().removeEvent(widget.googleCalendarEventID!);
+                      CalendarClient().delete(widget.googleCalendarEventID!);
                     }
 
                     // Uncheck the checkbox (this prevents the checkbox of the next task from being checked after this one is removed)
