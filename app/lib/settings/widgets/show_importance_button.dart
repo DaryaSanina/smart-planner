@@ -22,11 +22,6 @@ class ShowImportanceButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(
-              Icons.visibility_off,
-              color: Theme.of(context).colorScheme.tertiary,
-              size: 50,
-            ),
             Text(
               "Show task importance",
               style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 18)

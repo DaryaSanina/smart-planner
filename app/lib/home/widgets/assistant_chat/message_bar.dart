@@ -18,7 +18,7 @@ class _MessageBarState extends State<MessageBar> {
 
     ButtonStyle buttonStyle = ButtonStyle(
       shape: MaterialStateProperty.all(const CircleBorder()),
-      padding: MaterialStateProperty.all(const EdgeInsets.all(25)),
+      padding: MaterialStateProperty.all(const EdgeInsets.all(20)),
       backgroundColor: MaterialStateProperty.all(Theme.of(context).colorScheme.primary),
       iconColor: MaterialStateProperty.all(Theme.of(context).colorScheme.secondary),
     );
