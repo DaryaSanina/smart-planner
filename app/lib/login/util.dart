@@ -15,7 +15,7 @@ Future<int> login(String username, String password) async {
   var jsonResponse = jsonDecode(response.body);
 
   // Correct login information, there is a user with this username and the password hashes match, return this user's ID
-  if (jsonResponse['data'].length != 0 && passwordHash == jsonResponse['data'][0][3]) {
+  if (jsonResponse['data'].length != 0 && passwordHash == jsonResponse['data'][0][2]) {
 
     // Get user ID
     int userID = jsonResponse['data'][0][0];
