@@ -45,7 +45,8 @@
         <!-- Receiver for Scheduling Notifications after Reboot -->
         <receiver
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
-            android:enabled="true"> <!-- Add android:exported explicitly -->
+            android:enabled="true"
+            android:exported="true"> <!-- Add android:exported explicitly -->
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>

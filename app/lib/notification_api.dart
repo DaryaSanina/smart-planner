@@ -45,7 +45,7 @@ class NotificationAPI {
       tz.TZDateTime.from(scheduledDate, tz.local),
       await _notificationDetails(),
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-      androidAllowWhileIdle: true,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       payload: payload
     );
 
