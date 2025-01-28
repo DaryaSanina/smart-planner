@@ -52,9 +52,6 @@ class _HomePageState extends State<HomePage> {
             // AI chatbot view
             const Chat(),
 
-            // Calendar view
-            const SizedBox(),
-
           ][_selectedPageIndex],
           
           // Bottom navigation bar
@@ -72,11 +69,6 @@ class _HomePageState extends State<HomePage> {
                 selectedIcon: Icon(Icons.chat_outlined, color: Theme.of(context).colorScheme.tertiary),
                 icon: const Icon(Icons.chat_outlined),
                 label: "AI",
-              ),
-              NavigationDestination(
-                selectedIcon: Icon(Icons.calendar_month_outlined, color: Theme.of(context).colorScheme.tertiary),
-                icon: const Icon(Icons.calendar_month_outlined),
-                label: "Calendar",
               ),
             ],
             indicatorColor: Theme.of(context).colorScheme.secondary,
