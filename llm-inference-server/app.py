@@ -135,10 +135,10 @@ class ActionType(str, Enum):
 app = FastAPI()
 handler = Mangum(app)
 
-# Initialise the LLM (Llama 3.1-405B)
+# Initialise the LLM (Llama 3.3-70B)
 load_dotenv()
 DEFAULT_NUM_OUTPUTS = 4096
-assistant = LlamaAPI(api_key=os.getenv("LLAMA_API_KEY"), model="llama3.1-405b", max_tokens=4096)
+assistant = LlamaAPI(api_key=os.getenv("LLAMA_API_KEY"), model="llama3.1-8b", max_tokens=4096)
 
 
 def load_message_history(user_id: int, message_limit: int | None = None) -> list[ChatMessage]:
@@ -207,7 +207,7 @@ def get_data(messages: list[ChatMessage], user_id: int, max_attempts: int) -> Ch
     """
     try:
         # Generate an SQL query
-        sql_generator = LlamaAPI(api_key=os.getenv("LLAMA_API_KEY"), model="llama3.1-405b", max_tokens=4096)
+        sql_generator = LlamaAPI(api_key=os.getenv("LLAMA_API_KEY"), model="llama3.3-70b", max_tokens=4096)
         sql_generator_system_prompt = sql_generator_system_prompt.replace("USER_ID", str(user_id))
         sql_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_DATE", datetime.date.today().strftime(format='%d %B %Y'))
         sql_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_TIME_HOUR", str(datetime.datetime.now().hour))
@@ -229,7 +229,7 @@ def get_data(messages: list[ChatMessage], user_id: int, max_attempts: int) -> Ch
 
         # If the database server has recognised the query as incorrect
         print(database_response.status_code)
-        if database_response.status_code == 400:
+        if database_response.status_code == 400 and sql_query_object["sql_query"] != "":
             raise Exception(json.dumps(database_response.json()))
         
         # Retrieve the data and return it as a JSON string
@@ -268,7 +268,7 @@ def parse_action(action_text: str) -> tuple[ActionType, dict]:
 def get_action(messages: list[ChatMessage], max_attempts: int) -> tuple[ActionType, dict]:
     global action_generator_system_prompt
 
-    action_generator = LlamaAPI(api_key=os.getenv("LLAMA_API_KEY"), model="llama3.1-405b", max_tokens=4096)
+    action_generator = LlamaAPI(api_key=os.getenv("LLAMA_API_KEY"), model="llama3.3-70b", max_tokens=4096)
     action_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_DATE", datetime.date.today().strftime(format='%d %B %Y'))
     action_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_TIME_HOUR", str(datetime.datetime.now().hour))
     action_generator_system_prompt = sql_generator_system_prompt.replace("CURRENT_TIME_MINUTE", str(datetime.datetime.now().minute))
@@ -278,7 +278,6 @@ def get_action(messages: list[ChatMessage], max_attempts: int) -> tuple[ActionTy
         action_text = str(action_generator.chat(messages=messages_, max_tokens=4096).message.content)
         return parse_action(action_text)
     except Exception as e:
-        print(e, action_text)
         if max_attempts == 0:
             return (ActionType.ERROR, {})
         return get_action(messages=messages, max_attempts=max_attempts - 1)
@@ -346,7 +345,7 @@ def get_response(user_id: int):
     print("Loaded message history:", len(messages))
 
     # Load any data the assistant finds necessary to fulfill the last query of the user
-    data = get_data(messages, user_id, max_attempts=5)
+    data = get_data(messages, user_id, max_attempts=1)
     if data.content != 'Error: {"reason": "The query is empty"}':
         messages.append(data)
     print("Loaded data:", messages[-1].content)
@@ -361,7 +360,7 @@ def get_response(user_id: int):
     print("Generated a response:", response)
 
     # Call the LLM to decide what task planner action needs to be performed (if any)
-    action = get_action(messages=messages, max_attempts=3)
+    action = get_action(messages=messages, max_attempts=1)
     perform_action(action, user_id)
     print("Performed an action:", action)
 
