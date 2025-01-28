@@ -1,33 +1,11 @@
-import 'dart:convert';
-
 import 'package:app/home/widgets/assistant_chat/util.dart';
-import 'package:app/main.dart';
 import 'package:app/models/message_list_model.dart';
 
-import 'package:http/http.dart' as http;
-import 'package:just_audio/just_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
-class CustomAudioSource extends StreamAudioSource {
-  final List<int> bytes;
-  CustomAudioSource(this.bytes);
-
-  @override
-  Future<StreamAudioResponse> request([int? start, int? end]) async {
-    start ??= 0;
-    end ??= bytes.length;
-    return StreamAudioResponse(
-      sourceLength: bytes.length,
-      contentLength: end - start,
-      offset: start,
-      stream: Stream.value(bytes.sublist(start, end)),
-      contentType: 'audio/mpeg',
-    );
-  }
-}
 
 class MessageBar extends StatefulWidget {
   const MessageBar({super.key});
@@ -37,7 +15,6 @@ class MessageBar extends StatefulWidget {
 class _MessageBarState extends State<MessageBar> {
   TextEditingController messageController = TextEditingController();
   final SpeechToText _speechToText = SpeechToText();
-  final player = AudioPlayer();
 
   void _startListening() async {
     if (!_speechToText.isAvailable) {
@@ -58,34 +35,6 @@ class _MessageBarState extends State<MessageBar> {
     setState(() {
       messageController.text = result.recognizedWords;
     });
-  }
-
-  Future<void> playTextToSpeech(String text) async {
-
-    String voiceJessica = 'cgSgspJ2msm6clMCkdW9';
-
-    String url = 'https://api.elevenlabs.io/v1/text-to-speech/$voiceJessica';
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {
-        'accept': 'audio/mpeg',
-        'xi-api-key': ELEVEN_LABS_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: json.encode({
-        "text": text,
-        "model_id": "eleven_monolingual_v1",
-        "voice_settings": {"stability": .15, "similarity_boost": .75}
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      final bytes = response.bodyBytes; //get the bytes ElevenLabs sent back
-      await player.setAudioSource(CustomAudioSource(bytes)); //send the bytes to be read from the JustAudio library
-      player.play(); //play the audio
-    } else {
-        throw Exception('Failed to load audio');
-    }
   }
 
   @override
@@ -153,8 +102,6 @@ class _MessageBarState extends State<MessageBar> {
             });
 
             await messageList.updateMessages();
-
-            playTextToSpeech(messageList.messages.last.content);
 
             setState(() {
               messageController.text = "";

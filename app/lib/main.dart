@@ -10,20 +10,15 @@ import 'package:app/models/user_model.dart';
 import 'package:flutter/material.dart';
 
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
-
-String ELEVEN_LABS_API_KEY = dotenv.env['ELEVEN_LABS_API_KEY'] as String;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
   tz.initializeTimeZones();
-
-  await dotenv.load(fileName: ".env");
 
   // Load the user data from cache
   final prefs = await SharedPreferences.getInstance();
