@@ -1,38 +1,48 @@
 import 'package:app/models/tag_list_model.dart';
 
 import 'package:flutter/material.dart';
-
 import 'package:provider/provider.dart';
 
-class FilterDialog extends StatefulWidget {
+// A dialog where the user can choose tags so that only tasks with the chosen
+// tags will be displayed
+class FilteringDialog extends StatefulWidget {
   final int userID;
-  const FilterDialog({super.key, required this.userID});
+  const FilteringDialog({super.key, required this.userID});
 
-  @override State<StatefulWidget> createState() => _FilterDialogState();
+  @override State<StatefulWidget> createState() => _FilteringDialogState();
 }
 
-class _FilterDialogState extends State<FilterDialog> {
+class _FilteringDialogState extends State<FilteringDialog> {
 
   @override
   Widget build(BuildContext context) {
-    // Load the tag list model
-    final tagList = context.watch<TagListModel>();
+    final tagList = context.watch<TagListModel>();  // Load the list of tags
 
     return AlertDialog(
       title: const Text("Filter"),
 
       content: Column(
-        // Show all the available tags as checkboxes
+        // Show the list of available tags as checkboxes
         children: List.generate(
           tagList.tags.length,
           (i) => CheckboxListTile(
             title: Text(tagList.tags[i].name),
+
+            // Checkbox style
             activeColor: Theme.of(context).colorScheme.secondary,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(25)
+            ),
+
+            // If the checkbox is checked, the tag is selected
             value: tagList.filtered[tagList.tags[i].tagID],
+
+            // Update the list of chosen tags if the checkbox has been checked
+            // or unchecked
             onChanged: (bool? value) {
+              // Update the filter
               setState(() {
-                tagList.updateFilteredValue(tagList.tags[i].tagID, value!);  // Update the filter
+                tagList.updateFilteredValue(tagList.tags[i].tagID, value!);
               });
             },
           )
@@ -40,6 +50,7 @@ class _FilterDialogState extends State<FilterDialog> {
       ),
 
       actions: <Widget>[
+        // Filter reset button (to show all tasks)
         TextButton(
           onPressed: () {
             tagList.resetFilter();  // Empty the filter
@@ -48,6 +59,7 @@ class _FilterDialogState extends State<FilterDialog> {
           child: const Text("Reset"),
         ),
 
+        // Apply button
         TextButton(
           onPressed: () {
             Navigator.pop(context);  // Hide the dialog

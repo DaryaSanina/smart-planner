@@ -1,131 +1,208 @@
 import 'dart:collection';
-import 'dart:convert';
 
 import 'package:app/calendar_api.dart';
-import 'package:app/home/widgets/task_list/util.dart';
-import 'package:app/home/widgets/task_list/task.dart';
-import 'package:app/models/util.dart';
+import 'package:app/models/tag_list_model.dart';
+import 'package:app/server_interactions.dart';
+import 'package:app/home/widgets/task_list/task_widget.dart';
 
 import 'package:googleapis/calendar/v3.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class TaskListModel extends ChangeNotifier {
-  List<Task> _tasks = [];
-  UnmodifiableListView<Task> get tasks => UnmodifiableListView(_tasks);
+// This function transforms a DateTime string in the HTTP format into the format
+// that can be displayed to the user ([day] [month name] [year]
+// or [day] [month name] [year], [hour]:[minute])
+// [responseDateTime] should be a string in the HTTP format (YYYY-MM-DD[T]HH:MM:SS)
+String responseDateToDateString(String responseDateTime) {
+  String year = responseDateTime.substring(0, 4);  // year
 
-  void notifyListenersFromOutside() {
-    notifyListeners();
+  // month
+  const List months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+  ];
+  String month = months[int.parse(responseDateTime.substring(5, 7)) - 1];
+
+  String day = responseDateTime.substring(8, 10);  // day
+
+  String hour = responseDateTime.substring(11, 13);  // hour
+  String minute = responseDateTime.substring(14, 16);  // minute
+
+  // If time has not been specified
+  if (hour == "00" && minute == "00") {
+    return "$day $month $year";
   }
 
-  Future<bool> update(int userID) async {  // This procedure fetches the user's tasks from the database and their Google Calendar
+  return "$day $month $year, $hour:$minute";
+}
 
-    // Send a request to the database
-    http.Response response = await http.get(Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/get_task?user_id=$userID'));
-    List responseList = jsonDecode(response.body)['data'];
-    print(responseList);
+// This model represents the list of tasks the user has
+class TaskListModel extends ChangeNotifier {
+  List<TaskWidget> _tasks = [];
+  UnmodifiableListView<TaskWidget> get tasks => UnmodifiableListView(_tasks);
+
+  // This method fetches the user's tasks from the database
+  // and their Google Calendar
+  Future<void> update(int userID) async {
+    List databaseResponse = await getTasks(userID);
     
     // Update the task list with tasks from the database
     _tasks.clear();
-    for (int i = 0; i < responseList.length; ++i) {
-      int taskID = responseList[i][0];
-      String name = responseList[i][1];
+    for (int i = 0; i < databaseResponse.length; ++i) {
+      int taskID = databaseResponse[i][0];
+      String name = databaseResponse[i][1];
       String timings;
       DateTime? deadline;
       DateTime? start;
       DateTime? end;
-      int importance = responseList[i][6];
-      List tagIDs = await getTaskTags(taskID);
-      List<String> tags = [];
-      for (int tagID in tagIDs) {
-        tags.add(await getTagName(tagID));
-      }
+      int importance = databaseResponse[i][6];
+      List<Tag> tagIDsAndNames = await getTaskTags(taskID);
+      List<String> tags = List.generate(
+        tagIDsAndNames.length,
+        (i) => tagIDsAndNames[i].name
+      );
 
-      // If the user has a Google Calendar and the task has a GoogleCalendarEventID, check whether the task is still there, and update the details in the database if needed
-      String? googleCalendarEventID = responseList[i][8];
-      if (CalendarClient.calendar != null && googleCalendarEventID != null && googleCalendarEventID != "") {
+      // If the user has a Google Calendar and the task has
+      // a GoogleCalendarEventID, check whether the task is still in
+      // the user's Google Calendar, and update the details in the database
+      // if needed
+      String? googleCalendarEventID = databaseResponse[i][8];
+      if (CalendarClient.calendar != null
+          && googleCalendarEventID != null
+          && googleCalendarEventID != "null") {
         Event event = await CalendarClient().getEvent(googleCalendarEventID);
 
         // Remove the task (event) from the database if it does not exist
         if (event.summary == null || event.status == "cancelled") {
-          await http.delete(
-            Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/delete_task?task_id=$taskID'),
-            headers: {'Content-Type': 'application/json'}
-          );
+          await deleteTask(taskID);
           continue;
         }
 
-        // Retrieve task name and timings
+        // Retrieve the task's name and deadline or start and end
         name = event.summary!;
         if (name.length > 32) {
           name = name.substring(0, 32);
         }
-        if (event.end == null) {  // If there is a deadline
-          if (event.start!.dateTime != null) {  // If the deadline has a time associated with it
+
+        // If the task has a deadline
+        if (event.end == null) {
+          // If the deadline has a specific time associated with it
+          if (event.start!.dateTime != null) {
             deadline = event.start!.dateTime!;
           }
-          else {  // If the deadline is a date
+          // If the deadline only has a date
+          else {
             deadline = event.start!.date!;
           }
-          timings = "Due ${responseDateToDateString(deadline.toIso8601String())}";
+          timings = "Due ${responseDateToDateString(
+            deadline.toIso8601String()
+          )}";
         }
 
-        else {  // If there is a start and an end
-          if (event.start!.dateTime != null) {  // If the start has a time associated with it
+        // If there is a start and an end
+        else {
+          // If the start has a specific time associated with it
+          if (event.start!.dateTime != null) {
             start = event.start!.dateTime!;
           }
-          else {  // If the start is a date
+          // If the start only has a date
+          else {
             start = event.start!.date!;
           }
-          if (event.end!.dateTime != null) {  // If the end has a time associated with it
+
+          // If the end has a specific time associated with it
+          if (event.end!.dateTime != null) {
             end = event.end!.dateTime!;
           }
-          else {  // If the end is a date
+          // If the end only has a date
+          else {
             end = event.end!.date!;
           }
-          timings = "${responseDateToDateString(start.toIso8601String())} - ${responseDateToDateString(end.toIso8601String())}";
+          timings = "${responseDateToDateString(start.toIso8601String())} "
+                    "- ${responseDateToDateString(end.toIso8601String())}";
         }
 
         // Update task name and timings in the database
         await updateTask(
           taskID,
           name,
-          responseList[i][2],  // task description
-          responseList[i][6],  // task importance
-          
-          deadline != null,  // Whether there is a deadline
-          deadline?.subtract(Duration(hours: deadline.hour, minutes: deadline.minute)),  // The date of the deadline (if there is a deadline)
-          deadline != null ? TimeOfDay(hour: deadline.hour, minute: deadline.minute) : null,  // The time of the deadline (if there is a deadline)
+          databaseResponse[i][2],  // task description
+          databaseResponse[i][6],  // task importance
 
-          start?.subtract(Duration(hours: start.hour, minutes: start.minute)),  // The date of the start (if there is a start and an end)
-          start != null ? TimeOfDay(hour: start.hour, minute: start.minute) : null,  // The time of the start (if there is a start and an end)
+          deadline != null,  // Whether the task has a deadline
 
-          end?.subtract(Duration(hours: end.hour, minutes: end.minute)),  // The date of the end (if there is a start and an end)
-          end != null ? TimeOfDay(hour: end.hour, minute: end.minute) : null,  // The time of the end (if there is a start and an end)
+          // The date of the deadline (if the task has a deadline)
+          deadline?.subtract(
+            Duration(hours: deadline.hour, minutes: deadline.minute)
+          ),
+          // The time of the deadline (if the task has a deadline)
+          deadline != null ? TimeOfDay(
+            hour: deadline.hour,
+            minute: deadline.minute
+          ) : null,
+
+          // The date of the start (if the task has a start and an end)
+          start?.subtract(Duration(hours: start.hour, minutes: start.minute)),
+          // The time of the start (if the task has a start and an end)
+          start != null ? TimeOfDay(
+            hour: start.hour,
+            minute: start.minute
+          ) : null,
+
+          // The date of the end (if there is a start and an end)
+          end?.subtract(Duration(hours: end.hour, minutes: end.minute)),
+          // The time of the end (if there is a start and an end)
+          end != null ? TimeOfDay(hour: end.hour, minute: end.minute) : null,
         );
       }
       else {
-        // If the task is not from Google Calendar or the user has not linked their Google account, load task name and timings from the database
-        name = responseList[i][1];
-        if (responseList[i][3] != null) {  // If there is a deadline
-          timings = "Due ${responseDateToDateString(responseList[i][3])}";
-          deadline = DateTime.parse(responseList[i][3]);
+        // If the task is not from Google Calendar or the user has not
+        // connected their Google account, load task name and timings
+        // (deadline or start and end) from the database
+        name = databaseResponse[i][1];
+        if (databaseResponse[i][3] != null) {  // If the task has a deadline
+          timings = "Due ${responseDateToDateString(databaseResponse[i][3])}";
+          deadline = DateTime.parse(databaseResponse[i][3]);
         }
-        else {  // If there is a start and an end
-          timings = "${responseDateToDateString(responseList[i][4])} - ${responseDateToDateString(responseList[i][5])}";
-          start = DateTime.parse(responseList[i][4]);
-          end = DateTime.parse(responseList[i][5]);
+        else {  // If the task has a start and an end
+          timings = "${responseDateToDateString(databaseResponse[i][4])} "
+                    "- ${responseDateToDateString(databaseResponse[i][5])}";
+          start = DateTime.parse(databaseResponse[i][4]);
+          end = DateTime.parse(databaseResponse[i][5]);
         }
       }
 
-      _tasks.add(Task(taskID: taskID, name: name, timings: timings, userID: userID, importance: importance, deadline: deadline, start: start, end: end, tags: tags, googleCalendarEventID: googleCalendarEventID));
+      // Add the task to the list
+      _tasks.add(
+        TaskWidget(
+          taskID: taskID,
+          name: name,
+          timings: timings,
+          userID: userID,
+          importance: importance,
+          deadline: deadline,
+          start: start,
+          end: end,
+          tags: tags,
+          googleCalendarEventID: googleCalendarEventID
+        )
+      );
     }
 
     // Remove any duplicate tasks and get a list of task names
-    List<Task> newTasks = [];
+    List<TaskWidget> newTasks = [];
     List<String> taskNames = [];
-    for (Task task in _tasks) {
+    for (TaskWidget task in _tasks) {
       if (!taskNames.contains(task.name)) {
         newTasks.add(task);
         taskNames.add(task.name);
@@ -133,24 +210,27 @@ class TaskListModel extends ChangeNotifier {
     }
     _tasks = newTasks;
 
-    // Add new tasks from the user's Google Calendar to the task list and to the database
+    // Add new tasks from the user's Google Calendar to the task list
+    // and to the database
     if (CalendarClient.calendar != null) {
       Events events = await CalendarClient().getEvents();
       for (Event event in events.items!) {
-        // Check whether the Google Calendar event is not null and whether it has not already happened
+        // Check whether the Google Calendar event is not null
+        // and whether it has not already happened
         if (event.summary != null && event.start != null
-        && (event.start!.dateTime != null && event.start!.dateTime!.isAfter(DateTime.now())
-            || event.start!.date != null && event.start!.date!.isAfter(DateTime.now())
-            || event.end!.dateTime != null && event.end!.dateTime!.isAfter(DateTime.now())
-            || event.end!.date != null && event.end!.date!.isAfter(DateTime.now()))) {
+            && (event.end!.dateTime != null
+                    && event.end!.dateTime!.isAfter(DateTime.now())
+                || event.end!.date != null
+                    && event.end!.date!.isAfter(DateTime.now()))) {
             
           // Retrieve the task's data
           String name = event.summary!;
           if (name.length > 32) {
             name = name.substring(0, 32);
           }
-          String description = event.description != null ? event.description! : "";
-          int importance = 5;
+          String description = event.description != null
+                                ? event.description! : "";
+          int importance = 5;  // Default importance value
           List<String> tags = [];
           String timings = "";
           DateTime? deadline;
@@ -158,37 +238,52 @@ class TaskListModel extends ChangeNotifier {
           DateTime? end;
           String googleCalendarEventID = event.id!;
 
-          // Retrieve the task's timings
-          if (event.end == null) {  // If there is a deadline
-            if (event.start!.dateTime != null) {  // If the deadline has a time associated with it
+          // Retrieve the task's timings (deadline or start and end)
+
+          // If the task has a deadline
+          if (event.end == null) {
+            // If the deadline has a specific time associated with it
+            if (event.start!.dateTime != null) {
               deadline = event.start!.dateTime!;
             }
-            else {  // If the deadline is a date
+            // If the deadline only has a date
+            else {
               deadline = event.start!.date!;
             }
-            timings = "Due ${responseDateToDateString(deadline.toIso8601String())}";
+            timings = "Due ${responseDateToDateString(
+              deadline.toIso8601String()
+            )}";
           }
 
-          else {  // If there is a start and an end
-            if (event.start!.dateTime != null) {  // If the start has a time associated with it
+          // If there is a start and an end
+          else {
+            // If the start has a specific time associated with it
+            if (event.start!.dateTime != null) {
               start = event.start!.dateTime!;
             }
-            else {  // If the start is a date
+            // If the start only has a date
+            else {
               start = event.start!.date!;
             }
-            if (event.end!.dateTime != null) {  // If the end has a time associated with it
+
+            // If the end has a specific time associated with it
+            if (event.end!.dateTime != null) {
               end = event.end!.dateTime!;
             }
-            else {  // If the end is a date
+            // If the end only has a date
+            else {
               end = event.end!.date!;
             }
-            timings = "${responseDateToDateString(start.toIso8601String())} - ${responseDateToDateString(end.toIso8601String())}";
+            timings = "${responseDateToDateString(start.toIso8601String())} "
+                      "- ${responseDateToDateString(end.toIso8601String())}";
           }
 
-          // Check whether the task is already in the user's task list. If it is, skip it
+          // Check whether the task is already in the user's task list.
+          // If it is, skip it
           if (taskNames.contains(name)) {
             continue;
           }
+          // Add the name of the task to the list
           taskNames.add(name);
 
           // Add the task to the database
@@ -198,26 +293,55 @@ class TaskListModel extends ChangeNotifier {
             importance,
             userID,
 
-            deadline != null,  // Whether there is a deadline
-            deadline?.subtract(Duration(hours: deadline.hour, minutes: deadline.minute)),  // The date of the deadline (if there is a deadline)
-            deadline != null ? TimeOfDay(hour: deadline.hour, minute: deadline.minute) : null,  // The time of the deadline (if there is a deadline)
+            deadline != null,  // Whether the task has a deadline
 
-            start?.subtract(Duration(hours: start.hour, minutes: start.minute)),  // The date of the start (if there is a start and an end)
-            start != null ? TimeOfDay(hour: start.hour, minute: start.minute) : null,  // The time of the start (if there is a start and an end)
+            // The date of the deadline (if the task has a deadline)
+            deadline?.subtract(
+              Duration(hours: deadline.hour, minutes: deadline.minute)
+            ),
+            // The time of the deadline (if the task has a deadline)
+            deadline != null ? TimeOfDay(
+              hour: deadline.hour,
+              minute: deadline.minute
+            ) : null,
 
-            end?.subtract(Duration(hours: end.hour, minutes: end.minute)),  // The date of the end (if there is a start and an end)
-            end != null ? TimeOfDay(hour: end.hour, minute: end.minute) : null,  // The time of the end (if there is a start and an end)
+            // The date of the start (if the task has a start and an end)
+            start?.subtract(Duration(hours: start.hour, minutes: start.minute)),
+            // The time of the start (if the task has a start and an end)
+            start != null ? TimeOfDay(
+              hour: start.hour,
+              minute: start.minute
+            ) : null,
+
+            // The date of the end (if the task has a start and an end)
+            end?.subtract(Duration(hours: end.hour, minutes: end.minute)),
+            // The time of the end (if the task has a start and an end)
+            end != null ? TimeOfDay(hour: end.hour, minute: end.minute) : null,
 
             googleCalendarEventID,
           );
 
           // Add the task to the list
-          _tasks.add(Task(taskID: taskID, name: name, timings: timings, userID: userID, importance: importance, deadline: deadline, start: start, end: end, tags: tags, googleCalendarEventID: googleCalendarEventID));
+          _tasks.add(
+            TaskWidget(
+              taskID: taskID,
+              name: name,
+              timings: timings,
+              userID: userID,
+              importance: importance,
+              deadline: deadline,
+              start: start,
+              end: end,
+              tags: tags,
+              googleCalendarEventID: googleCalendarEventID
+            )
+          );
         }
       }
     }
 
-    // Sort the task list using cached data (if it exists)
+    // Sort the task list using cached information about the order they should
+    // appear in (if it exists)
     final prefs = await SharedPreferences.getInstance();
     String? order = prefs.getString('order');
     if (order == "deadline") {
@@ -229,120 +353,183 @@ class TaskListModel extends ChangeNotifier {
     else if (order == "ai") {
       await sortWithAI();
     }
-
-    return true;
   }
 
-  void remove(Task task) async {  // This procedure removes the specified task from the database and from the task list
-    await http.delete(
-      Uri.parse('https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/delete_task?task_id=${task.taskID}'),
-      headers: {'Content-Type': 'application/json'}
-    );
+  // This procedure removes the specified task from the database
+  // and from the task list
+  void remove(TaskWidget task) async {
+    deleteTask(task.taskID);
     _tasks.remove(task);
     notifyListeners();
   }
 
+  // This method sorts the tasks in the decreasing order of their importance
+  // levels
+  // Tasks with the same importance levels are sorted in the increasing order
+  // of their deadlines or end datetimes
+  // Tasks with the same importance levels and end datetimes are sorted
+  // in the increasing order of their start datetimes
   void sortByImportance() {
-    // This procedure sorts the tasks in the decreasing order of their importance
-    // Tasks with the same importance are sorted in the increasing order of their deadline or end date
-    // Tasks with the same importance and end date are sorted in the increasing order of their start date
+    _tasks.sort((TaskWidget task1, TaskWidget task2) {
+      // Compare two tasks and return a negative value if the first task
+      // should be before the second one, or a positive value if the first task
+      // should be after the second one
 
-    _tasks.sort((Task task1, Task task2) {
-      if (-(task1.importance.compareTo(task2.importance)) == 0) {  // If the importance is the same
-        int value = 0;
-        if (task1.deadline != null && task2.deadline != null) {  // If both tasks have deadlines
-          value = task1.deadline!.compareTo(task2.deadline!);  // Compare the deadlines
+      // If the importance of the two tasks is the same
+      if (-(task1.importance.compareTo(task2.importance)) == 0) {
+
+        // If both tasks have deadlines
+        if (task1.deadline != null && task2.deadline != null) {
+          // Compare the deadlines
+          return task1.deadline!.compareTo(task2.deadline!);
         }
-        else if (task1.deadline != null) {  // If the first task has a deadline and the second task has a start date and an end date
-          value = task1.deadline!.compareTo(task2.end!);  // Compare the first task's deadline with the second task's end date
+
+        // If the first task has a deadline and the second task has a start
+        // datetime and an end datetime
+        else if (task1.deadline != null) {
+          // Compare the first task's deadline with the second task's end
+          // datetime
+          return task1.deadline!.compareTo(task2.end!);
         }
-        else if (task2.deadline != null) {  // If the first task has a start date and an end date and the second task has a deadline
-          value = task1.end!.compareTo(task2.deadline!);  // Compare the first task's end date with the second task's deadline
+
+        // If the first task has a start datetime and an end datetime
+        // and the second task has a deadline
+        else if (task2.deadline != null) {
+          // Compare the first task's end datetime with the second task's
+          // deadline
+          return task1.end!.compareTo(task2.deadline!);
         }
-        // If both tasks have a start date and an end date
-        else if (task1.end!.isAtSameMomentAs(task2.end!)) {  // If the end dates of both tasks are at the same time
-          value = task1.start!.compareTo(task2.start!);  // Compare the tasks' start dates
+
+        // If both tasks have a start datetime and an end datetime
+
+        // If the end datetimes of both tasks are at the same time
+        else if (task1.end!.isAtSameMomentAs(task2.end!)) {
+          // Compare the tasks' start datetimes
+          return task1.start!.compareTo(task2.start!);
         }
         else {
-          value = task1.end!.compareTo(task2.end!);  // Compare the tasks' end dates
+          // Compare the tasks' end datetimes
+          return task1.end!.compareTo(task2.end!);
         }
-        return value;
       }
-      else {  // If the importance is not the same
-        return -(task1.importance.compareTo(task2.importance));  // Compare the tasks' importances
+
+      // If the importance levels of the two tasks are different
+      else {
+        // Compare the tasks' importance levels (in reverse order)
+        return -(task1.importance.compareTo(task2.importance));
       }
     });
+
+    notifyListeners();
   }
 
+  // This method sorts the tasks in the increasing order of their deadlines
+  // or end datetimes
+  // Tasks with the same end datetimes are sorted in the increasing order
+  // of their start datetimes
+  // Tasks with the same deadlines or start and end datetimes are sorted
+  // in the decreasing order of their importance levels
   void sortByDeadline() {
-    // This procedure sorts the tasks in the increasing order of their deadline or end date
-    // Tasks with the same end dates are sorted in the increasing order of their start date
-    // Tasks with the same deadlines or start and end dates are sorted in the decreasing order of their importance
+    _tasks.sort((TaskWidget task1, TaskWidget task2) {
+      // Compare two tasks and return a negative value if the first task
+      // should be before the second one, or a positive value if the first task
+      // should be after the second one
 
-    _tasks.sort((Task task1, Task task2) {
       int value = 0;
-      if (task1.deadline != null && task2.deadline != null) {  // If both tasks have deadlines
-        value = task1.deadline!.compareTo(task2.deadline!);  // Compare the deadlines
+
+      // If both tasks have deadlines
+      if (task1.deadline != null && task2.deadline != null) {
+        // Compare the deadlines
+        value = task1.deadline!.compareTo(task2.deadline!);
       }
-      else if (task1.deadline != null) {  // If the first task has a deadline and the second task has a start date and an end date
-        value = task1.deadline!.compareTo(task2.end!);  // Compare the first task's deadline with the second task's end date
+
+      // If the first task has a deadline and the second task has a start
+      // datetime and an end datetime
+      else if (task1.deadline != null) {
+        // Compare the first task's deadline with the second task's end datetime
+        value = task1.deadline!.compareTo(task2.end!);
       }
-      else if (task2.deadline != null) {  // If the first task has a start date and an end date and the second task has a deadline
-        value = task1.end!.compareTo(task2.deadline!);  // Compare the first task's end date with the second task's deadline
+
+      // If the first task has a start datetime and an end datetime
+      // and the second task has a deadline
+      else if (task2.deadline != null) {
+        // Compare the first task's end datetime with the second task's deadline
+        value = task1.end!.compareTo(task2.deadline!);
       }
-      // If both tasks have a start date and an end date
-      else if (task1.end!.isAtSameMomentAs(task2.end!)) {  // If the end dates of both tasks are at the same time
-        value = task1.start!.compareTo(task2.start!);  // Compare the tasks' start dates
+
+      // If both tasks have a start datetime and an end datetime
+
+      // If the end datetimes of both tasks are at the same time
+      else if (task1.end!.isAtSameMomentAs(task2.end!)) {
+        // Compare the tasks' start datetimes
+        value = task1.start!.compareTo(task2.start!);
       }
       else {
-        value = task1.end!.compareTo(task2.end!);  // Compare the tasks' end dates
+        // Compare the tasks' end datetimes
+        value = task1.end!.compareTo(task2.end!);
       }
 
-      if (value == 0) {  // If there is a tie
-        return -(task1.importance.compareTo(task2.importance));  // Compare the tasks' importances
+      // If there is a tie
+      if (value == 0) {
+        // Compare the tasks' importance levels
+        return -(task1.importance.compareTo(task2.importance));
       }
+
       else {
         return value;
       }
     });
+
+    notifyListeners();
   }
 
+  // This method sorts the tasks by importance and deadline (or start and
+  // end) by using the K-Means clustering algorithm to divide the tasks into
+  // four Eisenhower Matrix categories and then arrange them in the following
+  // order:
+  // important and urgent -> important but not urgent
+  // -> urgent but not important -> not important and not urgent
   Future<void> sortWithAI() async {
-    // This procedure sorts the tasks by importance and deadline
-    // by using the K-Means clustering algorithm to divide the tasks into 4 Eisenhower Matrix categories
-    // and then arrange them in the following order:
-    // important and urgent -> important but not urgent -> urgent but not important -> not important and not urgent
+    // First, sort the tasks by their deadline
+    sortByDeadline();
 
-    sortByDeadline();  // First, sort the tasks by their deadline
-
-    // Then get a list of pairs of integers that will be passed to the K-Means clustering algorithm
-    // For each task, the list contains:
+    // Then get a list of pairs of integers that will be passed to the K-Means
+    // clustering algorithm
+    // For each task, the list of pairs of integer contains:
     // 1. The importance of the task
-    // 2. The difference between the deadline or the end of the task and the current time in minutes
+    // 2. The difference between the deadline or the end datetime of the task
+    //    and the current time in minutes
     List<List<int>> data = [];
     for (int i = 0; i < _tasks.length; ++i) {
+      // If the task has a deadline
       if (_tasks[i].deadline != null) {
-        data.add([_tasks[i].importance, _tasks[i].deadline!.difference(DateTime.now()).inMinutes]);
+        data.add(
+          [
+            _tasks[i].importance,
+            _tasks[i].deadline!.difference(DateTime.now()).inMinutes
+          ]
+        );
       }
+      // If the task has a start datetime and an end datetime
       else {
-        data.add([_tasks[i].importance, _tasks[i].end!.difference(DateTime.now()).inMinutes]);
+        data.add(
+          [
+            _tasks[i].importance,
+            _tasks[i].end!.difference(DateTime.now()).inMinutes
+          ]
+        );
       }
     }
 
-    // Send the request to the server
-    String request = jsonEncode({"data": data});
-    http.Response response = await http.post(
-      Uri.parse('https://ejo5jpfxthbv3vdjlwg453xbea0boivt.lambda-url.eu-north-1.on.aws/k_means'),
-      headers: {'Content-Type': 'application/json'},
-      body: request,
-    );
-    List<dynamic> order = jsonDecode(response.body);  // This is the order of indices of the task list in which it needs to be arranged
+    List<int> order = await sortTasksWithKMeans(data);
 
     // Sort the tasks
-    List<Task> newTasks = [];
+    List<TaskWidget> newTasks = [];
     for (int i = 0; i < order.length; ++i) {
       newTasks.add(_tasks[order[i]]);
     }
     _tasks = newTasks;
+
+    notifyListeners();
   }
 }

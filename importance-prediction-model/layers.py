@@ -4,7 +4,8 @@ from autograd import Tensor
 
 class Layer:
     """
-    Represents a layer of a neural network. It is an abstract class that acts as a parent to all types of layers.
+    Represents a layer of a neural network. It is an abstract class that acts
+    as a parent to all types of layers.
 
     Attributes
     ----------
@@ -33,7 +34,12 @@ class Linear(Layer):
         The layer's parameters (a combination of weight and bias).
     """
 
-    def __init__(self, n_inputs: int, n_outputs: int, bias: bool = True) -> None:
+    def __init__(
+            self,
+            n_inputs: int,
+            n_outputs: int,
+            bias: bool = True
+    ) -> None:
         """
         Parameters
         ----------
@@ -210,7 +216,8 @@ class CrossEntropyLoss(Layer):
         prediction : Tensor
             The prediction.
         target : Tensor
-            The indices of the target values. They should have the same shape as 'prediction'.
+            The indices of the target values. They should have the same shape as
+            'prediction'.
         
         Returns
         -------
@@ -240,7 +247,8 @@ class Sigmoid(Layer):
         Returns
         -------
         Tensor
-            The result of applying the sigmoid activation function to the logits.
+            The result of applying the sigmoid activation function to the
+            logits.
         """
         return input.sigmoid()
 
@@ -308,7 +316,8 @@ class RNNCell(Layer):
     n_outputs : int
         The number of outputs of the cell.
     activation : Layer
-        The activation function applied to the hidden layer before passing its result to the output layer.
+        The activation function applied to the hidden layer before passing its
+        result to the output layer.
     w_ih : Linear
         The weight matrix from the input layer to the hidden layer.
     w_hh : Linear
@@ -316,10 +325,17 @@ class RNNCell(Layer):
     w_ho : Linear
         The weight matrix from the hidden layer to the output layer.
     parameters : list[Tensor]
-        The cell's parameters (a combination of the parameters of w_ih, w_hh and w_ho)
+        The cell's parameters (a combination of the parameters of w_ih, w_hh
+        and w_ho)
     """
 
-    def __init__(self, n_inputs: int, n_hidden: int, n_outputs: int, activation: str) -> None:
+    def __init__(
+            self,
+            n_inputs: int,
+            n_hidden: int,
+            n_outputs: int,
+            activation: str
+    ) -> None:
         """
         Raises
         ------
@@ -411,7 +427,8 @@ class LSTMCell(Layer):
     input_to_update_gate : Linear
         A linear layer mapping the input to the update gate.
     hidden_to_forgetting_gate : Linear
-        A linear layer (without bias) mapping the hidden layer to the forgetting gate.
+        A linear layer (without bias) mapping the hidden layer to the forgetting
+        gate.
     hidden_to_input_gate : Linear
         A linear layer (without bias) mapping the hidden layer to the input gate.
     hidden_to_output_gate : Linear
@@ -445,7 +462,11 @@ class LSTMCell(Layer):
         self.parameters += self.hidden_to_output_gate.get_parameters()
         self.parameters += self.hidden_to_update_gate.get_parameters()
     
-    def forward(self, input: Tensor, hidden: tuple[Tensor, Tensor]) -> tuple[Tensor, Tensor]:
+    def forward(
+            self,
+            input: Tensor,
+            hidden: tuple[Tensor, Tensor]
+    ) -> tuple[Tensor, Tensor]:
         """
         Performs forward propagation on the LSTM cell.
 
@@ -455,8 +476,10 @@ class LSTMCell(Layer):
             The input to the cell.
         hidden : tuple[Tensor, Tensor]
             A tuple of length 2
-            where the first value is a Tensor that represents the hidden hidden state vector of the previous cell,
-            and the second value is a Tensor that represents the cell hidden state vector of the previous cell.
+            where the first value is a Tensor that represents the hidden hidden
+            state vector of the previous cell,
+            and the second value is a Tensor that represents the cell hidden
+            state vector of the previous cell.
         
         Returns
         -------
@@ -468,10 +491,22 @@ class LSTMCell(Layer):
         previous_hidden = hidden[0]
         previous_cell = hidden[1]
 
-        forgetting_gate = (self.input_to_forgetting_gate.forward(input) + self.hidden_to_forgetting_gate.forward(previous_hidden)).sigmoid()
-        input_gate = (self.input_to_input_gate.forward(input) + self.hidden_to_input_gate.forward(previous_hidden)).sigmoid()
-        output_gate = (self.input_to_output_gate.forward(input) + self.hidden_to_output_gate.forward(previous_hidden)).sigmoid()
-        update_gate = (self.input_to_update_gate.forward(input) + self.hidden_to_update_gate.forward(previous_hidden)).tanh()
+        forgetting_gate = (
+            self.input_to_forgetting_gate.forward(input)
+            + self.hidden_to_forgetting_gate.forward(previous_hidden)
+        ).sigmoid()
+        input_gate = (
+            self.input_to_input_gate.forward(input)
+            + self.hidden_to_input_gate.forward(previous_hidden)
+        ).sigmoid()
+        output_gate = (
+            self.input_to_output_gate.forward(input)
+            + self.hidden_to_output_gate.forward(previous_hidden)
+        ).sigmoid()
+        update_gate = (
+            self.input_to_update_gate.forward(input)
+            + self.hidden_to_update_gate.forward(previous_hidden)
+        ).tanh()
         new_cell = forgetting_gate * previous_cell + input_gate * update_gate
         self.new_cell_tanh = new_cell.tanh()
         new_hidden = output_gate * self.new_cell_tanh
@@ -480,7 +515,8 @@ class LSTMCell(Layer):
     
     def init_hidden(self) -> tuple[Tensor, Tensor]:
         """
-        Initialises a hidden and a cell hidden states to be inputted to the first cell.
+        Initialises a hidden and a cell hidden states to be inputted to the
+        first cell.
 
         Parameters
         ----------
@@ -490,9 +526,11 @@ class LSTMCell(Layer):
         Returns
         -------
         hidden : Tensor
-            A tensor of shape (batch_size, n_hidden) where the first element is 1 and the rest of the elements are 0.
+            A tensor of shape (batch_size, n_hidden) where the first element is
+            1 and the rest of the elements are 0.
         cell : Tensor
-            A tensor of shape (batch_size, n_hidden) where the first element is 1 and the rest of the elements are 0.
+            A tensor of shape (batch_size, n_hidden) where the first element is
+            1 and the rest of the elements are 0.
         """
         hidden = Tensor(np.zeros((1, self.n_outputs)), autograd=True)
         cell = Tensor(np.zeros((1, self.n_outputs)), autograd=True)

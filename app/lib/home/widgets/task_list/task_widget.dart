@@ -9,7 +9,10 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
-class Task extends StatefulWidget {
+// A widget that shows the name, the deadline (or start and end), the tags
+// and, optionally, the importance of a task. It also has a button that marks
+// the task as complete and deletes it.
+class TaskWidget extends StatefulWidget {
   final String name;
   final String timings;
   final int userID;
@@ -20,7 +23,7 @@ class Task extends StatefulWidget {
   final DateTime? end;
   final List<String> tags;
   final String? googleCalendarEventID;
-  const Task({
+  const TaskWidget({
     super.key,
     required this.name,
     required this.timings,
@@ -35,46 +38,102 @@ class Task extends StatefulWidget {
   });
 
   @override
-  createState() => _TaskState();
+  createState() => _TaskWidgetState();
 }
-class _TaskState extends State<Task> {
+class _TaskWidgetState extends State<TaskWidget> {
+  // Indicates whether the task completion checkbox has been selected
+  // and the task completion animation is currently being performed or
+  // the task is currently being deleted from the database
   bool checkboxValue = false;
+
+  // Indicates whether the task is currently updating
   bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
-    // Load the models so that the widget can update dynamically
-    final taskModel = context.watch<TaskModel>();
-    final showImportanceModel = context.watch<ShowImportanceModel>();
-    final taskListModel = context.watch<TaskListModel>();
-    final tagListModel = context.watch<TagListModel>();
+    // Load the task, task list, tag list and importance visibility models
+    // so that the widget can update dynamically
+    TaskModel taskModel = context.watch<TaskModel>();
+    TaskListModel taskListModel = context.watch<TaskListModel>();
+    TagListModel tagListModel = context.watch<TagListModel>();
+    ImportanceVisibilityModel importanceVisibilityModel = context.watch<ImportanceVisibilityModel>();
 
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.width * 0.02),
+      padding: EdgeInsets.symmetric(
+        vertical: MediaQuery.of(context).size.width * 0.02
+      ),
       child: TextButton(
         // When the user has tapped on the task, open the task editing menu
         onPressed: () async {
-          await tagListModel.update(widget.userID);  // Update the tag list model
-          await taskModel.getDetails(widget.taskID);  // Update the task model
+          try {
+            // Refresh the tag list model
+            await tagListModel.update(widget.userID);
 
-          // Show the task editing dialog
-          await showDialog<String>(
-            context: context,
-            builder: (context) => TaskEditingDialog(userID: widget.userID, taskWidget: widget),
-          );
+            // Refresh the task model
+            await taskModel.getDetails(widget.taskID);
 
+            // Show the task editing dialog
+            if (context.mounted) {
+              await showDialog<String>(
+                context: context,
+                builder: (context) => TaskEditingDialog(
+                  userID: widget.userID,
+                  taskWidget: widget
+                ),
+              );
+            }
+          }
+
+          // Display a notification if there was an error
+          // and the information about the task could not be loaded
+          catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    "Sorry, there was an error. Please try again."
+                  )
+                ),
+              );
+              return;
+            }
+          }
+
+          // Show a circular progress indicator
           setState(() {
-            _isLoading = true;  // Show a circular progress indicator
+            _isLoading = true;
           });
-          await taskListModel.update(widget.userID);  // Update the task list model
-          taskListModel.notifyListenersFromOutside();
+
+          try {
+            // Update the task list model
+            await taskListModel.update(widget.userID);
+          }
+
+          // Display a notification if there was an error
+          // and the task could not be updated
+          catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    "Sorry, there was an error. Please try again."
+                  )
+                ),
+              );
+            }
+          }
+
+          // Hide the circular progress indicator
           setState(() {
-            _isLoading = false;  // Hide the circular progress indicator
+            _isLoading = false;
           });
         },
 
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.03, vertical: MediaQuery.of(context).size.width * 0.02),
+          padding: EdgeInsets.symmetric(
+            horizontal: MediaQuery.of(context).size.width * 0.03,
+            vertical: MediaQuery.of(context).size.width * 0.02
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
@@ -96,8 +155,8 @@ class _TaskState extends State<Task> {
                       ],
                     ),
                 
-                    // Importance
-                    ((showImportanceModel.showImportance)
+                    // Task importance
+                    ((importanceVisibilityModel.showImportance)
                     ? Text(
                         "Importance: ${widget.importance}",
                         style: const TextStyle(
@@ -106,7 +165,7 @@ class _TaskState extends State<Task> {
                       )
                     : const SizedBox.shrink()),
                 
-                    // Timings
+                    // Task deadline or start and end
                     Text(
                       widget.timings,
                       style: const TextStyle(
@@ -122,7 +181,9 @@ class _TaskState extends State<Task> {
                           widget.tags.length,
                           (i) => Card(
                             color: Theme.of(context).colorScheme.secondary,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.all(3.0),
                               child: Text(widget.tags[i]),
@@ -135,9 +196,14 @@ class _TaskState extends State<Task> {
                 ),
               )]
 
-              // A circular progress indicator
+              // A circular progress indicator to show that the task is updating
               + (_isLoading
-              ? [CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary), SizedBox(width: MediaQuery.of(context).size.width * 0.05),]
+              ? [
+                  CircularProgressIndicator(
+                    color: Theme.of(context).colorScheme.tertiary
+                  ),
+                  SizedBox(width: MediaQuery.of(context).size.width * 0.05)
+                ]
               : [])
 
               // A checkbox to remove the task
@@ -155,15 +221,20 @@ class _TaskState extends State<Task> {
                     setState(() {
                       checkboxValue = value!;
                     });
-                    await Future.delayed(const Duration(milliseconds: 1000));  // Wait for 1 second while showing the checkbox animation
+
+                    // Wait for 1 second while showing the checkbox animation
+                    await Future.delayed(const Duration(milliseconds: 1000));
                     taskListModel.remove(widget);  // Remove the task
 
-                    // Remove the task from the user's Google Calendar if their Google account is linked
-                    if (CalendarClient.calendar != null && widget.googleCalendarEventID != null) {
+                    // Remove the task from the user's Google Calendar
+                    // if they have linked their Google account
+                    if (CalendarClient.calendar != null
+                        && widget.googleCalendarEventID != null) {
                       CalendarClient().delete(widget.googleCalendarEventID!);
                     }
 
-                    // Uncheck the checkbox (this prevents the checkbox of the next task from being checked after this one is removed)
+                    // Uncheck the checkbox (this prevents the checkbox of the
+                    // next task from being checked after this one is removed)
                     setState(() {
                       checkboxValue = !value!;
                     });
