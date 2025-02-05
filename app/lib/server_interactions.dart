@@ -41,12 +41,16 @@ Future<List<dynamic>> getUserByGoogleIDToken(String googleIDToken) async {
 // the database
 Future<void> addUser(String username, String password) async {
   // Get the SHA-256 hash of the password
-  String passwordHash = getPasswordHash(password);
+  var (passwordHash, passwordSalt) = getPasswordHash(password);
   
   // Form a JSON POST request to the database server to add the user to the
   // database
   String request = jsonEncode(
-    <String, dynamic>{'username': username, 'password_hash': passwordHash}
+    <String, dynamic>{
+      'username': username,
+      'password_hash': passwordHash,
+      'password_salt': passwordSalt
+    }
   );
   // Send the request
   await http.post(
@@ -85,13 +89,14 @@ Future<String?> updateUsername(int userID, String username) async {
 // or the reason if it has not
 Future<String?> updatePassword(int userID, String password) async {
   // Get the password hash
-  String passwordHash = getPasswordHash(password);
+  var (passwordHash, passwordSalt) = getPasswordHash(password);
 
   // Send a PUT request to the database server
   http.Response response = await http.put(
     Uri.parse(
       'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'
       '/update_password?user_id=$userID&password_hash=$passwordHash'
+      '&password_salt=$passwordSalt'
     ),
     headers: <String, String>{'Content-Type': 'application/json'},
   );

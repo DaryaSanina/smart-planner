@@ -1,11 +1,32 @@
 import 'dart:convert';
+import 'dart:math';
+import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 
-// This function returns the SHA-256 hash of the provided password
-String getPasswordHash(String password) {
-  var bytes = utf8.encode(password);
-  var digest = sha256.convert(bytes);
-  return digest.toString();
+// This function computes the SHA-256 hash of the provided password. If no salt
+// has been provided, the function also generates a random salt that is added to
+// the end of the password before hashing it.
+// The function returns the hashed password and the salt
+(String, String) getPasswordHash(String password, [String? salt]) {
+  if (salt == null) {
+    // Generate a salt
+    String hexDigits = "0123456789abcdef";
+    Random random = Random();
+    salt = "";
+    int saltLength = random.nextInt(65) + 1;
+    for (int i = 0; i < saltLength; i++) {
+      salt = salt! + hexDigits[random.nextInt(16)];
+    }
+  }
+
+  // Add the salt to the end of the password
+  password += salt!;
+
+  // Hash the password
+  Uint8List bytes = utf8.encode(password);
+  Digest digest = sha256.convert(bytes);
+
+  return (digest.toString(), salt);
 }
 
 // This function checks whether the password is not empty, is between 8 and 16

@@ -32,7 +32,8 @@ cursor = db.cursor()
 # A POST request JSON object that represents a user that needs to be created
 class User(BaseModel):
     username: str
-    password_hash: Optional[str] = None
+    password_hash: str
+    password_salt: str
 
 
 # A POST request JSON object that represents a task that needs to be created
@@ -177,7 +178,7 @@ def get_user(google_id_token="", username=""):
             )
         
         cursor.execute(
-            "SELECT UserID, Username, PasswordHash FROM Users "
+            "SELECT UserID, Username, PasswordHash, PasswordSalt FROM Users "
                 + "WHERE GoogleID = %s",
             (google_id,)
         )
@@ -214,6 +215,9 @@ def add_user(user: User):
         - {"error": "A user with this username already exists"},
           status_code=400
         - {"error": "Password hash is not 64 characters long"}, status_code=400
+        - {"error": "The password salt is empty"}, status_code=400
+        - {"error": "Password salt is more than 64 characters long"},
+          status_code=400
         - {"id": the new user's ID}, status_code=201
     """
     # Check whether the username is valid
@@ -235,11 +239,24 @@ def add_user(user: User):
             {"error": "Password hash is not 64 characters long"},
             status_code=400
         )
+    
+    # Check whether the password salt is valid
+    if len(user.password_salt) == 0:
+        return JSONResponse(
+            {"error": "The password salt is empty"},
+            status_code=400
+        )
+    
+    if len(user.password_salt) > 64:
+        return JSONResponse(
+            {"error": "Password salt is more than 64 characters long"},
+            status_code=400
+        )
 
     # Insert the data
     cursor.execute(
-        "INSERT INTO Users VALUES (NULL, %s, %s, NULL)",
-        (user.username, user.password_hash)
+        "INSERT INTO Users VALUES (NULL, %s, %s, %s, NULL)",
+        (user.username, user.password_hash, user.password_salt)
     )
     db.commit()
     return JSONResponse({"id": cursor.lastrowid}, status_code=201)
@@ -289,7 +306,7 @@ def update_username(user_id: int, username: str):
 
 
 @app.put('/update_password')
-def update_password(user_id: int, password_hash: str):
+def update_password(user_id: int, password_hash: str, password_salt: str):
     """
     Updates the password hash of the user with the provided ID in the database.
 
@@ -299,11 +316,16 @@ def update_password(user_id: int, password_hash: str):
         ID of the user whose password hash needs to be updated
     password_hash : str
         New password hash
+    password_salt : str
+        New password salt
     
     Returns
     -------
     JSONResponse
         - {"error": "The password hash is not 64 characters long"},
+          status_code=400
+        - {"error": "The password salt is empty"}, status_code=400
+        - {"error": "The password salt is more than 64 characters long"},
           status_code=400
         - {"id": the user's ID}
     """
@@ -314,10 +336,23 @@ def update_password(user_id: int, password_hash: str):
             status_code=400
         )
 
+    # Check whether the password salt is valid
+    if len(password_salt) == 0:
+        return JSONResponse(
+            {"error": "The password salt is empty"},
+            status_code=400
+        )
+    
+    if len(password_salt) > 64:
+        return JSONResponse(
+            {"error": "The password salt is more than 64 characters long"},
+            status_code=400
+        )
+
     # Update the data
     cursor.execute(
-        "UPDATE Users SET PasswordHash = %s WHERE UserID = %s",
-        (password_hash, user_id)
+        "UPDATE Users SET PasswordHash = %s, PasswordSalt = %s WHERE UserID = %s",
+        (password_hash, password_salt, user_id)
     )
     db.commit()
     return JSONResponse({"id": user_id}, status_code=200)
@@ -1113,6 +1148,7 @@ if __name__ == "__main__":
                         Username VARCHAR(32) NOT NULL,
                         EmailAddress VARCHAR(256) NOT NULL,
                         PasswordHash CHAR(64) NOT NULL,
+                        PasswordSalt VARCHAR(64) NOT NULL,
                         GoogleID VARCHAR(256),
                         PRIMARY KEY (UserID)
                    )""")
