@@ -75,7 +75,10 @@ class _TaskListState extends State<TaskList> {
 
         Expanded(
           child: RefreshIndicator(
-            onRefresh: () async => await taskList.update(widget.userID),
+            onRefresh: () async {
+              await taskList.update(widget.userID);
+              taskList.notify();
+            },
             color: Theme.of(context).colorScheme.secondary,
             backgroundColor: Theme.of(context).colorScheme.tertiary,
 

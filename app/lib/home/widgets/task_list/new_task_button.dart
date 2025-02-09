@@ -82,6 +82,7 @@ class _NewTaskButtonState extends State<NewTaskButton> {
 
             try {
               await taskList.update(widget.userID);  // Update the task list
+              taskList.notify();
             }
 
             // Display a notification if there was an error

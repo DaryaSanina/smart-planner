@@ -51,6 +51,10 @@ class TaskListModel extends ChangeNotifier {
   List<TaskWidget> _tasks = [];
   UnmodifiableListView<TaskWidget> get tasks => UnmodifiableListView(_tasks);
 
+  void notify() {
+    notifyListeners();
+  }
+
   // This method fetches the user's tasks from the database
   // and their Google Calendar
   Future<bool> update(int userID) async {

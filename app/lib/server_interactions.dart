@@ -308,12 +308,16 @@ Future<List<Tag>> getTaskTags(int taskID) async {
       '/get_tags?task_id=$taskID'
     )
   );
-  return jsonDecode(response.body)['data'];
+  List data = jsonDecode(response.body)['data'];
+  return List.generate(
+    data.length,
+    (i) => Tag(tagID: data[i][0], name: data[i][1])
+  );
 }
 
 // This function returns the list of tags created by the user
 // with the given [userID]
-Future<List<List<dynamic>>> getUserTags(int userID) async {
+Future<List<dynamic>> getUserTags(int userID) async {
   http.Response response = await http.get(
     Uri.parse(
       'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'

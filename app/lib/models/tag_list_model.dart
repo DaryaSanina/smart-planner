@@ -51,7 +51,7 @@ class TagListModel extends ChangeNotifier {
   // This method fetches the user's tags from the database
   // and does not add any new tags to the current filter
   Future<void> update(int userID) async {
-    List<List<dynamic>> tagList = await getUserTags(userID);
+    List<dynamic> tagList = await getUserTags(userID);
 
     // Update the list of tags
     _tags.clear();

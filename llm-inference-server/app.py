@@ -31,6 +31,9 @@ associated with. When the user asks you to mark a task as complete, it means
 they want you to remove the task from the list. You can use this data to fulfill
 the user's queries.
 
+Remember that the user does not provide the JSON string themselves and it is
+generated automatically, so do not mention it in your conversation.
+
 You should keep your responses short.
 """
 
@@ -585,9 +588,9 @@ def get_response(user_id: int):
             'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1'
                 + '.on.aws/get_data_for_chatbot',
             json={
-                "content": data,
+                "content": data.content,
                 "role": 3,
-                "timestamp": datetime.datetime.now(),
+                "timestamp": datetime.datetime.now().isoformat(),
                 "user_id": user_id
             },
             headers={'Content-Type': 'application/json'}

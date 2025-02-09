@@ -107,6 +107,7 @@ class _TaskWidgetState extends State<TaskWidget> {
           try {
             // Update the task list model
             await taskListModel.update(widget.userID);
+            taskListModel.notify();
           }
 
           // Display a notification if there was an error
