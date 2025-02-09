@@ -104,6 +104,7 @@ class _UsernameEditingMenuState extends State<UsernameEditingMenu> {
                     
                     // Update the user model
                     user.setUsername(widget.controller.text);
+                    user.notify();
 
                     // Hide the circular progress indicator
                     setState(() {

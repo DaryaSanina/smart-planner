@@ -53,7 +53,7 @@ class TaskListModel extends ChangeNotifier {
 
   // This method fetches the user's tasks from the database
   // and their Google Calendar
-  Future<void> update(int userID) async {
+  Future<bool> update(int userID) async {
     List databaseResponse = await getTasks(userID);
     
     // Update the task list with tasks from the database
@@ -353,6 +353,8 @@ class TaskListModel extends ChangeNotifier {
     else if (order == "ai") {
       await sortWithAI();
     }
+
+    return true;
   }
 
   // This procedure removes the specified task from the database

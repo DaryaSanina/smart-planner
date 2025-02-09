@@ -13,7 +13,10 @@ Future<int> signIn(String username, String password) async {
   if (databaseResponse.isNotEmpty) {
     // Get the SHA-256 hash of the password
     String salt = databaseResponse[0][3];
-    var (passwordHash, passwordSalt) = getPasswordHash(password, salt);
+    var (passwordHash, passwordSalt) = getPasswordHash(
+      password,
+      salt
+    );
 
     // If the hash of the provided password matches the password hash of the
     // user with this username
