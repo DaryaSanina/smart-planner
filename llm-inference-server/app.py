@@ -111,6 +111,10 @@ and the query itself. The JSON object should have the following format:
                  quotation marks.
 }}
 
+You can only write SQL SELECT queries, and the data from them will later be used
+to fulfill the user's queries. You cannot alter the database yourself.
+No INSERT, UPDATE or DELETE queries. Only SELECT.
+
 Do not output anything else under any circumstances.
 """
 
@@ -118,7 +122,8 @@ action_generator_system_prompt = f"""
 You are an expert in task management and planning. Based on the conversation
 history with the user, you will need to determine whether you need to create a
 task, edit a task, mark a task as done, or do nothing, and output the details
-of the action.
+of the action. It is extremely important that you make sure to differentiate
+between creating and editing a task.
 
 If no action needs to be done, output "Nothing". This should be done in most
 cases unless specifically stated by the user.
@@ -135,7 +140,7 @@ importance, 10 is the highest importance)
 instead of a deadline)
 
 If a task needs to be edited, the output should have the following format
-(each thing on one separate line):
+(each thing on one separate line, task id should ALWAYS be present):
 "Edit"
 "Id: " task id (you will have the information about the task id in the message
 history)
@@ -210,7 +215,7 @@ def load_message_history(
 
     # Request the user's message history
     response = requests.get(
-        'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'
+        'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2.on.aws'
             + f'/get_messages?user_id={user_id}'
     )
     data = json.loads(response.content)["data"]
@@ -266,7 +271,7 @@ def get_data(
         # Generate an SQL query
         sql_generator = LlamaAPI(
             api_key=os.getenv("LLAMA_API_KEY"),
-            model="llama3.3-70b",
+            model="llama3.1-8b",
             max_tokens=4096
         )
         sql_generator_system_prompt = sql_generator_system_prompt.replace(
@@ -295,11 +300,13 @@ def get_data(
                 + messages,
             max_tokens=4096
         )
+        print(messages)
+        print(str(output.message.content))
         sql_query_object = json.loads(output.message.content)
 
         # Pass the SQL query to the database server
         database_response = requests.post(
-            'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1'
+            'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2'
                 + '.on.aws/get_data_for_chatbot',
             json={
                 "sql_query": sql_query_object["sql_query"],
@@ -329,10 +336,10 @@ def get_data(
             content="Error: " + str(e),
             role=MessageRole.TOOL
         )
-        if max_attempts == 0:
+        if max_attempts == 1:
             return error_message
         else:
-            return get_data(messages, user_id, max_attempts=max_attempts - 1)
+            return get_data(messages + [error_message], user_id, max_attempts=max_attempts - 1)
 
 
 def parse_action(action_text: str) -> tuple[ActionType, dict]:
@@ -391,6 +398,7 @@ def get_action(
         messages: list[ChatMessage],
         max_attempts: int
 ) -> tuple[ActionType, dict]:
+    print("Get action")
     """
     Generates the action LLM's response based on recent dialogue between the
     user and the assistant. This function is usually called after the assistant
@@ -435,27 +443,29 @@ def get_action(
     """
     global action_generator_system_prompt
 
-    # Initialise the action LLM
-    action_generator = LlamaAPI(
-        api_key=os.getenv("LLAMA_API_KEY"),
-        model="llama3.3-70b", max_tokens=4096
-    )
-
     # Add the current date and time to the action LLM's system prompt
     # so that it can use them to generate actions that require them
     # (e.g., if the user has asked the assistant to create a task and set the
     # deadline for tomorrow)
-    action_generator_system_prompt = sql_generator_system_prompt.replace(
+    action_generator_system_prompt = action_generator_system_prompt.replace(
         "CURRENT_DATE",
         datetime.date.today().strftime(format='%d %B %Y')
     )
-    action_generator_system_prompt = sql_generator_system_prompt.replace(
+    action_generator_system_prompt = action_generator_system_prompt.replace(
         "CURRENT_TIME_HOUR",
         str(datetime.datetime.now().hour)
     )
-    action_generator_system_prompt = sql_generator_system_prompt.replace(
+    action_generator_system_prompt = action_generator_system_prompt.replace(
         "CURRENT_TIME_MINUTE",
         str(datetime.datetime.now().minute)
+    )
+    print("Modified system prompt")
+
+    # Initialise the action LLM
+    action_generator = LlamaAPI(
+        api_key=os.getenv("LLAMA_API_KEY"),
+        model="llama3.1-8b", max_tokens=4096,
+        system_prompt=action_generator_system_prompt
     )
 
     # Remove all previous system messages and add this system message to the
@@ -469,6 +479,13 @@ def get_action(
         filter(lambda message: message.role != MessageRole.SYSTEM, messages)
     )
 
+    # Make sure that the last message is either the user's request or the
+    # response from the database
+    while len(messages_) > 0 and messages_[-1].role == MessageRole.ASSISTANT:
+        messages_.pop()
+    print("Updated messages")
+    print(messages_)
+
     try:
         # Query the action LLM to generate a response
         action_text = str(
@@ -477,14 +494,18 @@ def get_action(
                 max_tokens=4096
             ).message.content
         )
+        print("Generated an action text:", action_text)
+        if action_text == "":
+            raise Exception
 
         # Convert the action LLM's response into the type of action it would
         # like to take and the parameters of the action
+        print(parse_action(action_text))
         return parse_action(action_text)
     
-    except Exception:
+    except Exception as e:
         # If there are no attempts left, return ActionType.ERROR
-        if max_attempts == 0:
+        if max_attempts == 1:
             return (ActionType.ERROR, {})
         
         # Otherwise, try again
@@ -530,7 +551,7 @@ def perform_action(action: tuple[ActionType, dict], user_id: int) -> None:
     if action[0] == ActionType.CREATE:
         json_dict["user_id"] = user_id
         requests.post(
-            'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1'
+            'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2'
                 + '.on.aws/add_task',
             json=json_dict,
             headers={'Content-Type': 'application/json'}
@@ -540,7 +561,7 @@ def perform_action(action: tuple[ActionType, dict], user_id: int) -> None:
     elif action[0] == ActionType.EDIT:
         json_dict["user_id"] = user_id
         requests.put(
-            'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1'
+            'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2'
                 + '.on.aws/update_task',
             json=json_dict,
             headers={'Content-Type': 'application/json'}
@@ -549,7 +570,7 @@ def perform_action(action: tuple[ActionType, dict], user_id: int) -> None:
     # Delete a task from the database
     elif action[0] == ActionType.COMPLETE:
         requests.delete(
-            'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1'
+            'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2'
                 + f'.on.aws/delete_task?task_id={json_dict["task_id"]}',
             headers={'Content-Type': 'application/json'}
         )
@@ -579,13 +600,13 @@ def get_response(user_id: int):
 
     # Load any data the assistant finds necessary to fulfill the last query of
     # the user
-    data = get_data(messages, user_id, max_attempts=1)
+    data = get_data(messages, user_id, max_attempts=3)
     if data.content != 'Error: {"reason": "The query is empty"}':
         messages.append(data)
 
         # Send a message with the data to the database
         requests.post(
-            'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1'
+            'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2'
                 + '.on.aws/get_data_for_chatbot',
             json={
                 "content": data.content,
@@ -609,11 +630,13 @@ def get_response(user_id: int):
             max_tokens=4096
         ).message.content
     )
+    print(response)
     messages.append(ChatMessage(content=response, role=MessageRole.ASSISTANT))
 
     # Call the LLM to decide what task planner action needs to be performed
     # (if any)
-    action = get_action(messages=messages, max_attempts=1)
+    print("Call to get action")
+    action = get_action(messages=messages, max_attempts=3)
     perform_action(action, user_id)
 
     return JSONResponse({"response": response})

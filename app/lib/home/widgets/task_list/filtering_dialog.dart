@@ -6,8 +6,7 @@ import 'package:provider/provider.dart';
 // A dialog where the user can choose tags so that only tasks with the chosen
 // tags will be displayed
 class FilteringDialog extends StatefulWidget {
-  final int userID;
-  const FilteringDialog({super.key, required this.userID});
+  const FilteringDialog({super.key});
 
   @override State<StatefulWidget> createState() => _FilteringDialogState();
 }
@@ -16,7 +15,8 @@ class _FilteringDialogState extends State<FilteringDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final tagList = context.watch<TagListModel>();  // Load the list of tags
+    // Load the tag list model
+    final TagListModel tagList = context.watch<TagListModel>();
 
     return AlertDialog(
       title: const Text("Filter"),

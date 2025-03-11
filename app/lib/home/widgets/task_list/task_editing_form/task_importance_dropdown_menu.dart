@@ -16,7 +16,9 @@ extends State<TaskImportanceDropdownMenu> {
   Widget build(BuildContext context) {
     return DropdownMenu<int>(
       label: const Text("Importance"),
-      initialSelection: int.parse(widget.controller.text),
+      initialSelection: int.tryParse(widget.controller.text) == null
+        ? 5
+        : int.parse(widget.controller.text),
       controller: widget.controller,
       requestFocusOnTap: true,
       inputDecorationTheme: InputDecorationTheme(
@@ -31,8 +33,12 @@ extends State<TaskImportanceDropdownMenu> {
         );
       }).toList(),
       
-      onSelected: (int? newValue) 
-        => setState(() => widget.controller.text = newValue.toString()),
+      onSelected: (int? newValue) {
+        if (newValue != null && newValue >= 0 && newValue <= 10) {
+          
+        }
+      }
+      ,
     );
   }
 }

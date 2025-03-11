@@ -37,6 +37,8 @@ class _ReminderListState extends State<ReminderList> {
 
           // Reminder selection/deselection
           onChanged: (bool? value) {
+            print(value);
+            print(task.reminders);
             if (value!) {
               setState(() => task.addReminder(ReminderType.values[i]));
             }

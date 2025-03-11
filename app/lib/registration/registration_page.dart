@@ -41,7 +41,7 @@ class _RegistrationState extends State<RegistrationPage> {
 
               // If the user already has an account
               SizedBox(
-                child: Row(
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Text(
@@ -50,6 +50,10 @@ class _RegistrationState extends State<RegistrationPage> {
                         fontSize: 20,
                         color: Theme.of(context).colorScheme.tertiary,
                       ),
+                    ),
+
+                    SizedBox(
+                      height: 10,
                     ),
 
                     // Button that navigates the user to the login page
@@ -66,7 +70,7 @@ class _RegistrationState extends State<RegistrationPage> {
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
-                          "Log in",
+                          "Sign in",
                           style: TextStyle(
                             fontSize: 20,
                             color: Theme.of(context).colorScheme.tertiary,

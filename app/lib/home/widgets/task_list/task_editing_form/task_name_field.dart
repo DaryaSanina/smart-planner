@@ -17,7 +17,6 @@ class _TaskNameFieldState extends State<TaskNameField> {
       decoration: InputDecoration(
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
         labelText: "Task name",
-        counterText: "${50 - widget.controller.text.length} character(s) left"
       ),
       onChanged: (value) => setState(() => widget.controller.text = value),
       cursorColor: Theme.of(context).colorScheme.tertiary,
@@ -26,11 +25,14 @@ class _TaskNameFieldState extends State<TaskNameField> {
       validator: (value) {
         // Check whether the field is empty
         if (value == null || value.isEmpty) {
-          return "Please enter the task name";
+          return "Please enter task name";
         }
         // Check whether the task name is between 3 and 32 characters long
-        if (value.length < 3 || value.length > 50) {
-          return "The length of the task name is not between 3 and 50 characters";
+        if (value.length < 3) {
+          return "Task name has less than 3 characters";
+        }
+        else if (value.length > 256) {
+          return "Task name has more than 256 characters";
         }
         return null;
       },

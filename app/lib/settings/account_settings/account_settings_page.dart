@@ -9,10 +9,8 @@ import 'package:flutter/material.dart';
 class AccountSettingsPage extends StatefulWidget {
   const AccountSettingsPage({
     super.key,
-    required this.userID,
     required this.username
   });
-  final int userID;
   final String username;
 
   @override
@@ -52,7 +50,6 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                 children: [
                   // Username editing menu
                   UsernameEditingMenu(
-                    userID: widget.userID,
                     controller: usernameController
                   ),
               
@@ -60,7 +57,6 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
               
                   // Password editing menu
                   PasswordEditingMenu(
-                    userID: widget.userID,
                     currentPasswordController: currentPasswordController,
                     newPasswordController: newPasswordController,
                     repeatPasswordController: repeatPasswordController

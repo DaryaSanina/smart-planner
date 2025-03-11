@@ -101,7 +101,7 @@ class _AppState extends State<App> {
       // cache, or the login page otherwise
       home: (
         (widget.userID != null && widget.username != null)
-        ? HomePage(userID: widget.userID!, username: widget.username!)
+        ? HomePage()
         : const SignInPage()
       ),
     );

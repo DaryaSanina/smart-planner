@@ -1,31 +1,30 @@
 import 'package:app/home/widgets/assistant_chat/chat.dart';
 import 'package:app/home/widgets/task_list/home_app_bar.dart';
 import 'package:app/home/widgets/task_list/task_list.dart';
+import 'package:app/models/message_list_model.dart';
 import 'package:app/models/task_list_model.dart';
+import 'package:app/models/user_model.dart';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 // Home page
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.username, required this.userID});
-
-  final String username;
-  final int userID;
+  const HomePage({super.key});
 
   @override State<StatefulWidget> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedPageIndex = 1;
+  int _selectedPageIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-    // Load the task list model
-    final taskList = context.watch<TaskListModel>();
-
-    // Load the tasks from the database and update the task list model
-    final Future<void> loadedTasks = taskList.update(widget.userID);
+    // Load the user, task list and message list models
+    final UserModel user = context.watch<UserModel>();
+    final TaskListModel taskList = context.watch<TaskListModel>();
+    final MessageListModel messageList = context.watch<MessageListModel>();
+    print("build");
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -33,17 +32,20 @@ class _HomePageState extends State<HomePage> {
           backgroundColor: Theme.of(context).colorScheme.primary,
 
           // Header
-          appBar: HomeAppBar(userID: widget.userID),
+          appBar: HomeAppBar(),
 
           // Main body
           body: [
             // Task list screen
+            TaskList(),
+
+            // AI chatbot screen
             FutureBuilder<void>(
-              future: loadedTasks,  // Check whether the tasks have loaded
+              future: messageList.setUserID(user.id),  // Check whether the tasks have loaded
               builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
-                // If the tasks have loaded, show the task list screen
+                // If the messages have loaded, show the chatbot screen
                 if (snapshot.hasData) {
-                  return TaskList(userID: widget.userID);
+                  return Chat();
                 }
                 // If there was an error, show an error message
                 else if (snapshot.hasError) {
@@ -52,7 +54,7 @@ class _HomePageState extends State<HomePage> {
                     style: const TextStyle(color: Colors.red)
                   );
                 }
-                // If the tasks are being loaded,
+                // If the messages are being loaded,
                 // show a circular progress indicator
                 else {
                   return Center(
@@ -63,9 +65,6 @@ class _HomePageState extends State<HomePage> {
                 }
               },
             ),
-
-            // AI chatbot screen
-            const Chat(),
 
           ][_selectedPageIndex],
           
@@ -103,7 +102,7 @@ class _HomePageState extends State<HomePage> {
             // set the page index to the selected value and update the page
             onDestinationSelected: (index) async {
               setState(() {_selectedPageIndex = index;});
-              await taskList.update(widget.userID);
+              await taskList.update(user.id);
             },
           ),
         );

@@ -110,24 +110,24 @@ class _SortingDialogState extends State<SortingDialog> {
               // important and urgent -> important but not urgent
               // -> urgent but not important -> not important and not urgent
               if (_orderType == OrderType.ai) {
+                if (context.mounted && tasks.tasks.length < 4) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        "There should be at least 4 tasks"
+                      )
+                    ),
+                  );
+                }
+                await prefs.setString('order', 'ai');  // Update cache
                 await tasks.sortWithAI();
-                prefs.setString('order', 'ai');  // Update cache
               }
+              tasks.notify();
             }
 
             // Display a notification if there was an error
             // and the tasks could not be sorted
-            catch (e) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      "Sorry, there was an error. Please try again."
-                    )
-                  ),
-                );
-              }
-            }
+            catch (e) {}
 
             // Hide the circular progress indicator
             setState(() {

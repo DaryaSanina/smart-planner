@@ -1,7 +1,7 @@
 import 'package:app/home/home_page.dart';
+import 'package:app/models/task_list_model.dart';
 import 'package:app/server_interactions.dart';
 import 'package:app/sign_in/util.dart';
-import 'package:app/models/message_list_model.dart';
 import 'package:app/models/user_model.dart';
 import 'package:app/passwords.dart';
 
@@ -36,9 +36,9 @@ class _RegistrationFormState extends State<RegistrationForm> {
 
   @override
   Widget build(BuildContext context) {
-    // Load the user and message list models
-    final user = context.watch<UserModel>();
-    final messageList = context.watch<MessageListModel>();
+    // Load the user and task list models
+    UserModel user = context.watch<UserModel>();
+    TaskListModel taskList = context.watch<TaskListModel>();
 
     int userID;
 
@@ -70,8 +70,11 @@ class _RegistrationFormState extends State<RegistrationForm> {
                   return "Please enter your username";
                 }
                 // Check whether the username has between 3 and 32 characters
-                if (value.length < 3 || value.length > 32) {
-                  return "The username is not between 3 and 32 characters long";
+                if (value.length < 3) {
+                  return "The username is too short";
+                }
+                else if (value.length > 32) {
+                  return "The username is too long";
                 }
                 // Check whether the username has already been taken
                 if (_usernameExists) {
@@ -168,9 +171,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
                     user.setID(userID);
                     user.setUsername(usernameController.text);
                     user.notify();
-
-                    // Update the message list model
-                    messageList.setUserID(userID);
+                    await taskList.update(user.id);
                     
                     // Hide the circular progress indicator
                     setState(() {
@@ -182,10 +183,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) {
-                          return HomePage(
-                            username: usernameController.text,
-                            userID: userID
-                          );
+                          return HomePage();
                       }));
                     }
                   }

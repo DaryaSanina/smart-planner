@@ -122,6 +122,9 @@ class _MessageBarState extends State<MessageBar> {
           onPressed: () async {
             String content = messageController.text;  // Get the message content
             DateTime timestamp = DateTime.now();  // Get the current timestamp
+            if (content == "") {
+              return;
+            }
 
             try {
               // Send the message and display it to the user
@@ -131,13 +134,14 @@ class _MessageBarState extends State<MessageBar> {
                 timestamp,
                 messageList.userID
               );
+              await messageList.updateMessages();
+              messageList.notify();
 
               // Invoke the LLM and upload its response to the database
               try {
-                messageList.assistantIsGeneratingResponse = true;
-                invokeLLM(messageList.userID).whenComplete(() async {
-                  await messageList.updateMessages();
-                  messageList.assistantIsGeneratingResponse = false;
+                messageList.setAssistantResponseGenerationStatus(true);
+                await invokeLLM(messageList.userID).whenComplete(() async {
+                  messageList.setAssistantResponseGenerationStatus(false);
                 });
               }
               
@@ -152,7 +156,13 @@ class _MessageBarState extends State<MessageBar> {
               }
 
               // Display the response to the user
-              await messageList.updateMessages();
+              messageList.updateMessages().then((value) => messageList.notify());
+              messageList.notify();
+
+              // Clear the text message field
+              setState(() {
+                messageController.text = "";
+              });
             }
             
             // Display a notification if there was an error
@@ -167,12 +177,11 @@ class _MessageBarState extends State<MessageBar> {
                   ),
                 );
               }
+              // Clear the text message field
+              setState(() {
+                messageController.text = "";
+              });
             }
-
-            // Clear the text message field
-            setState(() {
-              messageController.text = "";
-            });
           },
           style: buttonStyle,
           child: const Icon(Icons.send),

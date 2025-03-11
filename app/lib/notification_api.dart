@@ -17,6 +17,7 @@ class NotificationAPI {
       // Check Android version
       if (androidInfo.version.sdkInt >= 33) {
         await Permission.notification.request();
+        await Permission.scheduleExactAlarm.request();
       }
     }
 
@@ -45,7 +46,8 @@ class NotificationAPI {
     String? body,
     String? payload,
     required DateTime scheduledDate,
-  }) async =>
+  }) async {
+    print(id);
     _notifications.zonedSchedule(
       id,
       title,
@@ -56,6 +58,7 @@ class NotificationAPI {
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       payload: payload
     );
+  }
 
   // This method cancels a notification with the specified [id]
   static Future<void> cancelNotification(int id) async

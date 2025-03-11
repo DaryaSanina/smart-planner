@@ -15,33 +15,31 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 // A form that the user can fill in to create or edit a task
-class TaskEditingForm extends StatefulWidget {
-  const TaskEditingForm({
+class TaskDetailsForm extends StatefulWidget {
+  const TaskDetailsForm({
     super.key,
-    required this.userID,
     required this.formKey,
     required this.taskNameController,
     required this.taskDescriptionController,
     required this.taskImportanceController
   });
-  final int userID;
   final GlobalKey<FormState> formKey;
   final TextEditingController taskNameController;
   final TextEditingController taskDescriptionController;
   final TextEditingController taskImportanceController;
 
-  @override State<StatefulWidget> createState() => _TaskEditingFormState();
+  @override State<StatefulWidget> createState() => _TaskDetailsFormState();
 }
 
-class _TaskEditingFormState extends State<TaskEditingForm>{
+class _TaskDetailsFormState extends State<TaskDetailsForm>{
 
   final TextEditingController newTagNameController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     // Load the task and tag list models so that the page can update dynamically
-    final task = context.watch<TaskModel>();
-    final tagList = context.watch<TagListModel>();
+    final TaskModel task = context.watch<TaskModel>();
+    final TagListModel tagList = context.watch<TagListModel>();
 
     return Form(
         key: widget.formKey,
@@ -65,9 +63,9 @@ class _TaskEditingFormState extends State<TaskEditingForm>{
             // A button to generate task importance using an LSTM model
             // (the processing is done on a server)
             TaskImportanceGenerationButton(
-              controller: widget.taskImportanceController,
-              taskName: widget.taskNameController.text,
-              taskDescription: widget.taskDescriptionController.text
+              taskImportanceController: widget.taskImportanceController,
+              taskNameController: widget.taskNameController,
+              taskDescriptionController: widget.taskDescriptionController
             ),
 
             SizedBox(height: MediaQuery.of(context).size.height * 0.05),
@@ -161,7 +159,10 @@ class _TaskEditingFormState extends State<TaskEditingForm>{
                 tagList.tags.length,
 
                 (i) => CheckboxListTile(
-                  title: Text(tagList.tags[i].name),
+                  title: Text(
+                    tagList.tags[i].name,
+                    overflow: TextOverflow.ellipsis
+                  ),
 
                   // Checkbox style
                   activeColor: Theme.of(context).colorScheme.secondary,
@@ -192,7 +193,6 @@ class _TaskEditingFormState extends State<TaskEditingForm>{
             
             // Form to add a new tag
             TagCreationForm(
-              userID: widget.userID,
               tagNameController: newTagNameController
             )
           ],

@@ -11,13 +11,11 @@ import 'package:provider/provider.dart';
 class PasswordEditingMenu extends StatefulWidget{
   const PasswordEditingMenu({
     super.key,
-    required this.userID,
     required this.currentPasswordController,
     required this.newPasswordController,
     required this.repeatPasswordController
   });
 
-  final int userID;
   final TextEditingController currentPasswordController;
   final TextEditingController newPasswordController;
   final TextEditingController repeatPasswordController;
@@ -187,7 +185,7 @@ class _PasswordEditingMenuState extends State<PasswordEditingMenu> {
 
                     // Update the password
                     String? errorMessage = await updatePassword(
-                      widget.userID,
+                      user.id,
                       widget.newPasswordController.text
                     );
 

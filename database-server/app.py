@@ -19,14 +19,6 @@ lambda_client = boto3.client('lambda')
 load_dotenv()
 mysql_password = os.getenv("MYSQL_PASSWORD")
 mysql_host = os.getenv("MYSQL_HOST")
-db = mysql.connector.connect(
-    host=mysql_host,
-    port=3306,
-    user="admin",
-    password=mysql_password,
-    database="smart_planner_database"
-)
-cursor = db.cursor()
 
 
 # A POST request JSON object that represents a user that needs to be created
@@ -132,7 +124,7 @@ def check_google_id_token(google_id_token: str) -> str:
         }
     }
     response = lambda_client.invoke(
-        FunctionName="arn:aws:lambda:eu-north-1:639191934765:function:"
+        FunctionName="arn:aws:lambda:eu-west-2:639191934765:function:"
             "smart_planner_google_token_id_verification",
         InvocationType='RequestResponse',
         Payload=json.dumps(url_parameters)
@@ -167,6 +159,14 @@ def get_user(google_id_token="", username=""):
         - {"data": [[ID, username, password hash]]} if the user has been found
         - {"data": []} if the user has not been found
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     # Get user by Google ID token
     if google_id_token != "":
         try:
@@ -194,6 +194,7 @@ def get_user(google_id_token="", username=""):
     else:
         cursor.execute("SELECT * FROM Users WHERE Username = %s", (username,))
     result = cursor.fetchall()
+    db.close()
     return JSONResponse({"data": result})
 
 
@@ -220,6 +221,14 @@ def add_user(user: User):
           status_code=400
         - {"id": the new user's ID}, status_code=201
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     # Check whether the username is valid
     if not (3 <= len(user.username) <= 32):
         return JSONResponse(
@@ -283,6 +292,14 @@ def update_username(user_id: int, username: str):
           status_code=400
         - {"id": the user's ID}
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     # Check whether the username is valid
     if not (3 <= len(username) <= 32):
         return JSONResponse(
@@ -302,6 +319,7 @@ def update_username(user_id: int, username: str):
         (username, user_id)
     )
     db.commit()
+    db.close()
     return JSONResponse({"id": user_id}, status_code=200)
 
 
@@ -329,6 +347,14 @@ def update_password(user_id: int, password_hash: str, password_salt: str):
           status_code=400
         - {"id": the user's ID}
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     # Check whether the password hash is valid
     if len(password_hash) != 64:
         return JSONResponse(
@@ -355,6 +381,7 @@ def update_password(user_id: int, password_hash: str, password_salt: str):
         (password_hash, password_salt, user_id)
     )
     db.commit()
+    db.close()
     return JSONResponse({"id": user_id}, status_code=200)
 
 
@@ -377,6 +404,14 @@ def link_google_account(user_id: int, google_id_token: str):
         - {"error": "Invalid Google ID token"}, status_code=400
         - {"id": the user's ID}
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     # Check whether the Google ID token is valid
     try:
         google_id = check_google_id_token(google_id_token)
@@ -392,6 +427,7 @@ def link_google_account(user_id: int, google_id_token: str):
         (google_id, user_id)
     )
     db.commit()
+    db.close()
     return JSONResponse({"id": user_id}, status_code=200)
 
 
@@ -410,8 +446,17 @@ def delete_user(user_id: int):
     JSONResponse
         {}
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     cursor.execute("DELETE FROM Users WHERE UserID = %s", (user_id,))
     db.commit()
+    db.close()
     return JSONResponse({})
 
 
@@ -452,6 +497,14 @@ def get_task(task_id=0, user_id=0):
             ]
           }
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     if task_id == 0 and user_id == 0:
         return JSONResponse(
             {
@@ -476,6 +529,7 @@ def get_task(task_id=0, user_id=0):
         for j in range(len(result[i])):
             if type(result[i][j]) == datetime.datetime:
                 result[i][j] = result[i][j].strftime("%Y-%m-%dT%H:%M:%S")
+    db.close()
     return JSONResponse({"data": result})
 
 
@@ -492,7 +546,7 @@ def add_task(task: Task):
     Returns
     -------
     JSONResponse
-        - {"error": "Task name is not between 3 and 50 characters long"},
+        - {"error": "Task name is not between 3 and 256 characters long"},
           status_code=400
         - {"error": "Importance is not between 0 and 10"}, status_code=400
         - {"error": "The task should either have a deadline or a start datetime
@@ -500,10 +554,18 @@ def add_task(task: Task):
         - {"error": "The user with this ID does not exist"}, status_code=400
         - {"id": the new task's ID}
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     # Check whether the task name is valid
-    if not (3 <= len(task.name) <= 50):
+    if not (3 <= len(task.name) <= 256):
         return JSONResponse(
-            {"error": "Task name is not between 3 and 50 characters long"},
+            {"error": "Task name is not between 3 and 256 characters long"},
             status_code=400
         )
 
@@ -595,6 +657,14 @@ def update_task(task: ExistingTask):
           and an end datetime"}, status_code=400
         - {}, status_code=201
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     # Check whether the task with this ID exists
     cursor.execute("SELECT * FROM Tasks WHERE TaskID = %s", (task.task_id,))
     if len(cursor.fetchall()) == 0:
@@ -606,9 +676,9 @@ def update_task(task: ExistingTask):
     updates = []
 
     if task.name is not None:
-        if not (3 <= len(task.name) <= 50):
+        if not (3 <= len(task.name) <= 256):
             return JSONResponse(
-                {"error": "Task name is not between 3 and 50 characters long"},
+                {"error": "Task name is not between 3 and 256 characters long"},
                 status_code=400
             )
         updates.append(f"Name = '{task.name}'")
@@ -661,6 +731,7 @@ def update_task(task: ExistingTask):
             + f" WHERE TaskID = {task.task_id}"
         cursor.execute(statement)
         db.commit()
+    db.close()
     return JSONResponse({}, status_code=201)
 
 
@@ -679,6 +750,14 @@ def delete_task(task_id: int):
     JSONResponse
         {}
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     # Delete all the tag connections for this task
     cursor.execute("DELETE FROM TasksToTags WHERE TaskID = %s", (task_id,))
 
@@ -689,6 +768,7 @@ def delete_task(task_id: int):
     cursor.execute("DELETE FROM Tasks WHERE TaskID = %s", (task_id,))
 
     db.commit()
+    db.close()
     return JSONResponse({})
 
 
@@ -720,6 +800,14 @@ def get_tags(user_id=0, task_id=0):
             ]
           }
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     # No parameters have been provided
     if user_id == 0 and task_id == 0:
         return JSONResponse(
@@ -739,6 +827,7 @@ def get_tags(user_id=0, task_id=0):
             (task_id,)
         )
     result = cursor.fetchall()
+    db.close()
     return JSONResponse({"data": result})
 
 
@@ -755,15 +844,23 @@ def add_tag(tag: Tag):
     Returns
     -------
     JSONResponse
-        - {"error": "Tag name is not between 3 and 32 characters long"},
+        - {"error": "Tag name is not between 3 and 256 characters long"},
           status_code=400
         - {"error": "The user with this ID does not exist"}, status_code=400
         - {"id": the new tag's ID}, status_code=201
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     # Check whether the tag name is valid
-    if not (3 <= len(tag.name) <= 32):
+    if not (3 <= len(tag.name) <= 256):
         return JSONResponse(
-            {"error": "Tag name is not between 3 and 32 characters long"},
+            {"error": "Tag name is not between 3 and 256 characters long"},
             status_code=400
         )
 
@@ -805,6 +902,14 @@ def add_task_to_tag_relationship(
         - {"error": "The tag with this ID does not exist"}, status_code=400
         - {"id": ID of the new task to tag relationship}
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     # Check whether the task with this ID exists
     cursor.execute(
         "SELECT * FROM Tasks WHERE TaskID = %s",
@@ -853,11 +958,20 @@ def delete_task_to_tag_relationship(task_id: int, tag_id: int):
     JSONResponse
         {}
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     cursor.execute(
         "DELETE FROM TasksToTags WHERE TaskID = %s AND TagID = %s",
         (task_id, tag_id)
     )
     db.commit()
+    db.close()
     return JSONResponse({})
 
 
@@ -884,8 +998,17 @@ def get_reminders(task_id: int):
             ]
         }
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     cursor.execute("SELECT * FROM Reminders WHERE TaskID = %s", (task_id,))
     result = cursor.fetchall()
+    db.close()
     return JSONResponse({"data": result})
 
 
@@ -905,6 +1028,14 @@ def add_reminder(reminder: Reminder):
         - {"error": "The task with this ID does not exist"}, status_code=400
         - 
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     # Check whether the task with this ID exists
     cursor.execute(
         "SELECT * FROM Tasks WHERE TaskID = %s",
@@ -948,6 +1079,14 @@ def delete_reminder(reminder: Reminder):
         - {"error": "The specified reminder does not exist"}, status_code=400
         - {"id": the deleted reminder's ID}
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     # Check whether the reminder exists
     cursor.execute(
         "SELECT * FROM Reminders WHERE TaskID = %s AND ReminderType = %s",
@@ -967,6 +1106,7 @@ def delete_reminder(reminder: Reminder):
         (reminder.task_id, reminder.reminder_type)
     )
     db.commit()
+    db.close()
     return JSONResponse({"id": reminder_id})
 
 
@@ -993,6 +1133,14 @@ def get_messages(user_id: int):
             ]
         }
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     cursor.execute("SELECT * FROM Messages WHERE UserID = %s", (user_id,))
     result = cursor.fetchall()
     result = list(result)
@@ -1022,6 +1170,14 @@ def add_message(message: Message):
         - {"error": "The user with this ID does not exist"}, status_code=400
         - {}
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     # Check whether the role is 1, 2 or 3
     if not (1 <= message.role <= 3):
         return JSONResponse(
@@ -1052,6 +1208,7 @@ def add_message(message: Message):
     )
 
     db.commit()
+    db.close()
     return JSONResponse({})
 
 
@@ -1079,6 +1236,14 @@ def get_data_for_chatbot(query: ChatbotQuery):
           Tags, TasksToTags and Reminders."}, status_code=400
         - {"data": the data returned by the query}
     """
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     if query.sql_query == "":
         return JSONResponse({"error": "The query is empty"}, status_code=400)
 
@@ -1141,12 +1306,19 @@ def get_data_for_chatbot(query: ChatbotQuery):
         )
 
 if __name__ == "__main__":
+    db = mysql.connector.connect(
+        host=mysql_host,
+        port=3306,
+        user="admin",
+        password=mysql_password,
+        database="smart_planner_database"
+    )
+    cursor = db.cursor()
     # Create the tables if they don't exist
     # Users table
     cursor.execute("""CREATE TABLE IF NOT EXISTS Users (
                         UserID INT AUTO_INCREMENT NOT NULL,
                         Username VARCHAR(32) NOT NULL,
-                        EmailAddress VARCHAR(256) NOT NULL,
                         PasswordHash CHAR(64) NOT NULL,
                         PasswordSalt VARCHAR(64) NOT NULL,
                         GoogleID VARCHAR(256),
@@ -1155,7 +1327,7 @@ if __name__ == "__main__":
     # Tasks table
     cursor.execute("""CREATE TABLE IF NOT EXISTS Tasks (
                         TaskID INT AUTO_INCREMENT NOT NULL,
-                        Name VARCHAR(50) NOT NULL,
+                        Name VARCHAR(256) NOT NULL,
                         Description TEXT,
                         Deadline DATETIME,
                         Start DATETIME,
@@ -1169,7 +1341,7 @@ if __name__ == "__main__":
     # Tags table
     cursor.execute("""CREATE TABLE IF NOT EXISTS Tags (
                         TagID INT AUTO_INCREMENT NOT NULL,
-                        Name VARCHAR(32) NOT NULL,
+                        Name VARCHAR(256) NOT NULL,
                         UserID INT NOT NULL,
                         PRIMARY KEY (TagID),
                         FOREIGN KEY (UserID) REFERENCES Users(UserID)
@@ -1201,6 +1373,8 @@ if __name__ == "__main__":
                         PRIMARY KEY (MessageID),
                         FOREIGN KEY (UserID) REFERENCES Users(UserID)
                    )""")
+    db.commit()
+    db.close()
 
     # Run the server
     uvicorn.run(app, host="127.0.0.1", port=8000, log_config="log.ini")

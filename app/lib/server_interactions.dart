@@ -17,7 +17,7 @@ enum ReminderType {tenMinutes, oneHour, oneDay, oneWeek}
 Future<List<dynamic>> getUserByUsername(String username) async {
   http.Response response = await http.get(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2.on.aws'
       '/get_user?username=$username'
     )
   );
@@ -30,11 +30,12 @@ Future<List<dynamic>> getUserByUsername(String username) async {
 Future<List<dynamic>> getUserByGoogleIDToken(String googleIDToken) async {
   http.Response response = await http.get(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2.on'
       '.aws/get_user?google_id_token=$googleIDToken'
     )
   );
-  return jsonDecode(response.body);
+  print(response.statusCode);
+  return jsonDecode(response.body)["data"];
 }
 
 // This procedure adds a user with the specifed [username] and [password] to
@@ -55,7 +56,7 @@ Future<void> addUser(String username, String password) async {
   // Send the request
   await http.post(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2.on.aws'
       '/add_user'
     ),
     headers: <String, String>{'Content-Type': 'application/json'},
@@ -70,7 +71,7 @@ Future<String?> updateUsername(int userID, String username) async {
   // Send a PUT request to the database server
   http.Response response = await http.put(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2.on.aws'
       '/update_username?user_id=$userID&username=$username'
     ),
     headers: <String, String>{'Content-Type': 'application/json'},
@@ -94,7 +95,7 @@ Future<String?> updatePassword(int userID, String password) async {
   // Send a PUT request to the database server
   http.Response response = await http.put(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2.on.aws'
       '/update_password?user_id=$userID&password_hash=$passwordHash'
       '&password_salt=$passwordSalt'
     ),
@@ -115,8 +116,8 @@ Future<String?> updatePassword(int userID, String password) async {
 Future<void> connectGoogleAccount(int userID, String googleIDToken) async {
   await http.put(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url'
-      '.eu-north-1.on.aws/link_google_account'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url'
+      '.eu-west-2.on.aws/link_google_account'
       '?user_id=$userID&google_id_token=$googleIDToken'
     )
   );
@@ -126,7 +127,7 @@ Future<void> connectGoogleAccount(int userID, String googleIDToken) async {
 Future<List> getTasks(int userID) async {
   http.Response response = await http.get(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2.on.aws'
       '/get_task?user_id=$userID'
     )
   );
@@ -137,7 +138,7 @@ Future<List> getTasks(int userID) async {
 Future<dynamic> getTaskByID(int taskID) async {
   var response = await http.get(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2.on.aws'
       '/get_task?task_id=$taskID'));
   return jsonDecode(response.body)['data'][0];
 }
@@ -183,7 +184,7 @@ Future<int> addTask(String name,
   String request = jsonEncode(requestDict);
   http.Response response = await http.post(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2.on.aws'
       '/add_task'
     ),
     headers: {'Content-Type': 'application/json'},
@@ -211,7 +212,8 @@ Future<void> updateTask(int taskID,
                         [String? googleCalendarEventID]
 ) async {
   // Form a JSON for a task update PUT request
-  String url = 'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws/update_task';
+  String url = 'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2'
+    '.on.aws/update_task';
 
   Map requestDict = {
     "task_id": taskID,
@@ -223,8 +225,11 @@ Future<void> updateTask(int taskID,
 
   if (isDeadline) {
     requestDict["deadline"] = dateTimeToString(deadlineDate!, deadlineTime);
+    requestDict["start"] = null;
+    requestDict["end"] = null;
   }
   else {
+    requestDict["deadline"] = null;
     requestDict["start"] = dateTimeToString(startDate!, startTime);
     requestDict["end"] = dateTimeToString(endDate!, endTime);
   }
@@ -232,11 +237,12 @@ Future<void> updateTask(int taskID,
   String request = jsonEncode(requestDict);
 
   // Send the request
-  await http.put(
+  var response = await http.put(
     Uri.parse(url),
     headers: <String, String>{'Content-Type': 'application/json'},
     body: request,
   );
+  print(jsonDecode(response.body));
 }
 
 // This function requests the LSTM model on the server to predict the importance
@@ -248,12 +254,12 @@ Future<int> getTaskImportancePrediction(
   ) async {
 
   // Form the request as a JSON
-  String request = jsonEncode({"description": "$taskName. $taskDescription"});
+  String request = jsonEncode({"name": taskName, "description": taskDescription});
 
   // Send the request
   http.Response response = await http.post(
     Uri.parse(
-      'https://ejo5jpfxthbv3vdjlwg453xbea0boivt.lambda-url.eu-north-1.on.aws'
+      'https://wtepmoxn7j2ggan4jthze245ui0wadww.lambda-url.eu-west-2.on.aws'
       '/predict_importance'
     ),
     headers: {'Content-Type': 'application/json'},
@@ -270,10 +276,13 @@ Future<int> getTaskImportancePrediction(
 Future<void> deleteTask(int taskID) async {
   await http.delete(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url'
-      '.eu-north-1.on.aws/delete_task?task_id=$taskID'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url'
+      '.eu-west-2.on.aws/delete_task?task_id=$taskID'
     ),
-    headers: {'Content-Type': 'application/json'}
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+    }
   );
 }
 
@@ -282,13 +291,13 @@ Future<void> deleteTask(int taskID) async {
 // [data] is a list where each element is a list of two numbers - the importance
 // level of the corresponding task and the number of minutes until its deadline
 // or start datetime
-Future<List<int>> sortTasksWithKMeans(List<List<int>> data) async {
+Future<List<dynamic>> sortTasksWithKMeans(List<List<int>> data) async {
   // Send a POST request with the data to the LSTM and K-Means inference
   // server to get the order of the tasks
   String request = jsonEncode({"data": data});
   http.Response response = await http.post(
     Uri.parse(
-      'https://ejo5jpfxthbv3vdjlwg453xbea0boivt.lambda-url.eu-north-1.on.aws'
+      'https://wtepmoxn7j2ggan4jthze245ui0wadww.lambda-url.eu-west-2.on.aws'
       '/k_means'
     ),
     headers: {'Content-Type': 'application/json'},
@@ -304,7 +313,7 @@ Future<List<int>> sortTasksWithKMeans(List<List<int>> data) async {
 Future<List<Tag>> getTaskTags(int taskID) async {
   http.Response response = await http.get(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2.on.aws'
       '/get_tags?task_id=$taskID'
     )
   );
@@ -320,7 +329,7 @@ Future<List<Tag>> getTaskTags(int taskID) async {
 Future<List<dynamic>> getUserTags(int userID) async {
   http.Response response = await http.get(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2.on.aws'
       '/get_tags?user_id=$userID'
     ),
   );
@@ -338,7 +347,7 @@ Future<int> addTag(String name, int userID) async {
   // Send the request
   http.Response response = await http.post(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2.on.aws'
       '/add_tag'
     ),
     headers: {'Content-Type': 'application/json'},
@@ -359,7 +368,7 @@ Future<int> addTaskToTagRelationship(int taskID, int tagID) async {
   // Send the request
   http.Response response = await http.post(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2.on.aws'
       '/add_task_to_tag_relationship'
     ),
     headers: {'Content-Type': 'application/json'},
@@ -376,7 +385,7 @@ Future<int> addTaskToTagRelationship(int taskID, int tagID) async {
 Future<void> deleteTaskToTagRelationship(int taskID, int tagID) async {
   await http.delete(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2.on.aws'
       '/delete_task_to_tag_relationship?task_id=$taskID&tag_id=$tagID'
     ),
     headers: {'Content-Type': 'application/json'}
@@ -384,17 +393,17 @@ Future<void> deleteTaskToTagRelationship(int taskID, int tagID) async {
 }
 
 // This function returns the types of reminders for a task given its [taskID]
-Future<List<ReminderType>> getTaskReminders(int taskID) async {
+Future<Set<ReminderType>> getTaskReminders(int taskID) async {
   // Send a GET request to the database server to get the task's reminder types
   http.Response response = await http.get(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2.on.aws'
       '/get_reminders?task_id=$taskID'
     )
   );
 
   // Get the types of the task's reminders
-  List<ReminderType> reminders = [];
+  Set<ReminderType> reminders = {};
   for (final dynamic reminder in jsonDecode(response.body)['data']) {
     if (reminder[2] == 1) {
       reminders.add(ReminderType.tenMinutes);
@@ -423,7 +432,7 @@ Future<int> addReminder(int taskID, int reminderType) async {
   // Send the request
   http.Response response = await http.post(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2.on.aws'
       '/add_reminder'
     ),
     headers: {'Content-Type': 'application/json'},
@@ -439,12 +448,16 @@ Future<int> addReminder(int taskID, int reminderType) async {
 // It returns the ID of the reminder if it has been deleted or -1 if the
 // reminder has not been found.
 Future<int> deleteReminder(int taskID, int reminderType) async {
+  String request = jsonEncode(
+    {'task_id': taskID, 'reminder_type': reminderType}
+  );
   http.Response response = await http.delete(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'
-      '/delete_reminder?task_id=$taskID&reminder_type=$reminderType'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2.on.aws'
+      '/delete_reminder'
     ),
-    headers: {'Content-Type': 'application/json'}
+    headers: {'Content-Type': 'application/json'},
+    body: request
   );
 
   // If the reminder has not been found
@@ -452,7 +465,11 @@ Future<int> deleteReminder(int taskID, int reminderType) async {
     return -1;
   }
 
-  int reminderID = jsonDecode(response.body)['id'];
+  int? reminderID = jsonDecode(response.body)['id'];
+
+  if (reminderID == null) {
+    return -1;
+  }
   
   return reminderID;
 }
@@ -463,7 +480,7 @@ Future<List<Message>> getMessages(int userID) async {
   // Send a GET request to the database server to get the user's messages
   http.Response response = await http.get(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2.on.aws'
       '/get_messages?user_id=$userID'
     )
   );
@@ -473,7 +490,7 @@ Future<List<Message>> getMessages(int userID) async {
   for (final dynamic message in jsonDecode(response.body)['data']) {
     messages.add(
       Message(
-        messageID: int.parse(message[0].toString()),
+        id: int.parse(message[0].toString()),
         content: message[1],
         role: MessageRole.values[int.parse(message[2].toString()) - 1],
       )
@@ -505,11 +522,11 @@ Future<void> sendMessage(
     "timestamp": timestamp.toIso8601String(),
     "user_id": userID
   });
-
+  
   // Send the JSON in an HTTP POST request to add the message to the database
   await http.post(
     Uri.parse(
-      'https://szhp6s7oqx7vr6aspphi6ugyh40fhkne.lambda-url.eu-north-1.on.aws'
+      'https://tiavyhhg2ajtw7j4iohc4j2tsi0zsnty.lambda-url.eu-west-2.on.aws'
       '/add_message'
     ),
     headers: {'Content-Type': 'application/json'},
@@ -525,7 +542,7 @@ Future<void> invokeLLM(int userID) async {
   // Send an HTTP GET request to get the LLM's response
   http.Response response = await http.get(
     Uri.parse(
-      'https://unsvtgzrumeigr72yblvkp7jwq0onuei.lambda-url.eu-north-1.on.aws'
+      'https://gkh43pbsne3lu6tk4iuyy3apqu0bwcou.lambda-url.eu-west-2.on.aws'
       '/get_response?user_id=$userID'
     )
   );

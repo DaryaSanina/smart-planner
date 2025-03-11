@@ -31,25 +31,19 @@ Future<dynamic> signInWithGoogle() async {
       idToken: googleAuth?.idToken,
     );
 
-    // Load the user's client ID into the Google Calendar client
-    final client = await googleSignIn.authenticatedClient();
-    CalendarClient.calendar = calendar_api.CalendarApi(client!);
-
-    return await FirebaseAuth.instance.signInWithCredential(credential);
+    return (
+      await FirebaseAuth.instance.signInWithCredential(credential),
+      await googleSignIn.authenticatedClient()
+    );
   } on Exception {
     return;
   }
 }
 
 // Google Sign-In Button
-class GoogleSignInButton extends StatefulWidget {
+class GoogleSignInButton extends StatelessWidget {
   const GoogleSignInButton({super.key});
 
-  @override
-  State<GoogleSignInButton> createState() => _GoogleSignInButtonState();
-}
-
-class _GoogleSignInButtonState extends State<GoogleSignInButton> {
   @override
   Widget build(BuildContext context) {
     // Load the user and message list models
@@ -59,7 +53,7 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
     return InkWell(
       onTap: () async {
         // Sign in to Google account
-        UserCredential userCredential = await signInWithGoogle();
+        var (userCredential, client) = await signInWithGoogle();
         String googleIDToken = (await userCredential.user!.getIdToken())!;
 
         // Identify the user based on their ID token
@@ -70,6 +64,9 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
 
         // Check whether the user exists
         if (databaseResponse.isNotEmpty) {
+          // Load the user's client ID into the Google Calendar client
+          CalendarClient.calendar = calendar_api.CalendarApi(client!);
+
           // Load the user's data
           userID = databaseResponse[0][0];
           username = databaseResponse[0][1];
@@ -85,7 +82,7 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
           // Show the home page
           if (context.mounted) {
             Navigator.push(context, MaterialPageRoute(builder: (context) {
-              return HomePage(username: username, userID: userID);
+              return HomePage();
             }));
           }
         }

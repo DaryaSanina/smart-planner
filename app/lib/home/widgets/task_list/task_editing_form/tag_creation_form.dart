@@ -1,4 +1,5 @@
 import 'package:app/models/tag_list_model.dart';
+import 'package:app/models/user_model.dart';
 import 'package:app/server_interactions.dart';
 
 import 'package:flutter/material.dart';
@@ -8,11 +9,9 @@ import 'package:provider/provider.dart';
 class TagCreationForm extends StatefulWidget{
   const TagCreationForm({
     super.key,
-    required this.userID,
     required this.tagNameController
   });
 
-  final int userID;
   final TextEditingController tagNameController;
 
   @override
@@ -23,10 +22,11 @@ class _TagCreationFormState extends State<TagCreationForm> {
   
   // Indicates whether the database server is currently processing
   // a tag creation request
-  bool _isLoadingTag = false;
+  bool _tagIsLoading = false;
 
   @override
   Widget build(BuildContext context) {
+    UserModel user = context.watch<UserModel>();
     TagListModel tagList = context.watch<TagListModel>();
 
     return Row(
@@ -35,18 +35,18 @@ class _TagCreationFormState extends State<TagCreationForm> {
           onPressed: () async {
             // Check whether the name of the tag has between 3 and 32 characters
             if (widget.tagNameController.text.length >= 3
-                && widget.tagNameController.text.length <= 32) {
+                && widget.tagNameController.text.length <= 256) {
               // Show a circular progress indicator
               setState(() {
-                _isLoadingTag = true;
+                _tagIsLoading = true;
               });
 
               try {
                 // Add the tag to the database
-                await addTag(widget.tagNameController.text, widget.userID);
+                await addTag(widget.tagNameController.text, user.id);
 
                 // Update the the tag list model
-                tagList.update(widget.userID);
+                tagList.load(user.id);
               }
 
               // Display a notification if there was an error
@@ -65,19 +65,33 @@ class _TagCreationFormState extends State<TagCreationForm> {
 
               // Hide the circular progress indicator
               setState(() {
-                _isLoadingTag = false;
+                _tagIsLoading = false;
               });
             }
             else {
               // Show the user a notification
               // saying that the tag name is incorrect
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    "Tag name should be between 3 and 32 characters long."
-                  )
-                ),
-              );
+              await showDialog<String>(
+                  context: context,
+                  builder: (dialogContext) => AlertDialog(
+                    content: Text(
+                      "Tag name should be between 3 and 256 characters long"
+                    ),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);  // Hide the dialog
+                        },
+                        child: Text(
+                          "OK",
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.tertiary
+                          )
+                        )
+                      )
+                    ],
+                  ),
+                );
             }
           },
           icon: const Icon(Icons.add),
@@ -101,7 +115,7 @@ class _TagCreationFormState extends State<TagCreationForm> {
       ]
 
       // Show a circular progress indicator while the new tag is being created
-      + (_isLoadingTag
+      + (_tagIsLoading
       ? [CircularProgressIndicator(
           color: Theme.of(context).colorScheme.tertiary
         )]

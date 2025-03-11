@@ -1,6 +1,6 @@
 import 'package:app/home/home_page.dart';
+import 'package:app/models/task_list_model.dart';
 import 'package:app/sign_in/util.dart';
-import 'package:app/models/message_list_model.dart';
 import 'package:app/models/user_model.dart';
 
 import 'package:flutter/material.dart';
@@ -29,9 +29,9 @@ class _SignInFormState extends State<SignInForm> {
 
   @override
   Widget build(BuildContext context) {
-    // Load the user and message list models
-    final user = context.watch<UserModel>();
-    final messageList = context.watch<MessageListModel>();
+    // Load the user and the task list models
+    UserModel user = context.watch<UserModel>();
+    TaskListModel taskList = context.watch<TaskListModel>();
 
     int userID;
 
@@ -119,9 +119,7 @@ class _SignInFormState extends State<SignInForm> {
                         // Update the user model
                         user.setID(userID);
                         user.setUsername(usernameController.text);
-                
-                        // Update the message list model
-                        messageList.setUserID(userID);
+                        await taskList.update(user.id);
                 
                         // Hide the circular progress indicator
                         setState(() {
@@ -133,10 +131,7 @@ class _SignInFormState extends State<SignInForm> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) {
-                              return HomePage(
-                                username: usernameController.text,
-                                userID: userID
-                              );
+                              return HomePage();
                             })
                           );
                         }

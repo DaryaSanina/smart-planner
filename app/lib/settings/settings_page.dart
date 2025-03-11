@@ -1,15 +1,13 @@
 import 'package:app/settings/widgets/account_settings_tile.dart';
 import 'package:app/settings/widgets/sign_out_tile.dart';
 import 'package:app/settings/widgets/settings_app_bar.dart';
-import 'package:app/settings/widgets/show_importance_tile.dart';
+import 'package:app/settings/widgets/importance_visibility_tile.dart';
 
 import 'package:flutter/material.dart';
 
 // Settings page
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key, required this.userID, required this.username});
-  final int userID;
-  final String username;
+  const SettingsPage({super.key});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -34,12 +32,9 @@ class _SettingsPageState extends State<SettingsPage> {
             // List of settings
             child: Column(
               children: [
-                AccountSettingsTile(
-                  userID: widget.userID,
-                  username: widget.username
-                ),
+                AccountSettingsTile(),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.025),
-                const ShowImportanceTile(),
+                const ImportanceVisibilityTile(),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.025),
                 const SignOutTile(),
               ]

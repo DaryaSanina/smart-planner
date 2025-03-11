@@ -11,11 +11,11 @@ enum MessageRole { user, assistant, tool }
 // This class represents a message in the chat with the assistant
 class Message {
   Message({
-    required this.messageID,
+    required this.id,
     required this.content,
     required this.role
   });
-  int messageID;
+  int id;
   String content;
   MessageRole role;
 }
@@ -23,23 +23,33 @@ class Message {
 // This model represents the conversation history between the user and
 // the assistant
 class MessageListModel extends ChangeNotifier {
-  int userID = 0;
+  int _userID = 0;
+  get userID => _userID;
   List<Message> _messages = [];
   UnmodifiableListView get messages => UnmodifiableListView(_messages);
-  bool assistantIsGeneratingResponse = false;
+  bool _assistantIsGeneratingResponse = false;
+  get assistantIsGeneratingResponse => _assistantIsGeneratingResponse;
 
   // This method updates the message list in the model by requesting them from
   // the server
   Future<void> updateMessages() async {
     _messages.clear();
     _messages = await getMessages(userID);
-    notifyListeners();
   }
 
   // This method updates the ID of the user whose messages the model needs to
   // contain with [newUserID], and then updates the message list.
-  void setUserID(int newUserID) {
-    userID = newUserID;
-    updateMessages();
+  Future<bool> setUserID(int newUserID) async {
+    _userID = newUserID;
+    await updateMessages();
+    return true;
+  }
+
+  void setAssistantResponseGenerationStatus(bool newValue) {
+    _assistantIsGeneratingResponse = newValue;
+  }
+
+  void notify() {
+    notifyListeners();
   }
 }

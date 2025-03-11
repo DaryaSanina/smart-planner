@@ -7,19 +7,17 @@ import 'package:provider/provider.dart';
 // Header for the chat and dashboard pages
 class HomeAppBar extends StatefulWidget implements PreferredSizeWidget {
   const HomeAppBar({
-    this.appBarHeight = kToolbarHeight,
+    this.height = kToolbarHeight,
     super.key,
-    required this.userID,
   });
 
   @override
   State<HomeAppBar> createState() => _HomeAppBarState();
 
-  final double appBarHeight;
-  final int userID;
+  final double height;
 
   @override
-  Size get preferredSize => Size.fromHeight(appBarHeight);
+  Size get preferredSize => Size.fromHeight(height);
 }
 
 class _HomeAppBarState extends State<HomeAppBar> {
@@ -32,10 +30,13 @@ class _HomeAppBarState extends State<HomeAppBar> {
       automaticallyImplyLeading: false,
 
       // Greet the user with the text displayed on the app bar
-      title: Text("Hi ${user.username}", style: const TextStyle(fontSize: 24)),
+      title: Text(
+        "Hi ${user.username}",
+        style: const TextStyle(fontSize: 24, overflow: TextOverflow.ellipsis)
+      ),
 
       actions: [
-        SettingsButton(userID: widget.userID, username: user.username),
+        SettingsButton(),
       ],
     );
   }

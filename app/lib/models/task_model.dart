@@ -31,8 +31,8 @@ class TaskModel extends ChangeNotifier {
   get googleCalendarEventID => _googleCalendarEventID;
   List<int> _tags = [];
   UnmodifiableListView get tags => UnmodifiableListView(_tags);
-  List<ReminderType> _reminders = [];
-  UnmodifiableListView get reminders => UnmodifiableListView(_reminders);
+  Set<ReminderType> _reminders = {};
+  UnmodifiableSetView get reminders => UnmodifiableSetView(_reminders);
 
   // This method sets all attributes to their default values
   void clear() {
@@ -65,7 +65,7 @@ class TaskModel extends ChangeNotifier {
 
   // This method gets the details of the task with the given [taskID] and
   // sets the attributes of the model to match those details
-  Future<void> getDetails(int taskID) async {
+  Future<void> loadDetails(int taskID) async {
     dynamic details = await getTaskByID(taskID);
 
     // Update the model's attributes

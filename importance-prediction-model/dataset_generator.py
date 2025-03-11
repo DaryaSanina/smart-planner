@@ -21,6 +21,7 @@ examples_to_generate = int(args.n_examples)
 data = set()
 
 while examples_to_generate > 0:
+    print("new iteration")
     messages = [
         {
             "role": "system",
@@ -82,6 +83,7 @@ while examples_to_generate > 0:
         except Exception as e:
             pass
     examples_to_generate = int(args.n_examples) - len(data)
+    print(examples_to_generate)
 
 # Create a Pandas dataframe with the generated examples
 dataframe = pd.DataFrame(

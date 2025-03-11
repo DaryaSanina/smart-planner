@@ -1,20 +1,16 @@
+import 'package:app/calendar_api.dart';
 import 'package:app/models/user_model.dart';
 import 'package:app/server_interactions.dart';
 import 'package:app/sign_in/widgets/google_sign_in.dart';
 
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:googleapis/calendar/v3.dart' as calendar_api;
 import 'package:provider/provider.dart';
 
 import 'package:flutter/material.dart';
 
-class ConnectGoogleAccountButton extends StatefulWidget {
+class ConnectGoogleAccountButton extends StatelessWidget {
   const ConnectGoogleAccountButton({super.key});
 
-  @override
-  State<ConnectGoogleAccountButton> createState() => _ConnectGoogleAccountButtonState();
-}
-
-class _ConnectGoogleAccountButtonState extends State<ConnectGoogleAccountButton> {
   @override
   Widget build(BuildContext context) {
     // Load the user model
@@ -24,8 +20,11 @@ class _ConnectGoogleAccountButtonState extends State<ConnectGoogleAccountButton>
       onTap: () async {
         try {
           // Connect a Google account
-          UserCredential userCredential = await signInWithGoogle();
+          var (userCredential, client) = await signInWithGoogle();
           String googleIDToken = (await userCredential.user!.getIdToken())!;
+
+          // Load the user's client ID into the Google Calendar client
+          CalendarClient.calendar = calendar_api.CalendarApi(client!);
 
           // Add the ID token to the database
           await connectGoogleAccount(user.id, googleIDToken);

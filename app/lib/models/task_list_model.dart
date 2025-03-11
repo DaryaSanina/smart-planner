@@ -57,8 +57,9 @@ class TaskListModel extends ChangeNotifier {
 
   // This method fetches the user's tasks from the database
   // and their Google Calendar
-  Future<bool> update(int userID) async {
+  Future<bool> update(int userID, {bool notifyListenersBoolean=true}) async {
     List databaseResponse = await getTasks(userID);
+    print(databaseResponse);
     
     // Update the task list with tasks from the database
     _tasks.clear();
@@ -94,8 +95,8 @@ class TaskListModel extends ChangeNotifier {
 
         // Retrieve the task's name and deadline or start and end
         name = event.summary!;
-        if (name.length > 32) {
-          name = name.substring(0, 32);
+        if (name.length > 256) {
+          name = name.substring(0, 256);
         }
 
         // If the task has a deadline
@@ -192,7 +193,6 @@ class TaskListModel extends ChangeNotifier {
           taskID: taskID,
           name: name,
           timings: timings,
-          userID: userID,
           importance: importance,
           deadline: deadline,
           start: start,
@@ -205,7 +205,7 @@ class TaskListModel extends ChangeNotifier {
 
     // Remove any duplicate tasks and get a list of task names
     List<TaskWidget> newTasks = [];
-    List<String> taskNames = [];
+    Set<String> taskNames = {};
     for (TaskWidget task in _tasks) {
       if (!taskNames.contains(task.name)) {
         newTasks.add(task);
@@ -229,8 +229,8 @@ class TaskListModel extends ChangeNotifier {
             
           // Retrieve the task's data
           String name = event.summary!;
-          if (name.length > 32) {
-            name = name.substring(0, 32);
+          if (name.length > 256) {
+            name = name.substring(0, 256);
           }
           String description = event.description != null
                                 ? event.description! : "";
@@ -331,7 +331,6 @@ class TaskListModel extends ChangeNotifier {
               taskID: taskID,
               name: name,
               timings: timings,
-              userID: userID,
               importance: importance,
               deadline: deadline,
               start: start,
@@ -348,14 +347,15 @@ class TaskListModel extends ChangeNotifier {
     // appear in (if it exists)
     final prefs = await SharedPreferences.getInstance();
     String? order = prefs.getString('order');
+    print(order);
     if (order == "deadline") {
-      sortByDeadline();
+      sortByDeadline(notifyListenersBoolean: notifyListenersBoolean);
     }
     else if (order == "importance") {
-      sortByImportance();
+      sortByImportance(notifyListenersBoolean: notifyListenersBoolean);
     }
     else if (order == "ai") {
-      await sortWithAI();
+      await sortWithAI(notifyListenersBoolean: notifyListenersBoolean);
     }
 
     return true;
@@ -375,7 +375,7 @@ class TaskListModel extends ChangeNotifier {
   // of their deadlines or end datetimes
   // Tasks with the same importance levels and end datetimes are sorted
   // in the increasing order of their start datetimes
-  void sortByImportance() {
+  void sortByImportance({bool notifyListenersBoolean=true}) {
     _tasks.sort((TaskWidget task1, TaskWidget task2) {
       // Compare two tasks and return a negative value if the first task
       // should be before the second one, or a positive value if the first task
@@ -426,7 +426,7 @@ class TaskListModel extends ChangeNotifier {
       }
     });
 
-    notifyListeners();
+    if (notifyListenersBoolean) notifyListeners();
   }
 
   // This method sorts the tasks in the increasing order of their deadlines
@@ -435,7 +435,7 @@ class TaskListModel extends ChangeNotifier {
   // of their start datetimes
   // Tasks with the same deadlines or start and end datetimes are sorted
   // in the decreasing order of their importance levels
-  void sortByDeadline() {
+  void sortByDeadline({bool notifyListenersBoolean=true}) {
     _tasks.sort((TaskWidget task1, TaskWidget task2) {
       // Compare two tasks and return a negative value if the first task
       // should be before the second one, or a positive value if the first task
@@ -486,7 +486,7 @@ class TaskListModel extends ChangeNotifier {
       }
     });
 
-    notifyListeners();
+    if (notifyListenersBoolean) notifyListeners();
   }
 
   // This method sorts the tasks by importance and deadline (or start and
@@ -495,9 +495,9 @@ class TaskListModel extends ChangeNotifier {
   // order:
   // important and urgent -> important but not urgent
   // -> urgent but not important -> not important and not urgent
-  Future<void> sortWithAI() async {
+  Future<void> sortWithAI({bool notifyListenersBoolean=true}) async {
     // First, sort the tasks by their deadline
-    sortByDeadline();
+    sortByImportance(notifyListenersBoolean: false);
 
     // Then get a list of pairs of integers that will be passed to the K-Means
     // clustering algorithm
@@ -527,7 +527,13 @@ class TaskListModel extends ChangeNotifier {
       }
     }
 
-    List<int> order = await sortTasksWithKMeans(data);
+    List<dynamic> order = await sortTasksWithKMeans(data);
+    print(data);
+    print(_tasks);
+    print(order);
+    if (_tasks == []) {
+      return;
+    }
 
     // Sort the tasks
     List<TaskWidget> newTasks = [];
@@ -535,7 +541,9 @@ class TaskListModel extends ChangeNotifier {
       newTasks.add(_tasks[order[i]]);
     }
     _tasks = newTasks;
+    print(notifyListenersBoolean);
+    print(_tasks);
 
-    notifyListeners();
+    if (notifyListenersBoolean) notifyListeners();
   }
 }

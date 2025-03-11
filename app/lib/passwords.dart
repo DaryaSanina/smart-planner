@@ -39,8 +39,11 @@ String? validatePassword(String? password) {
   }
 
   // Check whether the password is between 8 and 16 characters long
-  if (password.length < 8 || password.length > 16) {
-    return "The password should be between 8 and 16 characters long";
+  if (password.length < 8) {
+    return "The password has less than 8 characters";
+  }
+  else if (password.length > 16) {
+    return "The password has more than 16 characters";
   }
 
   // Check whether the password contains lowercase and uppercase letters,
@@ -64,16 +67,16 @@ String? validatePassword(String? password) {
     }
   }
   if (!hasLowerCase) {
-    return "The password should contain lowercase letters";
+    return "The password has no lowercase letters";
   }
   if (!hasUpperCase) {
-    return "The password should contain uppercase letters";
+    return "The password has no uppercase letters";
   }
   if (!hasDigits) {
-    return "The password should contain digits";
+    return "The password has no digits";
   }
   if (!hasSymbols) {
-    return "The password should contain special symbols";
+    return "The password has no special symbols";
   }
   return null;
 }

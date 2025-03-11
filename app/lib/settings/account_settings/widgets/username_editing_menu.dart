@@ -9,11 +9,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class UsernameEditingMenu extends StatefulWidget{
   const UsernameEditingMenu({
     super.key,
-    required this.userID,
     required this.controller
   });
 
-  final int userID;
   final TextEditingController controller;
 
   @override
@@ -24,8 +22,6 @@ class _UsernameEditingMenuState extends State<UsernameEditingMenu> {
   // Indicates whether the database server is currently processing a username
   // update request
   bool _usernameIsUpdating = false;
-
-  
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +76,7 @@ class _UsernameEditingMenuState extends State<UsernameEditingMenu> {
                     });
 
                     String? validationError = await updateUsername(
-                      widget.userID,
+                      user.id,
                       widget.controller.text
                     );
             

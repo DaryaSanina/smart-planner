@@ -4,6 +4,7 @@ import 'package:app/models/importance_visibility_model.dart';
 import 'package:app/models/tag_list_model.dart';
 import 'package:app/models/task_model.dart';
 import 'package:app/models/task_list_model.dart';
+import 'package:app/models/user_model.dart';
 
 import 'package:flutter/material.dart';
 
@@ -15,7 +16,6 @@ import 'package:provider/provider.dart';
 class TaskWidget extends StatefulWidget {
   final String name;
   final String timings;
-  final int userID;
   final int taskID;
   final int importance;
   final DateTime? deadline;
@@ -27,7 +27,6 @@ class TaskWidget extends StatefulWidget {
     super.key,
     required this.name,
     required this.timings,
-    required this.userID,
     required this.taskID,
     required this.importance,
     this.deadline,
@@ -46,13 +45,14 @@ class _TaskWidgetState extends State<TaskWidget> {
   // the task is currently being deleted from the database
   bool checkboxValue = false;
 
-  // Indicates whether the task is currently updating
+  // Indicates whether the details of the task are currently updating
   bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
-    // Load the task, task list, tag list and importance visibility models
+    // Load the user, task, task list, tag list and importance visibility models
     // so that the widget can update dynamically
+    final UserModel user = context.watch<UserModel>();
     TaskModel taskModel = context.watch<TaskModel>();
     TaskListModel taskListModel = context.watch<TaskListModel>();
     TagListModel tagListModel = context.watch<TagListModel>();
@@ -67,17 +67,16 @@ class _TaskWidgetState extends State<TaskWidget> {
         onPressed: () async {
           try {
             // Refresh the tag list model
-            await tagListModel.update(widget.userID);
+            await tagListModel.load(user.id);
 
             // Refresh the task model
-            await taskModel.getDetails(widget.taskID);
+            await taskModel.loadDetails(widget.taskID);
 
             // Show the task editing dialog
             if (context.mounted) {
               await showDialog<String>(
                 context: context,
                 builder: (context) => TaskEditingDialog(
-                  userID: widget.userID,
                   taskWidget: widget
                 ),
               );
@@ -106,7 +105,7 @@ class _TaskWidgetState extends State<TaskWidget> {
 
           try {
             // Update the task list model
-            await taskListModel.update(widget.userID);
+            await taskListModel.update(user.id);
             taskListModel.notify();
           }
 
@@ -143,17 +142,13 @@ class _TaskWidgetState extends State<TaskWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Task name
-                    Row(
-                      children: <Widget>[
-                        Text(
-                          widget.name,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w200,
-                          ),
-                          softWrap: true,
-                        ),
-                      ],
+                    Text(
+                      widget.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w200,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                 
                     // Task importance

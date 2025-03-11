@@ -1,23 +1,24 @@
+import 'package:app/models/user_model.dart';
 import 'package:app/settings/account_settings/account_settings_page.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 // Account settings tile on the settings page
 class AccountSettingsTile extends StatelessWidget {
   const AccountSettingsTile({
     super.key,
-    required this.userID,
-    required this.username,
   });
-  final int userID;
-  final String username;
 
   @override
   Widget build(BuildContext context) {
+    // Load the user model
+    final UserModel user = context.watch<UserModel>();
+
     return ElevatedButton(
       // Go to the account settings page
       onPressed: () {
         Navigator.push(context, MaterialPageRoute(builder: (context) {
-          return AccountSettingsPage(userID: userID, username: username);
+          return AccountSettingsPage(username: user.username);
         }));
       },
 

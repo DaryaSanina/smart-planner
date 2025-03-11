@@ -1,3 +1,4 @@
+import 'package:app/calendar_api.dart';
 import 'package:app/sign_in/sign_in_page.dart';
 import 'package:flutter/material.dart';
 
@@ -12,7 +13,8 @@ class SignOutTile extends StatelessWidget {
     return ElevatedButton(
       // Sign the user out
       onPressed: () {
-         Navigator.push(context, MaterialPageRoute(builder: (context) {
+        CalendarClient.calendar = null;
+        Navigator.push(context, MaterialPageRoute(builder: (context) {
           return const SignInPage();
         }));
       },

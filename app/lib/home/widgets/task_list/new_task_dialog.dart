@@ -1,5 +1,6 @@
 import 'package:app/calendar_api.dart';
 import 'package:app/home/widgets/task_list/task_editing_form/task_details_form.dart';
+import 'package:app/models/user_model.dart';
 import 'package:app/server_interactions.dart';
 import 'package:app/models/task_model.dart';
 import 'package:app/notification_api.dart';
@@ -10,8 +11,7 @@ import 'package:provider/provider.dart';
 
 // A dialog in which the user can create a new task
 class NewTaskDialog extends StatefulWidget {
-  const NewTaskDialog({super.key, required this.userID});
-  final int userID;
+  const NewTaskDialog({super.key});
 
   @override State<StatefulWidget> createState() => _NewTaskDialogState();
 }
@@ -28,16 +28,18 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
 
   @override
   Widget build(BuildContext context) {
+    // Load the user model
+    final UserModel user = context.watch<UserModel>();
+
     // Load the task model so that the page can update dynamically
-    final task = context.watch<TaskModel>();
+    final TaskModel task = context.watch<TaskModel>();
 
     return AlertDialog(
       title: const Text("Create a new task"),
 
       scrollable: true,
 
-      content: TaskEditingForm(
-        userID: widget.userID,
+      content: TaskDetailsForm(
         formKey: _formKey,
         taskNameController: _taskNameController,
         taskDescriptionController: _taskDescriptionController,
@@ -78,6 +80,81 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                   && task.startDate != null
                   && task.endDate != null) {
 
+                  // If the task has a start and an end, check that the task
+                  // ends after it starts
+                  if (task.startDate != null && task.endDate != null) {
+                    DateTime start = task.startDate;
+                    if (task.startTime != null) {
+                      start.add(
+                        Duration(
+                          hours: task.startTime.hour,
+                          minutes: task.startTime.minute
+                        )
+                      );
+                    }
+                    DateTime end = task.endDate;
+                    if (task.endTime != null) {
+                      end.add(
+                        Duration(
+                          hours: task.endTime.hour,
+                          minutes: task.endTime.minute
+                        )
+                      );
+                    }
+                    if (start.isAfter(end)) {
+                      await showDialog<String>(
+                        context: context,
+                        builder: (dialogContext) => AlertDialog(
+                          content: Text(
+                            "The task cannot end before it starts"
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);  // Hide the dialog
+                              },
+                              child: Text(
+                                "OK",
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.tertiary
+                                )
+                              )
+                            )
+                          ],
+                        ),
+                      );
+                      return;
+                    }
+                  }
+
+                  // Check task importance validity
+                  if (int.tryParse(_taskImportanceController.text) == null
+                      || int.parse(_taskImportanceController.text) < 0
+                      || int.parse(_taskImportanceController.text) > 10) {
+                    await showDialog<String>(
+                      context: context,
+                      builder: (dialogContext) => AlertDialog(
+                        content: Text(
+                          "Task importance should be an integer from 0 to 10"
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);  // Hide the dialog
+                            },
+                            child: Text(
+                              "OK",
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.tertiary
+                              )
+                            )
+                          )
+                        ],
+                      ),
+                    );
+                    return;
+                  }
+
                   // Show a circular progress indicator
                   setState(() {
                     _isLoading = true;
@@ -104,7 +181,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                       task.name,
                       task.description,
                       task.importance,
-                      widget.userID,
+                      user.id,
                       task.hasDeadline,
                       task.deadlineDate,
                       task.deadlineTime,
@@ -181,6 +258,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                         title = "Starts $title";
                       }
 
+
                       NotificationAPI.scheduleNotification(
                         id: reminderID,
                         title: title,
@@ -194,11 +272,25 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                   // and the task could not be created
                   catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
+                      await showDialog<String>(
+                        context: context,
+                        builder: (dialogContext) => AlertDialog(
                           content: Text(
                             "Sorry, there was an error. Please try again."
-                          )
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);  // Hide the dialog
+                              },
+                              child: Text(
+                                "OK",
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.tertiary
+                                )
+                              )
+                            )
+                          ],
                         ),
                       );
                     }
@@ -215,11 +307,25 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
               // If the selected timings are incorrect,
               // show the user an error message
               else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
+                await showDialog<String>(
+                  context: context,
+                  builder: (dialogContext) => AlertDialog(
                     content: Text(
                       "There should either be a deadline or a start and an end."
-                    )
+                    ),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);  // Hide the dialog
+                        },
+                        child: Text(
+                          "OK",
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.tertiary
+                          )
+                        )
+                      )
+                    ],
                   ),
                 );
               }

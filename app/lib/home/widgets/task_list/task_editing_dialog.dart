@@ -13,10 +13,8 @@ import 'package:provider/provider.dart';
 class TaskEditingDialog extends StatefulWidget {
   const TaskEditingDialog({
     super.key,
-    required this.userID,
     required this.taskWidget
   });
-  final int userID;
   final TaskWidget taskWidget;
 
   @override State<StatefulWidget> createState() => _TaskEditingDialogState();
@@ -38,7 +36,7 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
   @override
   Widget build(BuildContext context) {
     // Load the task model so that the page can update dynamically
-    final task = context.watch<TaskModel>();
+    final TaskModel task = context.watch<TaskModel>();
 
     // When the dialog opens, load the values in the task name, description and
     // importance fields from the details of the task
@@ -54,8 +52,7 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
 
       scrollable: true,
 
-      content: TaskEditingForm(
-        userID: widget.userID,
+      content: TaskDetailsForm(
         formKey: _formKey,
         taskNameController: _taskNameController,
         taskDescriptionController: _taskDescriptionController,
@@ -79,7 +76,9 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
             // from the corresponding text boxes
             task.setName(_taskNameController.text);
             task.setDescription(_taskDescriptionController.text);
-            task.setImportance(int.parse(_taskImportanceController.text));
+            if (int.tryParse(_taskImportanceController.text) != null) {
+              task.setImportance(int.parse(_taskImportanceController.text));
+            }
 
             // Validate the form
             if (_formKey.currentState!.validate()) {
@@ -91,6 +90,81 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                   && (task.endDate == null && task.endTime == null)
                 || (task.deadlineDate == null && task.deadlineTime == null)
                   && task.startDate != null && task.endDate != null) {
+                
+                // If the task has a start and an end, check that the task
+                  // ends after it starts
+                  if (task.startDate != null && task.endDate != null) {
+                    DateTime start = task.startDate;
+                    if (task.startTime != null) {
+                      start.add(
+                        Duration(
+                          hours: task.startTime.hour,
+                          minutes: task.startTime.minute
+                        )
+                      );
+                    }
+                    DateTime end = task.endDate;
+                    if (task.endTime != null) {
+                      end.add(
+                        Duration(
+                          hours: task.endTime.hour,
+                          minutes: task.endTime.minute
+                        )
+                      );
+                    }
+                    if (start.isAfter(end)) {
+                      await showDialog<String>(
+                        context: context,
+                        builder: (dialogContext) => AlertDialog(
+                          content: Text(
+                            "The task cannot end before it starts"
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);  // Hide the dialog
+                              },
+                              child: Text(
+                                "OK",
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.tertiary
+                                )
+                              )
+                            )
+                          ],
+                        ),
+                      );
+                      return;
+                    }
+                  }
+                
+                // Check task importance validity
+                if (int.tryParse(_taskImportanceController.text) == null
+                    || int.parse(_taskImportanceController.text) < 0
+                    || int.parse(_taskImportanceController.text) > 10) {
+                  await showDialog<String>(
+                    context: context,
+                    builder: (dialogContext) => AlertDialog(
+                      content: Text(
+                        "Task importance should be an integer from 0 to 10"
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);  // Hide the dialog
+                          },
+                          child: Text(
+                            "OK",
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.tertiary
+                            )
+                          )
+                        )
+                      ],
+                    ),
+                  );
+                  return;
+                }
 
                 // Show a circular progress indicator
                 setState(() {
@@ -269,11 +343,26 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                 // and the task could not be updated
                 catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
+                    print(e);
+                    await showDialog<String>(
+                      context: context,
+                      builder: (dialogContext) => AlertDialog(
                         content: Text(
                           "Sorry, there was an error. Please try again."
-                        )
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);  // Hide the dialog
+                            },
+                            child: Text(
+                              "OK",
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.tertiary
+                              )
+                            )
+                          )
+                        ],
                       ),
                     );
                   }
@@ -291,12 +380,25 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
 
               // Display a notification if the selected timings are incorrect
               else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
+                await showDialog<String>(
+                  context: context,
+                  builder: (dialogContext) => AlertDialog(
                     content: Text(
-                      "There should either be a deadline"
-                      " or a start and an end."
-                    )
+                      "There should either be a deadline or a start and an end."
+                    ),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);  // Hide the dialog
+                        },
+                        child: Text(
+                          "OK",
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.tertiary
+                          )
+                        )
+                      )
+                    ],
                   ),
                 );
               }
@@ -304,7 +406,7 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
             }
           },
           child: Text(
-            "OK",
+            "Update",
             style: TextStyle(color: Theme.of(context).colorScheme.tertiary)
           ),
         ),

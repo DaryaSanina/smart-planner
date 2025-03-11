@@ -2,31 +2,31 @@ import 'package:app/home/widgets/task_list/new_task_dialog.dart';
 import 'package:app/models/tag_list_model.dart';
 import 'package:app/models/task_list_model.dart';
 import 'package:app/models/task_model.dart';
+import 'package:app/models/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 // A button that opens the task creation dialog
 class NewTaskButton extends StatefulWidget {
-  const NewTaskButton({super.key, required this.userID});
-
-  final int userID;
+  const NewTaskButton({super.key});
 
   @override
   State<NewTaskButton> createState() => _NewTaskButtonState();
 }
 
 class _NewTaskButtonState extends State<NewTaskButton> {
-  // Indicates that the database server is currently processing a request to
+  // Indicates whether the database server is currently processing a request to
   // load the user's tags so that they can be shown in the task creation dialog
   bool _tagListIsUpdating = false;
 
-  // Indicates that the task list is currently being updated
+  // Indicates whether the task list is currently being updated
   bool _taskListIsUpdating = false;
 
   @override
   Widget build(BuildContext context) {
-    // Load the task, task list and tag list models
+    // Load the user, task, task list and tag list models
     // so that the page can update dynamically
+    final UserModel user = context.watch<UserModel>();
     TaskModel task = context.watch<TaskModel>();
     TaskListModel taskList = context.watch<TaskListModel>();
     TagListModel tagList = context.watch<TagListModel>();
@@ -42,7 +42,7 @@ class _NewTaskButtonState extends State<NewTaskButton> {
 
             try {
               // Update the tag list to show it in the task creation dialog
-              await tagList.update(widget.userID);
+              await tagList.load(user.id);
 
               // Reset the task model
               task.clear();
@@ -71,7 +71,7 @@ class _NewTaskButtonState extends State<NewTaskButton> {
             if (context.mounted) {
               await showDialog<String>(
                 context: context,
-                builder: (context) => NewTaskDialog(userID: widget.userID),
+                builder: (dialogContext) => NewTaskDialog(),
               );
             }
 
@@ -81,7 +81,7 @@ class _NewTaskButtonState extends State<NewTaskButton> {
             });
 
             try {
-              await taskList.update(widget.userID);  // Update the task list
+              await taskList.update(user.id);  // Update the task list
               taskList.notify();
             }
 

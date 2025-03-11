@@ -8,23 +8,24 @@ class ImportanceVisibilityModel extends ChangeNotifier {
   // When the model is created, this method loads the setting from cache
   ImportanceVisibilityModel() {
     SharedPreferences.getInstance().then((prefs) {
-      showImportance = prefs.getBool('showImportance') ?? false;
+      _showImportance = prefs.getBool('showImportance') ?? false;
       notifyListeners();
     },);
   }
 
-  bool showImportance = false;
+  bool _showImportance = false;
+  get showImportance => _showImportance;
 
   // This method updates the importance visibility setting.
   // [newValue] is a boolean that is true if the user has turned importance
   // visibility on, and false if the user has turned it off.
   void change(bool newValue) {
     // Update the variable
-    showImportance = newValue;
+    _showImportance = newValue;
 
     // Update the cache
     SharedPreferences.getInstance().then((prefs) {
-      prefs.setBool('showImportance', showImportance);
+      prefs.setBool('showImportance', _showImportance);
     },);
     notifyListeners();
   }

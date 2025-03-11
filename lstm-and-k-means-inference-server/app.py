@@ -7,6 +7,7 @@ import numpy as np
 import random
 import pickle as pkl
 from autograd import Tensor
+from layers import Embedding, Sequential, LSTMCell, Relu, Linear
 
 
 class TaskImportancePredictor:
@@ -78,8 +79,8 @@ class TaskImportancePredictor:
             "You need to load the tokens of the input first " \
                 + "(use the load_tokens method)."
 
-        hidden0 = self.model.layers[0].init_hidden(batch_size=1)
-        hidden1 = self.model.layers[1].init_hidden(batch_size=1)
+        hidden0 = self.model.layers[0].init_hidden()
+        hidden1 = self.model.layers[1].init_hidden()
         for t in range(len(self.tokens)):
             input = Tensor([self.tokens[t]], autograd=True)
             lstm_input = self.embedding.forward(input=input)
@@ -92,8 +93,9 @@ class TaskImportancePredictor:
                 hidden=hidden1
             )
         output = self.output_layer.forward(hidden1[0])
+        print(float(output.data) * 10)
 
-        return float(output.data)
+        return float(output.data) * 10
 
 
 class KMeansClassifier:
@@ -260,7 +262,6 @@ class KMeansData(BaseModel):
 
 app = FastAPI()
 handler = Mangum(app)
-importance_predictor = TaskImportancePredictor()
 
 
 @app.post('/k_means')
@@ -298,7 +299,7 @@ def k_means(data: KMeansData) -> JSONResponse:
           (status code = 500)
     """
     try:
-        data = [list(task[0] * 10000, task[1]) for task in data.data]
+        data = [[task[0] * 10000, task[1]] for task in data.data]
         classifier = KMeansClassifier(data_list=data, k=4)
         classifier.generate_centroids()
         clusters, centroids = classifier.cluster()
@@ -311,11 +312,11 @@ def k_means(data: KMeansData) -> JSONResponse:
         )[:2]
         important_urgent_cluster = min(
             high_importance_clusters,
-            key=lambda x: centroids.data[int(x)][1]
+            key=lambda x: (centroids.data[int(x)][1], x)
         )
         important_not_urgent_cluster = max(
             high_importance_clusters,
-            key=lambda x: centroids.data[int(x)][1]
+            key=lambda x: (centroids.data[int(x)][1], x)
         )
 
         low_importance_clusters = list(
@@ -326,11 +327,11 @@ def k_means(data: KMeansData) -> JSONResponse:
         )[2:]
         not_important_urgent_cluster = min(
             low_importance_clusters,
-            key=lambda x: centroids.data[int(x)][1]
+            key=lambda x: (centroids.data[int(x)][1], x)
         )
         not_important_not_urgent_cluster = max(
             low_importance_clusters,
-            key=lambda x: centroids.data[int(x)][1]
+            key=lambda x: (centroids.data[int(x)][1], x)
         )
 
         important_urgent_order = [
@@ -349,9 +350,14 @@ def k_means(data: KMeansData) -> JSONResponse:
             i for i in range(len(data))
             if clusters.data[i] == not_important_not_urgent_cluster
         ]
+        print(important_urgent_order)
+        print(important_not_urgent_order)
+        print(not_important_urgent_order)
+        print(not_important_not_urgent_order)
 
         order = important_urgent_order + important_not_urgent_order \
             + not_important_urgent_order + not_important_not_urgent_order
+        print(order)
 
         return JSONResponse(order)
     
@@ -377,7 +383,9 @@ def predict_importance(data: Task) -> JSONResponse:
         {"importance": an integer representing the predicted importance level of
         the task}
     """
-    importance_predictor.load_tokens(data.name + ' ' + data.description)
+    importance_predictor = TaskImportancePredictor()
+    importance_predictor.load_tokens(data.name + '. ' + data.description)
+    print(data.name, data.description, importance_predictor.tokens)
     prediction = round(importance_predictor.predict())
     return JSONResponse({"importance": prediction})
 

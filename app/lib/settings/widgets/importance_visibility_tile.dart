@@ -6,8 +6,8 @@ import 'package:provider/provider.dart';
 
 // A tile on the settings page that contains the switch that allows the user to
 // enable or disable the setting to show task importance levels on the dashboard
-class ShowImportanceTile extends StatelessWidget {
-  const ShowImportanceTile({
+class ImportanceVisibilityTile extends StatelessWidget {
+  const ImportanceVisibilityTile({
     super.key
   });
 

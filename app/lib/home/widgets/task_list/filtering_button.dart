@@ -1,5 +1,6 @@
 import 'package:app/home/widgets/task_list/filtering_dialog.dart';
 import 'package:app/models/tag_list_model.dart';
+import 'package:app/models/user_model.dart';
 
 import 'package:flutter/material.dart';
 
@@ -8,21 +9,22 @@ import 'package:provider/provider.dart';
 // A button that opens the task filtering dialog where the user can choose tags
 // so that only tasks with the chosen tags will be displayed
 class FilteringButton extends StatelessWidget {
-  final int userID;
   const FilteringButton({
     super.key,
-    required this.userID
   });
 
   @override
   Widget build(BuildContext context) {
-    final tagList = context.watch<TagListModel>();  // Load the list of tags
+    // Load the user and tag list models
+    final UserModel user = context.watch<UserModel>();
+    final TagListModel tagList = context.watch<TagListModel>();
+
     return ElevatedButton(
       onPressed: () async {
-        tagList.update(userID);  // Refresh the list of tags
+        tagList.load(user.id);  // Refresh the list of tags
         await showDialog<String>(  // Show the task filtering dialog
           context: context,
-          builder: (context) => FilteringDialog(userID: userID),
+          builder: (context) => FilteringDialog(),
         );
       },
       

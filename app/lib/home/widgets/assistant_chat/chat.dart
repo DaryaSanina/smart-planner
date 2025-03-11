@@ -1,5 +1,5 @@
 import 'package:app/home/widgets/assistant_chat/message_bar.dart';
-import 'package:app/home/widgets/assistant_chat/messages.dart';
+import 'package:app/home/widgets/assistant_chat/message_list.dart';
 
 import 'package:flutter/material.dart';
 
@@ -21,7 +21,7 @@ class _ChatState extends State<Chat> {
         Expanded(
           child: SizedBox(
             height: MediaQuery.of(context).size.height * 0.8,
-            child: const MessageList()
+            child: MessageList()
           ),
         ),
 

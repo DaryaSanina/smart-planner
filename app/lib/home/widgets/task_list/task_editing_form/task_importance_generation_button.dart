@@ -6,14 +6,14 @@ import 'package:flutter/material.dart';
 class TaskImportanceGenerationButton extends StatefulWidget{
   const TaskImportanceGenerationButton({
     super.key,
-    required this.controller,
-    required this.taskName,
-    required this.taskDescription
+    required this.taskImportanceController,
+    required this.taskNameController,
+    required this.taskDescriptionController
   });
 
-  final TextEditingController controller;
-  final String taskName;
-  final String taskDescription;
+  final TextEditingController taskImportanceController;
+  final TextEditingController taskNameController;
+  final TextEditingController taskDescriptionController;
 
   @override
   State<TaskImportanceGenerationButton> createState() => _TaskImportanceGenerationButtonState();
@@ -45,11 +45,11 @@ extends State<TaskImportanceGenerationButton> {
         try {
           // Get the importance level prediction
           int newImportance = await getTaskImportancePrediction(
-            widget.taskName,
-            widget.taskDescription
+            widget.taskNameController.text,
+            widget.taskDescriptionController.text
           );
 
-          widget.controller.text = newImportance.toString();
+          widget.taskImportanceController.text = newImportance.toString();
         }
 
         // Display a notification if there was an error
