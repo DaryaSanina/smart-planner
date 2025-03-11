@@ -272,6 +272,7 @@ class _NewTaskDialogState extends State<NewTaskDialog>{
                   // and the task could not be created
                   catch (e) {
                     if (context.mounted) {
+                      print(e);
                       await showDialog<String>(
                         context: context,
                         builder: (dialogContext) => AlertDialog(
