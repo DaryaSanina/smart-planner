@@ -354,7 +354,7 @@ class TaskListModel extends ChangeNotifier {
     else if (order == "importance") {
       sortByImportance(notifyListenersBoolean: notifyListenersBoolean);
     }
-    else if (order == "ai") {
+    else if (order == "ai" && _tasks.length >= 4) {
       await sortWithAI(notifyListenersBoolean: notifyListenersBoolean);
     }
 
