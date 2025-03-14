@@ -1,6 +1,8 @@
 import 'package:app/calendar_api.dart';
 import 'package:app/home/widgets/task_list/task_editing_form/task_details_form.dart';
 import 'package:app/models/tag_list_model.dart';
+import 'package:app/models/task_list_model.dart';
+import 'package:app/models/user_model.dart';
 import 'package:app/server_interactions.dart';
 import 'package:app/home/widgets/task_list/task_widget.dart';
 import 'package:app/models/task_model.dart';
@@ -37,6 +39,11 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
   Widget build(BuildContext context) {
     // Load the task model so that the page can update dynamically
     final TaskModel task = context.watch<TaskModel>();
+
+    // Load the task list and user models so that the task list can be updated
+    // after the dialog closes
+    final TaskListModel taskList = context.watch<TaskListModel>();
+    final UserModel user = context.watch<UserModel>();
 
     // When the dialog opens, load the values in the task name, description and
     // importance fields from the details of the task
@@ -193,10 +200,12 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                     // If it was an event (there was a start and an end),
                     // but now it is a task (there is a deadline),
                     // delete it from the user's Google Calendar
+                    // and set its Google Calendar Event ID to null
                     else {
                       await CalendarClient().delete(
                         task.googleCalendarEventID
                       );
+                      task.setGoogleCalendarEventID("null");
                     }
                   }
 
@@ -367,6 +376,7 @@ class _TaskEditingDialogState extends State<TaskEditingDialog>{
                     );
                   }
                 }
+                await taskList.update(user.id);
 
                 // Hide the circular progress indicator
                 setState(() {
