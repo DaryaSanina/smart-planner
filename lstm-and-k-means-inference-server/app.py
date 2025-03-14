@@ -81,21 +81,33 @@ class TaskImportancePredictor:
 
         hidden0 = self.model.layers[0].init_hidden()
         hidden1 = self.model.layers[1].init_hidden()
+        hidden2 = self.model.layers[2].init_hidden()
         for t in range(len(self.tokens)):
+            print("t", t)
             input = Tensor([self.tokens[t]], autograd=True)
+            print(input.data.shape)
             lstm_input = self.embedding.forward(input=input)
+            print(lstm_input.data.shape)
             hidden0 = self.model.layers[0].forward(
                 input=lstm_input,
                 hidden=hidden0
             )
+            print(hidden0[0].data.shape, hidden0[1].data.shape)
             hidden1 = self.model.layers[1].forward(
                 input=hidden0[0],
                 hidden=hidden1
             )
-        output = self.output_layer.forward(hidden1[0])
-        print(float(output.data) * 10)
+            print(hidden1[0].data.shape, hidden1[1].data.shape)
+            hidden2 = self.model.layers[2].forward(
+                input=hidden1[0],
+                hidden=hidden2
+            )
+            print(hidden2[0].data.shape, hidden2[1].data.shape)
+        output = self.output_layer.forward(hidden2[0])
+        print(output.data.shape)
+        print(float(output.data))
 
-        return float(output.data) * 10
+        return float(output.data)
 
 
 class KMeansClassifier:
