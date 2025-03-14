@@ -2,6 +2,7 @@ import 'package:app/calendar_api.dart';
 import 'package:app/home/home_page.dart';
 import 'package:app/models/message_list_model.dart';
 import 'package:app/models/user_model.dart';
+import 'package:app/models/task_list_model.dart';
 import 'package:app/server_interactions.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -46,8 +47,9 @@ class GoogleSignInButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Load the user and message list models
+    // Load the user, task list and message list models
     final user = context.watch<UserModel>();
+    final taskList = context.watch<TaskListModel>();
     final messageList = context.watch<MessageListModel>();
 
     return InkWell(
@@ -78,6 +80,9 @@ class GoogleSignInButton extends StatelessWidget {
 
           // Update the message list model
           messageList.setUserID(userID);
+
+          // Update the task list model
+          await taskList.update(user.id);
 
           // Show the home page
           if (context.mounted) {
