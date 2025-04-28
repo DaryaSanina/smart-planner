@@ -4,3 +4,5 @@ mangum
 mysql-connector-python
 python-dotenv
 pydantic
+requests
+boto3

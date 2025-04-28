@@ -1,9 +1,11 @@
-import 'package:app/settings/widgets/account_settings_button.dart';
+import 'package:app/settings/widgets/account_settings_tile.dart';
+import 'package:app/settings/widgets/sign_out_tile.dart';
 import 'package:app/settings/widgets/settings_app_bar.dart';
-import 'package:app/settings/widgets/show_importance_button.dart';
+import 'package:app/settings/widgets/importance_visibility_tile.dart';
 
 import 'package:flutter/material.dart';
 
+// Settings page
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -22,12 +24,19 @@ class _SettingsPageState extends State<SettingsPage> {
           appBar: const SettingsAppBar(),
 
           body: Padding(
-            padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.03, vertical: MediaQuery.of(context).size.height * 0.02),
+            padding: EdgeInsets.symmetric(
+              horizontal: MediaQuery.of(context).size.width * 0.03,
+              vertical: MediaQuery.of(context).size.height * 0.02
+            ),
+
+            // List of settings
             child: Column(
               children: [
-                const AccountSettingsButton(),
+                AccountSettingsTile(),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.025),
-                const ShowImportanceButton(),
+                const ImportanceVisibilityTile(),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.025),
+                const SignOutTile(),
               ]
             ),
           ),

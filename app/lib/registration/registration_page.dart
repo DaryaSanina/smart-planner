@@ -1,7 +1,7 @@
 import 'package:app/registration/widgets/registration_form.dart';
-
 import 'package:flutter/material.dart';
 
+// Registration page
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
 
@@ -15,21 +15,19 @@ class _RegistrationState extends State<RegistrationPage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         return Scaffold(
+
+          // Stops the screen from overflowing when the keyboard is shown
           resizeToAvoidBottomInset: false,
+
           backgroundColor: Theme.of(context).colorScheme.primary,
 
           body: Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              // Logo
+              // App logo
               const SizedBox(
                 child: Center(
-                  child: Text(
-                    "Smart Planner",
-                    style: TextStyle(
-                      fontSize: 40,
-                    ),
-                  ),
+                  child: Image(image: AssetImage('assets/banner.png')),
                 ),
               ),
 
@@ -43,7 +41,7 @@ class _RegistrationState extends State<RegistrationPage> {
 
               // If the user already has an account
               SizedBox(
-                child: Row(
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Text(
@@ -54,6 +52,10 @@ class _RegistrationState extends State<RegistrationPage> {
                       ),
                     ),
 
+                    SizedBox(
+                      height: 10,
+                    ),
+
                     // Button that navigates the user to the login page
                     ElevatedButton(
                       onPressed: () {
@@ -61,12 +63,14 @@ class _RegistrationState extends State<RegistrationPage> {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.secondary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30)
+                        ),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
-                          "Log in",
+                          "Sign in",
                           style: TextStyle(
                             fontSize: 20,
                             color: Theme.of(context).colorScheme.tertiary,

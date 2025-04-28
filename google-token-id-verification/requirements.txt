@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+mangum
+python-dotenv
+google-auth
+requests
+aiohttp
+pyjwt
+pyopenssl

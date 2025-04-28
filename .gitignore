@@ -1,3 +1,4 @@
+app/.env
 prototype/.env
 prototype/test.py
 prototype/__pycache__
@@ -6,7 +7,17 @@ database-server/.env
 database-server/logfile.log
 database-server/test.py
 lstm-and-k-means-inference-server/.env
-importance-prediction-model/
+lstm-and-k-means-inference-server/importance_embedding.pkl
+lstm-and-k-means-inference-server/importance_model.pkl
+lstm-and-k-means-inference-server/importance_output.pkl
+lstm-and-k-means-inference-server/word2index.pkl
+importance-prediction-model/importance_embedding.pkl
+importance-prediction-model/importance_model.pkl
+importance-prediction-model/importance_output.pkl
+importance-prediction-model/word2index.pkl
+llm-inference-server/.env
+llm-inference-server/test.py
+google-id-token-verification-server/.env
 
 # Miscellaneous
 *.class

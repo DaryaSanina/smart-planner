@@ -1,31 +1,74 @@
-import 'package:app/login/login_page.dart';
+import 'package:app/home/home_page.dart';
+import 'package:app/sign_in/sign_in_page.dart';
 import 'package:app/models/importance_visibility_model.dart';
+import 'package:app/models/message_list_model.dart';
 import 'package:app/models/tag_list_model.dart';
 import 'package:app/models/task_list_model.dart';
 import 'package:app/models/task_model.dart';
+import 'package:app/models/user_model.dart';
 
 import 'package:flutter/material.dart';
-
+import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timezone/data/latest.dart' as tz;
 
-void main() {
+Future<void> main() async {
+  // Ensure that all widgets are initialised
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialise Firebase for signing in with Google
+  await Firebase.initializeApp();
+
+  // Get the local timezone
+  tz.initializeTimeZones();
+
+  // Load the user's details from cache
+  final prefs = await SharedPreferences.getInstance();
+  final int? userID = prefs.getInt('userID');
+  final String? username = prefs.getString('username');
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => TaskListModel()),
         ChangeNotifierProvider(create: (context) => TaskModel()),
-        ChangeNotifierProvider(create: (context) => ShowImportanceModel()),
+        ChangeNotifierProvider(create: (context) => ImportanceVisibilityModel()),
         ChangeNotifierProvider(create: (context) => TagListModel()),
+        ChangeNotifierProvider(create: (context) => UserModel()),
+        ChangeNotifierProvider(create: (context) => MessageListModel()),
       ],
-      child: const MyApp(),
+      child: App(userID: userID, username: username),
     )
   );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class App extends StatefulWidget {
+  const App({super.key, this.userID, this.username});
+
+  final int? userID;
+  final String? username;
+
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+  bool firstBuild = true;
+
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<UserModel>();
+    final messageList = context.watch<MessageListModel>();
+    if (firstBuild && widget.userID != null && widget.username != null) {
+      firstBuild = false;
+      user.setID(widget.userID!);
+      user.setUsername(widget.username!);
+      messageList.setUserID(widget.userID!);
+    }
+    else if (firstBuild) {
+      firstBuild = false;
+    }
     return MaterialApp(
       title: 'Smart Planner',
       debugShowCheckedModeBanner: false,
@@ -43,7 +86,7 @@ class MyApp extends StatelessWidget {
         // Text button theme
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
-            foregroundColor: const Color(0xFFFFFFFF),  // Text button text colour
+            foregroundColor: const Color(0xFFFFFFFF),
           ),
         ),
         // Text selection theme
@@ -54,8 +97,13 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
 
-      // Load the initial page
-      home: const LoginPage(),
+      // Load the home page if the user data (user ID and username) is in the
+      // cache, or the login page otherwise
+      home: (
+        (widget.userID != null && widget.username != null)
+        ? HomePage()
+        : const SignInPage()
+      ),
     );
   }
 }
